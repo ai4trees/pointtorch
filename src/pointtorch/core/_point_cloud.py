@@ -1,6 +1,6 @@
 """ Point cloud object. """
 
-__all__ = ["PointCloud"]
+__all__ = ["PointCloud", "PointCloudSeries"]
 
 from pathlib import Path
 from typing import Dict, Hashable, Iterable, List, Optional, Union
