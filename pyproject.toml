@@ -31,8 +31,10 @@ keywords = ["point cloud", "deep learning", "pytorch"]
 requires-python = ">=3.9"
 dependencies = [
     "laspy>=2.0.0, <3.0.0",
+    "laszip>=0.2.0, <3.0.0",
     "numpy>=1.21.0, <3.0.0",
     "pandas>=2.0.0, <3.0.0",
+    "tables>=3.8.0, <4.0.0",
     "torch>=2.0.0, <2.5.0",
     "torch-cluster>=1.6.0, <2.0.0",
     "torch-scatter>=2.0.2, <3.0.0"

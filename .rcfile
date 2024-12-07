@@ -11,3 +11,6 @@ max-positional-arguments=8
 
 [REPORTS]
 reports=yes
+
+[SIMILARITIES]
+min-similarity-lines=20
