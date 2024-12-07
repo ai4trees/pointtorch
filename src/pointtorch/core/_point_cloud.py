@@ -33,7 +33,7 @@ class PointCloud(pd.DataFrame):
 
     _metadata = ["identifier", "x_max_resolution", "y_max_resolution", "z_max_resolution"]
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         data: Union[np.ndarray, Iterable, Dict, pd.DataFrame],
         index: Optional[Union[pd.Index, np.ndarray]] = None,
@@ -121,7 +121,7 @@ class PointCloudSeries(pd.Series):
 
     _metadata = ["identifier", "x_max_resolution", "y_max_resolution", "z_max_resolution"]
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         data: Optional[Union[np.ndarray, Iterable, Dict, int, float, str]] = None,
         index: Optional[Union[pd.Index, np.ndarray]] = None,
