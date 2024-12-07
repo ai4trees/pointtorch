@@ -13,3 +13,4 @@ Subpackages
    :maxdepth: 4
 
    pointtorch.core
+   pointtorch.io
