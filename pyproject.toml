@@ -75,4 +75,4 @@ changelog_file = "CHANGELOG.md"
 build_command = "python -m build"
 
 [tool.setuptools.package-data]
-pointtree = ["*.typed"]
+pointtorch = ["*.typed"]
