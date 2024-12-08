@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import List, Optional, Union
 
-import pandas
+import pandas as pd
 import pytest
 
 from pointtorch.io import HdfReader, HdfWriter, PointCloudIoData
@@ -41,7 +41,7 @@ class TestHdfReader:
         columns: Optional[List[str]],
         use_pathlib: bool,
     ):
-        point_cloud_df = pandas.DataFrame(
+        point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud = PointCloudIoData(point_cloud_df)
@@ -81,7 +81,7 @@ class TestHdfReader:
         expected_z_max_resolution = 0.01
 
         point_cloud = PointCloudIoData(
-            pandas.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"]),
+            pd.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"]),
             x_max_resolution=expected_x_max_resolution,
             y_max_resolution=expected_y_max_resolution,
             z_max_resolution=expected_z_max_resolution,

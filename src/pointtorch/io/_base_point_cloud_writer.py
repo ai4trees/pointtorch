@@ -6,7 +6,7 @@ import abc
 import pathlib
 from typing import List, Optional, Union
 
-import pandas
+import pandas as pd
 
 from ._point_cloud_io_data import PointCloudIoData
 
@@ -75,7 +75,7 @@ class BasePointCloudWriter(abc.ABC):
     @abc.abstractmethod
     def _write_data(
         self,
-        point_cloud: pandas.DataFrame,
+        point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
         identifier: Optional[str] = None,

@@ -5,8 +5,8 @@ __all__ = ["HdfWriter"]
 import pathlib
 from typing import List, Optional, Union
 
-import numpy
-import pandas
+import numpy as np
+import pandas as pd
 
 from ._base_point_cloud_writer import BasePointCloudWriter
 from ._point_cloud_io_data import PointCloudIoData
@@ -44,7 +44,7 @@ class HdfWriter(BasePointCloudWriter):
 
     def _write_data(
         self,
-        point_cloud: pandas.DataFrame,
+        point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
         identifier: Optional[str] = None,
@@ -66,9 +66,9 @@ class HdfWriter(BasePointCloudWriter):
 
         point_cloud.to_hdf(file_path, key="point_cloud", format="t", data_columns=True, index=False)
 
-        pandas.DataFrame({"identifier": [identifier]}).to_hdf(file_path, key="identifier", index=False)
+        pd.DataFrame({"identifier": [identifier]}).to_hdf(file_path, key="identifier", index=False)
 
-        max_resolutions = pandas.DataFrame(
+        max_resolutions = pd.DataFrame(
             [
                 {
                     "x_max_resolution": x_max_resolution,
@@ -77,7 +77,7 @@ class HdfWriter(BasePointCloudWriter):
                 }
             ]
         )
-        max_resolutions["x_max_resolution"] = max_resolutions["x_max_resolution"].astype(numpy.float64)
-        max_resolutions["y_max_resolution"] = max_resolutions["y_max_resolution"].astype(numpy.float64)
-        max_resolutions["z_max_resolution"] = max_resolutions["z_max_resolution"].astype(numpy.float64)
+        max_resolutions["x_max_resolution"] = max_resolutions["x_max_resolution"].astype(np.float64)
+        max_resolutions["y_max_resolution"] = max_resolutions["y_max_resolution"].astype(np.float64)
+        max_resolutions["z_max_resolution"] = max_resolutions["z_max_resolution"].astype(np.float64)
         max_resolutions.to_hdf(file_path, key="max_resolution", index=False)
