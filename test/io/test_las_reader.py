@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import List, Optional, Union
 
-import pandas
+import pandas as pd
 import pytest
 
 from pointtorch.io import LasReader, LasWriter, PointCloudIoData
@@ -41,7 +41,7 @@ class TestLasReader:
         columns: Optional[List[str]],
         use_pathlib: bool,
     ):
-        point_cloud_df = pandas.DataFrame(
+        point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
@@ -78,7 +78,7 @@ class TestLasReader:
         expected_y_max_resolution = 0.01
         expected_z_max_resolution = 1
 
-        point_cloud_df = pandas.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
+        point_cloud_df = pd.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(
             point_cloud_df,
             x_max_resolution=expected_x_max_resolution,

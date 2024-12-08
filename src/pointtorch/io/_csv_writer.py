@@ -6,7 +6,7 @@ import math
 import pathlib
 from typing import List, Optional, Union
 
-import pandas
+import pandas as pd
 
 from ._base_point_cloud_writer import BasePointCloudWriter
 from ._point_cloud_io_data import PointCloudIoData
@@ -44,7 +44,7 @@ class CsvWriter(BasePointCloudWriter):
 
     def _write_data(
         self,
-        point_cloud: pandas.DataFrame,
+        point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
         identifier: Optional[str] = None,

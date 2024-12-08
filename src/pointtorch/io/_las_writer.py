@@ -6,8 +6,8 @@ import pathlib
 from typing import List, Optional, Union
 
 import laspy
-import numpy
-import pandas
+import numpy as np
+import pandas as pd
 
 from ._base_point_cloud_writer import BasePointCloudWriter
 from ._point_cloud_io_data import PointCloudIoData
@@ -42,7 +42,7 @@ class LasWriter(BasePointCloudWriter):
 
         return ["las", "laz"]
 
-    def _select_point_format(self, point_cloud: pandas.DataFrame) -> int:
+    def _select_point_format(self, point_cloud: pd.DataFrame) -> int:
         """
         Determines the las file format that covers the most columns of the given point cloud.
 
@@ -64,7 +64,7 @@ class LasWriter(BasePointCloudWriter):
 
     def _write_data(
         self,
-        point_cloud: pandas.DataFrame,
+        point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
         identifier: Optional[str] = None,
@@ -114,7 +114,7 @@ class LasWriter(BasePointCloudWriter):
                 extra_columns.remove(column_name)
             else:
                 default_value = LasWriter._standard_field_defaults.get(column_name, 0)
-                las_data[column_name] = numpy.full_like(las_data[column_name], fill_value=default_value)
+                las_data[column_name] = np.full_like(las_data[column_name], fill_value=default_value)
 
         for column_name in extra_columns:
             if column_name.lower() in ["x", "y", "z"]:

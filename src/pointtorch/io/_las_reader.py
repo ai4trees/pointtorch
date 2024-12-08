@@ -6,8 +6,8 @@ import pathlib
 from typing import List, Optional, Tuple, Union
 
 import laspy
-import numpy
-import pandas
+import numpy as np
+import pandas as pd
 
 from ._base_point_cloud_reader import BasePointCloudReader
 from ._point_cloud_io_data import PointCloudIoData
@@ -56,7 +56,7 @@ class LasReader(BasePointCloudReader):
         # class.
         return super().read(file_path, columns=columns)
 
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pandas.DataFrame:
+    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in las or laz format.
 
@@ -68,13 +68,13 @@ class LasReader(BasePointCloudReader):
             Point cloud data.
         """
         las_data = laspy.read(file_path)
-        data = numpy.array([las_data.x, las_data.y, las_data.z]).T
-        point_cloud_df = pandas.DataFrame(data, columns=["x", "y", "z"])
+        data = np.array([las_data.x, las_data.y, las_data.z]).T
+        point_cloud_df = pd.DataFrame(data, columns=["x", "y", "z"])
 
         for column_name in las_data.header.point_format.standard_dimension_names:
             if column_name.lower() in ["x", "y", "z"] or columns is not None and column_name not in columns:
                 continue
-            column_values = numpy.array(las_data[column_name])
+            column_values = np.array(las_data[column_name])
             default_value = LasReader._standard_field_defaults.get(column_name, 0)
             if (column_values != default_value).any() or not self._ignore_default_columns:
                 point_cloud_df[column_name] = column_values

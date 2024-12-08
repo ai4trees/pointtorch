@@ -5,7 +5,7 @@ __all__ = ["CsvReader"]
 import pathlib
 from typing import List, Optional, Tuple, Union
 
-import pandas
+import pandas as pd
 
 from ._base_point_cloud_reader import BasePointCloudReader
 from ._point_cloud_io_data import PointCloudIoData
@@ -40,7 +40,7 @@ class CsvReader(BasePointCloudReader):
         # class.
         return super().read(file_path, columns=columns)
 
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pandas.DataFrame:
+    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in csv or txt format.
 
@@ -53,7 +53,7 @@ class CsvReader(BasePointCloudReader):
         """
 
         file_format = file_path.suffix.lstrip(".")
-        return pandas.read_csv(file_path, usecols=columns, sep="," if file_format == "csv" else " ")
+        return pd.read_csv(file_path, usecols=columns, sep="," if file_format == "csv" else " ")
 
     @staticmethod
     def _read_max_resolutions(file_path: pathlib.Path) -> Tuple[float, float, float]:
@@ -68,7 +68,7 @@ class CsvReader(BasePointCloudReader):
         """
 
         file_format = file_path.suffix.lstrip(".")
-        df = pandas.read_csv(file_path, usecols=["x", "y", "z"], sep="," if file_format == "csv" else " ", dtype=str)
+        df = pd.read_csv(file_path, usecols=["x", "y", "z"], sep="," if file_format == "csv" else " ", dtype=str)
 
         # The precision of each coordinate is calculated by counting the digits after the decimal.
         x_max_resolution = (

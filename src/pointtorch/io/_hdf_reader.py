@@ -5,7 +5,7 @@ __all__ = ["HdfReader"]
 import pathlib
 from typing import List, Optional, Tuple, Union
 
-import pandas
+import pandas as pd
 
 from ._base_point_cloud_reader import BasePointCloudReader
 from ._point_cloud_io_data import PointCloudIoData
@@ -40,7 +40,7 @@ class HdfReader(BasePointCloudReader):
         # class.
         return super().read(file_path, columns=columns)
 
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pandas.DataFrame:
+    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in h5 and hdf format.
 
@@ -52,7 +52,7 @@ class HdfReader(BasePointCloudReader):
             Point cloud data.
         """
 
-        return pandas.read_hdf(file_path, columns=columns, key="point_cloud")  # type: ignore[return-value]
+        return pd.read_hdf(file_path, columns=columns, key="point_cloud")  # type: ignore[return-value]
 
     @staticmethod
     def _read_max_resolutions(file_path: pathlib.Path) -> Tuple[float, float, float]:
@@ -66,9 +66,9 @@ class HdfReader(BasePointCloudReader):
             Maximum resolution of the x-, y-, and z-coordinates of the point cloud.
         """
 
-        x_max_resolution = float(pandas.read_hdf(file_path, key="max_resolution")["x_max_resolution"].iloc[0])
-        y_max_resolution = float(pandas.read_hdf(file_path, key="max_resolution")["y_max_resolution"].iloc[0])
-        z_max_resolution = float(pandas.read_hdf(file_path, key="max_resolution")["z_max_resolution"].iloc[0])
+        x_max_resolution = float(pd.read_hdf(file_path, key="max_resolution")["x_max_resolution"].iloc[0])
+        y_max_resolution = float(pd.read_hdf(file_path, key="max_resolution")["y_max_resolution"].iloc[0])
+        z_max_resolution = float(pd.read_hdf(file_path, key="max_resolution")["z_max_resolution"].iloc[0])
 
         return x_max_resolution, y_max_resolution, z_max_resolution
 
@@ -81,4 +81,4 @@ class HdfReader(BasePointCloudReader):
             Point cloud identifier.
         """
 
-        return str(pandas.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
+        return str(pd.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
