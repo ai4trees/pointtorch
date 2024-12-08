@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import Union
 
-import pandas
+import pandas as pd
 import pytest
 
 from pointtorch.io import PointCloudIoData, PointCloudWriter, PointCloudReader
@@ -39,7 +39,7 @@ class TestPointCloudWriter:
         file_format: str,
         use_pathlib: bool,
     ):
-        point_cloud_df = pandas.DataFrame(
+        point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
@@ -54,7 +54,7 @@ class TestPointCloudWriter:
         assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
 
     def test_write_unsupported_format(self, point_cloud_writer: PointCloudWriter, cache_dir: str):
-        point_cloud_data = PointCloudIoData(pandas.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
+        point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
         file_path = os.path.join(cache_dir, "test_file.invalid")
 
         with pytest.raises(ValueError):
@@ -74,7 +74,7 @@ class TestPointCloudWriter:
         expected_y_max_resolution = 0.01
         expected_z_max_resolution = 1
 
-        point_cloud_df = pandas.DataFrame([[0.1, 0, 0], [1, 1.06, 1]], columns=["x", "y", "z"])
+        point_cloud_df = pd.DataFrame([[0.1, 0, 0], [1, 1.06, 1]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(
             point_cloud_df,
             x_max_resolution=expected_x_max_resolution,

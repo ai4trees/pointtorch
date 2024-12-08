@@ -6,7 +6,7 @@ import abc
 import pathlib
 from typing import List, Optional, Tuple, Union
 
-import pandas
+import pandas as pd
 
 from ._point_cloud_io_data import PointCloudIoData
 
@@ -66,7 +66,7 @@ class BasePointCloudReader(abc.ABC):
         )
 
     @abc.abstractmethod
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pandas.DataFrame:
+    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Reads point data from a point cloud file. This method has to be overriden by child classes.
 

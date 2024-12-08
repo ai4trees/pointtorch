@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import List, Optional, Union
 
-import pandas
+import pandas as pd
 import pytest
 
 from pointtorch.io import LasWriter, LasReader, PointCloudIoData
@@ -41,7 +41,7 @@ class TestLasWriter:
         columns: Optional[List[str]],
         use_pathlib: bool,
     ):
-        point_cloud_df = pandas.DataFrame(
+        point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
@@ -64,7 +64,7 @@ class TestLasWriter:
         assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
 
     def test_write_unsupported_format(self, las_writer: LasWriter, cache_dir: str):
-        point_cloud_data = PointCloudIoData(pandas.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
+        point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
         file_path = os.path.join(cache_dir, "test_point_cloud.invalid")
 
         with pytest.raises(ValueError):
@@ -86,7 +86,7 @@ class TestLasWriter:
     def test_write_missing_column(
         self, las_writer: LasWriter, cache_dir: str, file_format: str, columns: Optional[List[str]]
     ):
-        point_cloud_data = PointCloudIoData(pandas.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
+        point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
         file_path = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
 
         with pytest.raises(ValueError):
@@ -101,7 +101,7 @@ class TestLasWriter:
         expected_y_max_resolution = 0.01
         expected_z_max_resolution = 1
 
-        point_cloud_df = pandas.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
+        point_cloud_df = pd.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(
             point_cloud_df,
             x_max_resolution=expected_x_max_resolution,

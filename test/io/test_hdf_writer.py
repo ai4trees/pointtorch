@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import List, Optional, Union
 
-import pandas
+import pandas as pd
 import pytest
 
 from pointtorch.io import HdfWriter, PointCloudIoData
@@ -31,7 +31,7 @@ class TestHdfWriter:
     def test_writer(
         self, hdf_writer: HdfWriter, cache_dir: str, file_format: str, columns: Optional[List[str]], use_pathlib: bool
     ):
-        point_cloud_df = pandas.DataFrame(
+        point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
@@ -50,15 +50,15 @@ class TestHdfWriter:
 
             point_cloud_df = point_cloud_df[columns]
 
-        read_point_cloud_df = pandas.read_hdf(file_path, key="point_cloud")
+        read_point_cloud_df = pd.read_hdf(file_path, key="point_cloud")
 
-        identifier = str(pandas.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
+        identifier = str(pd.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_df.to_numpy()).all()
         assert "test" == identifier
 
     def test_write_unsupported_format(self, hdf_writer: HdfWriter, cache_dir: str):
-        point_cloud_data = PointCloudIoData(pandas.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
+        point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
         file_path = os.path.join(cache_dir, "test_point_cloud.invalid")
 
         with pytest.raises(ValueError):
@@ -74,7 +74,7 @@ class TestHdfWriter:
     def test_write_missing_column(
         self, hdf_writer: HdfWriter, cache_dir: str, file_format: str, columns: Optional[List[str]]
     ):
-        point_cloud_df = pandas.DataFrame([[0, 0, 0]], columns=["x", "y", "z"])
+        point_cloud_df = pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(point_cloud_df)
         file_path = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
 
@@ -88,7 +88,7 @@ class TestHdfWriter:
         expected_y_max_resolution = 0.01
         expected_z_max_resolution = 1
 
-        point_cloud_df = pandas.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
+        point_cloud_df = pd.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(
             point_cloud_df,
             x_max_resolution=expected_x_max_resolution,
@@ -101,8 +101,8 @@ class TestHdfWriter:
             file_path = pathlib.Path(file_path)
         hdf_writer.write(point_cloud_data, file_path)
 
-        read_point_cloud_df = pandas.read_hdf(file_path, key="point_cloud")
-        max_resolution = pandas.read_hdf(file_path, key="max_resolution")
+        read_point_cloud_df = pd.read_hdf(file_path, key="point_cloud")
+        max_resolution = pd.read_hdf(file_path, key="max_resolution")
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_df.to_numpy()).all()
         assert expected_x_max_resolution == max_resolution["x_max_resolution"].iloc[0]
@@ -112,7 +112,7 @@ class TestHdfWriter:
     def test_write_max_resolutions_none(
         self, hdf_writer: HdfWriter, cache_dir: str, file_format: str, use_pathlib: bool
     ):
-        point_cloud_df = pandas.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
+        point_cloud_df = pd.DataFrame([[0.1, 0.0, 0.0], [1.0, 1.06, 1.0]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(point_cloud_df)
         file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
@@ -120,6 +120,6 @@ class TestHdfWriter:
 
         hdf_writer.write(point_cloud_data, file_path)
 
-        read_point_cloud_df = pandas.read_hdf(file_path, key="point_cloud")
+        read_point_cloud_df = pd.read_hdf(file_path, key="point_cloud")
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_df.to_numpy()).all()
