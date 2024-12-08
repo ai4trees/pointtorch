@@ -1,1 +1,1 @@
-python -m pip install pointtree
+python -m pip install pointtorch
