@@ -42,7 +42,8 @@ class TestLasWriter:
         use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
-            [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
+            [[0, 0, 0, 1, 122, 56, 28, 245], [1, 1, 1, 0, 23, 128, 128, 128]],
+            columns=["x", "y", "z", "classification", "instance", "r", "g", "b"],
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
         file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
@@ -59,9 +60,17 @@ class TestLasWriter:
 
             point_cloud_df = point_cloud_df[columns]
 
+        point_cloud_df.rename({"r": "red", "g": "green", "b": "blue"}, axis=1, inplace=True)
+
         read_point_cloud_data = las_reader.read(file_path)
 
-        assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
+        expected_columns = sorted(point_cloud_df.columns)
+        columns = sorted(read_point_cloud_data.data.columns)
+
+        assert expected_columns == columns
+        assert (
+            point_cloud_df[expected_columns].to_numpy() == read_point_cloud_data.data[expected_columns].to_numpy()
+        ).all()
 
     def test_write_unsupported_format(self, las_writer: LasWriter, cache_dir: str):
         point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
