@@ -1,9 +1,14 @@
 """ Tests for the pointtorch.core.PointCloud class. """
 
+import pathlib
+import os
+import shutil
+from typing import Union
+
 import numpy as np
 import pytest
 
-from pointtorch import PointCloud, PointCloudSeries
+from pointtorch import PointCloud, PointCloudSeries, read
 
 
 class TestPointCloud:
@@ -22,6 +27,13 @@ class TestPointCloud:
     @pytest.fixture
     def point_cloud(self, data, identifier):
         return PointCloud(data, columns=["x", "y", "z", "intensity"], identifier=identifier)
+
+    @pytest.fixture
+    def cache_dir(self):
+        cache_dir = "./tmp/test/core/TestPointCloud"
+        os.makedirs(cache_dir, exist_ok=True)
+        yield cache_dir
+        shutil.rmtree(cache_dir)
 
     def test_xyz(self, data, point_cloud):
         assert (data[:, :3] == point_cloud.xyz()).all()
@@ -58,3 +70,17 @@ class TestPointCloud:
         z_max_resolution = 0.1
         point_cloud = PointCloud(point_cloud, z_max_resolution=z_max_resolution)
         assert z_max_resolution == point_cloud.z_max_resolution
+
+    @pytest.mark.parametrize("file_format", ["csv", "txt", "h5", "hdf", "las", "laz"])
+    @pytest.mark.parametrize("use_pathlib", [True, False])
+    def test_to(self, file_format: str, use_pathlib: bool, cache_dir, point_cloud):
+        point_cloud = PointCloud(point_cloud)
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
+        if use_pathlib:
+            file_path = pathlib.Path(file_path)
+
+        point_cloud.to(file_path)
+
+        read_point_cloud_data = read(file_path)
+
+        assert (point_cloud.to_numpy() == read_point_cloud_data.to_numpy()).all()
