@@ -97,11 +97,9 @@ jobs:
           python -m pip freeze
           python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
           python -m pip freeze
-          python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
-          python -m pip freeze
           python -m pip install --upgrade -e .'[dev, docs]'
       - name: Install numpy version compatible to pandas
-        if: ${{ matrix.version.python == '3.9' }}
+        # if: ${{ matrix.version.python == '3.9' }}
         shell: bash
         run: |
           python -m pip install numpy==1.26.4
