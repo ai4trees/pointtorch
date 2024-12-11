@@ -92,8 +92,11 @@ jobs:
         shell: bash
         run: |
           python -m pip install torch==${{ matrix.version.torch }}
+          python -m pip freeze
           python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          python -m pip freeze
           python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          python -m pip freeze
           python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
           python -m pip freeze
           python -m pip install --upgrade -e .'[dev, docs]'
