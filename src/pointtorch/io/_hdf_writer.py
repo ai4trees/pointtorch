@@ -5,6 +5,7 @@ __all__ = ["HdfWriter"]
 import pathlib
 from typing import List, Optional, Union
 
+import h5py
 import numpy as np
 import pandas as pd
 
@@ -64,9 +65,10 @@ class HdfWriter(BasePointCloudWriter):
             z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to `None`.
         """
 
-        point_cloud.to_hdf(file_path, key="point_cloud", format="t", data_columns=True, index=False)
+        with h5py.File(file_path, "w") as h5file:
+            h5file.attrs["identifier"] = identifier if identifier is not None else ""
 
-        pd.DataFrame({"identifier": [identifier]}).to_hdf(file_path, key="identifier", index=False)
+        point_cloud.to_hdf(file_path, key="point_cloud", format="t", data_columns=True, index=False)
 
         max_resolutions = pd.DataFrame(
             [

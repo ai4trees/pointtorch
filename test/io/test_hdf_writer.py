@@ -8,11 +8,15 @@ from typing import List, Optional, Union
 import pandas as pd
 import pytest
 
-from pointtorch.io import HdfWriter, PointCloudIoData
+from pointtorch.io import HdfWriter, HdfReader, PointCloudIoData
 
 
 class TestHdfWriter:
     """Tests for the pointtorch.io.HdfWriter class."""
+
+    @pytest.fixture
+    def hdf_reader(self):
+        return HdfReader()
 
     @pytest.fixture
     def hdf_writer(self):
@@ -29,7 +33,13 @@ class TestHdfWriter:
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_writer(
-        self, hdf_writer: HdfWriter, cache_dir: str, file_format: str, columns: Optional[List[str]], use_pathlib: bool
+        self,
+        hdf_reader: HdfReader,
+        hdf_writer: HdfWriter,
+        cache_dir: str,
+        file_format: str,
+        columns: Optional[List[str]],
+        use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
@@ -50,12 +60,10 @@ class TestHdfWriter:
 
             point_cloud_df = point_cloud_df[columns]
 
-        read_point_cloud_df = pd.read_hdf(file_path, key="point_cloud")
+        read_point_cloud = hdf_reader.read(file_path)
 
-        identifier = str(pd.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
-
-        assert (point_cloud_df.to_numpy() == read_point_cloud_df.to_numpy()).all()
-        assert "test" == identifier
+        assert (point_cloud_df.to_numpy() == read_point_cloud.data.to_numpy()).all()
+        assert "test" == read_point_cloud.identifier
 
     def test_write_unsupported_format(self, hdf_writer: HdfWriter, cache_dir: str):
         point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
