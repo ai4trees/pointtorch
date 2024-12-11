@@ -42,6 +42,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
+    "hypothesis",
     "mypy",
     "pandas-stubs",
     "pylint",
