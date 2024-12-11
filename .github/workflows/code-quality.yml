@@ -99,7 +99,7 @@ jobs:
           python -m pip freeze
           python -m pip install --upgrade -e .'[dev, docs]'
       - name: Install numpy version compatible to pandas
-        if: ${{ matrix.version.python == '3.9' }}
+        if: ${{ matrix.version.python == '3.9' || matrix.version.python == '3.10' || matrix.version.python == '3.11' }}
         shell: bash
         run: |
           python -m pip install numpy==1.26.4
