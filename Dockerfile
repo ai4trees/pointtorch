@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends git
+RUN apt-get update && apt-get install -y --no-install-recommends git lsb-release software-properties-common wget
 
 ######## Install Python packages that depend on PyTorch #########
 
@@ -48,6 +48,8 @@ RUN mkdir /workspace/Open3D/build && cd /workspace/Open3D/build && \
 RUN python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
 
 FROM pytorch/pytorch:2.4.0-cuda12.4-cudnn9-runtime
+
+WORKDIR /workspace
 
 COPY --from=builder /opt/conda/lib/python3.11/site-packages/pytorch3d /opt/conda/lib/python3.11/site-packages
 COPY --from=builder /opt/conda/lib/python3.11/site-packages/pytorch3d-*.dist-info /opt/conda/lib/python3.11/site-packages
