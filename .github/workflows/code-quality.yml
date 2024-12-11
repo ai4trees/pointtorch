@@ -126,12 +126,12 @@ jobs:
         run: |
           cd /github/workspace/
           python -m pip install --upgrade .'[dev, docs]'
-          pytest --cov --cov-report=xml
+          pytest --cov . --cov-report=xml
+          pwd
           ls
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
         with:
-          directory: /github/workspace/
           files: coverage.xml
           fail_ci_if_error: true
           token: ${{ secrets.codecov_token }}

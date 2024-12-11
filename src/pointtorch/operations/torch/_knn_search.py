@@ -45,6 +45,9 @@ def knn_search(  # pylint: disable=too-many-positional-arguments
         Tuple of two tensors. The first tensor contains the indices of the neighbors of each query point. The
         second tensor contains the distances between the neighbors and the query points.
 
+    Raises:
+        ValueError: If the shapes of the input tensors are inconsistent.
+
     Shape:
         - :attr:`coords_support_points`: :math:`(N, 3)`
         - :attr:`coords_query_points`: :math:`(N', 3)`
@@ -62,6 +65,19 @@ def knn_search(  # pylint: disable=too-many-positional-arguments
           | :math:`N' = \text{ number of query points}`
           | :math:`n_{max} = \text{ maximum number of neighbors a query point has}`
     """
+
+    if len(coords_support_points) != len(batch_indices_support_points):
+        raise ValueError("coords_support_points and batch_indices_support_points must have the same length.")
+    if len(coords_query_points) != len(batch_indices_query_points):
+        raise ValueError("coords_query_points and batch_indices_query_points must have the same length.")
+    if point_cloud_sizes_support_points.sum() != len(coords_support_points):
+        raise ValueError(
+            "The sum of point_cloud_sizes_support_points is not equal to the length of coords_support_points."
+        )
+    if point_cloud_sizes_query_points != len(coords_query_points):
+        raise ValueError(
+            "The sum of point_cloud_sizes_support_points is not equal to the length of coords_query_points."
+        )
 
     if pytorch3d_is_available():
         return knn_search_pytorch3d(
@@ -388,9 +404,6 @@ def knn_search_torch_cluster(  # pylint: disable=too-many-locals, too-many-posit
     device = coords_query_points.device
     num_query_points = len(coords_query_points)
     invalid_neighbor_index = len(coords_support_points)
-
-    if not point_cloud_sizes_support_points.sum() == len(coords_support_points):
-        raise ValueError("Invalid shape.")
 
     k = min(k, int(point_cloud_sizes_support_points.amax().item()))
 

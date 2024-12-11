@@ -411,3 +411,51 @@ class TestKnnSearch:
 
             np.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_open3d.cpu().numpy())
             np.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_open3d.cpu().numpy(), decimal=4)
+
+    def test_invalid_batch_indices_support_points(self):
+        with pytest.raises(ValueError):
+            knn_search(
+                torch.randn((10, 3), dtype=torch.float),
+                torch.randn((5, 3), dtype=torch.float),
+                torch.zeros(8, dtype=torch.long),
+                torch.zeros(5, dtype=torch.long),
+                torch.tensor([10], dtype=torch.long),
+                torch.tensor([5], dtype=torch.long),
+                k=1,
+            )
+
+    def test_invalid_batch_indices_query_points(self):
+        with pytest.raises(ValueError):
+            knn_search(
+                torch.randn((10, 3), dtype=torch.float),
+                torch.randn((5, 3), dtype=torch.float),
+                torch.zeros(10, dtype=torch.long),
+                torch.zeros(8, dtype=torch.long),
+                torch.tensor([10], dtype=torch.long),
+                torch.tensor([5], dtype=torch.long),
+                k=1,
+            )
+
+    def test_invalid_point_cloud_sizes_support_points(self):
+        with pytest.raises(ValueError):
+            knn_search(
+                torch.randn((10, 3), dtype=torch.float),
+                torch.randn((5, 3), dtype=torch.float),
+                torch.zeros(10, dtype=torch.long),
+                torch.zeros(5, dtype=torch.long),
+                torch.tensor([8], dtype=torch.long),
+                torch.tensor([5], dtype=torch.long),
+                k=1,
+            )
+
+    def test_invalid_point_cloud_sizes_query_points(self):
+        with pytest.raises(ValueError):
+            knn_search(
+                torch.randn((10, 3), dtype=torch.float),
+                torch.randn((5, 3), dtype=torch.float),
+                torch.zeros(10, dtype=torch.long),
+                torch.zeros(5, dtype=torch.long),
+                torch.tensor([10], dtype=torch.long),
+                torch.tensor([8], dtype=torch.long),
+                k=1,
+            )
