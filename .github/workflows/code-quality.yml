@@ -91,9 +91,11 @@ jobs:
       - name: Install package and dependencies
         shell: bash
         run: |
-          pip install torch==${{ matrix.version.torch }}
-          pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
-          pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          python -m pip install torch==${{ matrix.version.torch }}
+          python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
+          python -m pip freeze
           python -m pip install --upgrade -e .'[dev, docs]'
       - name: Install numpy version compatible to pandas
         if: ${{ matrix.version.python == '3.9' }}

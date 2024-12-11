@@ -10,6 +10,8 @@ class TestConfig:
     """Tests for the pointtorch.config module."""
 
     def test_open3d_available(self, monkeypatch):
+        monkeypatch.setitem(sys.modules, "open3d", ModuleType("open3d"))
+        monkeypatch.setitem(sys.modules, "open3d.ml", ModuleType("open3d.ml"))
         monkeypatch.setitem(sys.modules, "open3d.ml.torch", ModuleType("open3d.ml.torch"))
         assert open3d_is_available()
 
