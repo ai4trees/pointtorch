@@ -74,7 +74,7 @@ def knn_search(  # pylint: disable=too-many-positional-arguments
         raise ValueError(
             "The sum of point_cloud_sizes_support_points is not equal to the length of coords_support_points."
         )
-    if point_cloud_sizes_query_points != len(coords_query_points):
+    if point_cloud_sizes_query_points.sum() != len(coords_query_points):
         raise ValueError(
             "The sum of point_cloud_sizes_support_points is not equal to the length of coords_query_points."
         )
