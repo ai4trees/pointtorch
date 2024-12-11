@@ -12,5 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   pointtorch.config
    pointtorch.core
    pointtorch.io
+   pointtorch.operations
