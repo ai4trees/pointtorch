@@ -3,7 +3,7 @@
 from typing import Optional
 
 import hypothesis
-import numpy
+import numpy as np
 import pytest
 import torch
 
@@ -85,8 +85,8 @@ class TestNeighorSearch:
         expected_neighbor_indices = torch.empty((batch_size * num_points, 0), dtype=torch.long)
         expected_neighbor_distances = torch.empty((batch_size * num_points, 0), dtype=torch.float)
 
-        numpy.testing.assert_array_equal(expected_neighbor_indices.numpy(), neighbor_indices.cpu().numpy())
-        numpy.testing.assert_array_equal(expected_neighbor_distances.numpy(), neighbor_distances.cpu().numpy())
+        np.testing.assert_array_equal(expected_neighbor_indices.numpy(), neighbor_indices.cpu().numpy())
+        np.testing.assert_array_equal(expected_neighbor_distances.numpy(), neighbor_distances.cpu().numpy())
 
     @pytest.mark.parametrize("radius", [5, None])
     @hypothesis.settings(deadline=None)
@@ -141,7 +141,7 @@ class TestNeighorSearch:
         point_cloud_sizes_support_points = torch.tensor([5, 6], dtype=torch.long, device=device)
 
         if radius is None:
-            expected_neighbor_indices = numpy.array(
+            expected_neighbor_indices = np.array(
                 [
                     [0, 2, 1, 4, 3, 11],
                     [4, 3, 1, 2, 0, 11],
@@ -151,45 +151,45 @@ class TestNeighorSearch:
                 ]
             )
 
-            expected_neighbor_distances = numpy.array(
+            expected_neighbor_distances = np.array(
                 [
                     [
                         0,
                         4,
-                        numpy.linalg.norm(numpy.array([0, 5, 0]) - numpy.array([20, 18, 0])),
+                        np.linalg.norm(np.array([0, 5, 0]) - np.array([20, 18, 0])),
                         25,
-                        numpy.linalg.norm(numpy.array([0, 5, 0]) - numpy.array([20, 20, 1])),
-                        numpy.inf,
+                        np.linalg.norm(np.array([0, 5, 0]) - np.array([20, 20, 1])),
+                        np.inf,
                     ],
-                    [0, 1, 2, numpy.linalg.norm(numpy.array([20, 20, 0]) - numpy.array([4, 5, 0])), 25, numpy.inf],
+                    [0, 1, 2, np.linalg.norm(np.array([20, 20, 0]) - np.array([4, 5, 0])), 25, np.inf],
                     [
                         0,
                         1,
-                        numpy.linalg.norm(numpy.array([3, 1, 0]) - numpy.array([8, 2, 0])),
-                        numpy.linalg.norm(numpy.array([3, 1, 0]) - numpy.array([8, 3, 0])),
-                        numpy.linalg.norm(numpy.array([3, 1, 0]) - numpy.array([9, 3, 0])),
-                        numpy.linalg.norm(numpy.array([3, 1, 0]) - numpy.array([10, 3, 0])),
+                        np.linalg.norm(np.array([3, 1, 0]) - np.array([8, 2, 0])),
+                        np.linalg.norm(np.array([3, 1, 0]) - np.array([8, 3, 0])),
+                        np.linalg.norm(np.array([3, 1, 0]) - np.array([9, 3, 0])),
+                        np.linalg.norm(np.array([3, 1, 0]) - np.array([10, 3, 0])),
                     ],
                     [
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([8, 2, 0])),
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([8, 3, 0])),
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([9, 3, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([8, 2, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([8, 3, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([9, 3, 0])),
                         3,
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([10, 3, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([10, 3, 0])),
                         4,
                     ],
                     [
                         0,
                         1,
                         2,
-                        numpy.linalg.norm(numpy.array([10, 3, 0]) - numpy.array([8, 2, 0])),
-                        numpy.linalg.norm(numpy.array([10, 3, 0]) - numpy.array([4, 1, 0])),
-                        numpy.linalg.norm(numpy.array([10, 3, 0]) - numpy.array([3, 1, 0])),
+                        np.linalg.norm(np.array([10, 3, 0]) - np.array([8, 2, 0])),
+                        np.linalg.norm(np.array([10, 3, 0]) - np.array([4, 1, 0])),
+                        np.linalg.norm(np.array([10, 3, 0]) - np.array([3, 1, 0])),
                     ],
                 ]
             )
         else:
-            expected_neighbor_indices = numpy.array(
+            expected_neighbor_indices = np.array(
                 [
                     [0, 2, 11, 11, 11, 11],
                     [4, 3, 1, 11, 11, 11],
@@ -198,26 +198,26 @@ class TestNeighorSearch:
                     [10, 9, 8, 7, 11, 11],
                 ]
             )
-            expected_neighbor_distances = numpy.array(
+            expected_neighbor_distances = np.array(
                 [
-                    [0, 4, numpy.inf, numpy.inf, numpy.inf, numpy.inf],
-                    [0, 1, 2, numpy.inf, numpy.inf, numpy.inf],
-                    [0, 1, numpy.inf, numpy.inf, numpy.inf, numpy.inf],
+                    [0, 4, np.inf, np.inf, np.inf, np.inf],
+                    [0, 1, 2, np.inf, np.inf, np.inf],
+                    [0, 1, np.inf, np.inf, np.inf, np.inf],
                     [
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([8, 2, 0])),
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([8, 3, 0])),
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([9, 3, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([8, 2, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([8, 3, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([9, 3, 0])),
                         3,
-                        numpy.linalg.norm(numpy.array([7, 1, 0]) - numpy.array([10, 3, 0])),
+                        np.linalg.norm(np.array([7, 1, 0]) - np.array([10, 3, 0])),
                         4,
                     ],
                     [
                         0,
                         1,
                         2,
-                        numpy.linalg.norm(numpy.array([10, 3, 0]) - numpy.array([8, 2, 0])),
-                        numpy.inf,
-                        numpy.inf,
+                        np.linalg.norm(np.array([10, 3, 0]) - np.array([8, 2, 0])),
+                        np.inf,
+                        np.inf,
                     ],
                 ]
             )
@@ -242,35 +242,35 @@ class TestNeighorSearch:
                 expected_neighbor_distances = expected_neighbor_distances[:, :k]
 
             assert expected_neighbor_indices.shape == neighbor_indices.shape
-            numpy.testing.assert_array_equal(expected_neighbor_indices, neighbor_indices_np)
+            np.testing.assert_array_equal(expected_neighbor_indices, neighbor_indices_np)
 
             assert expected_neighbor_distances.shape == neighbor_distances.shape
-            numpy.testing.assert_almost_equal(expected_neighbor_distances, neighbor_distances_np, decimal=6)
+            np.testing.assert_almost_equal(expected_neighbor_distances, neighbor_distances_np, decimal=6)
         else:
             if k is not None:
                 for idx, row in enumerate(expected_neighbor_indices):
                     valid_indices = (neighbor_indices_np[idx] < invalid_neighbor_index).sum()
-                    valid_distances = (numpy.isfinite(neighbor_distances_np[idx])).sum()
+                    valid_distances = (np.isfinite(neighbor_distances_np[idx])).sum()
                     expected_valid_indices = (row < invalid_neighbor_index).sum()
 
                     assert k >= len(neighbor_indices_np[idx])
-                    assert numpy.isin(neighbor_indices_np[idx], row).all()
+                    assert np.isin(neighbor_indices_np[idx], row).all()
                     assert valid_indices == min(k, expected_valid_indices)
                     assert valid_distances == min(k, expected_valid_indices)
             else:
                 assert expected_neighbor_indices.shape == neighbor_indices.shape
                 assert expected_neighbor_distances.shape == neighbor_distances.shape
 
-                sorting_indices_expected = numpy.argsort(expected_neighbor_indices, axis=-1)
-                sorting_indices = numpy.argsort(neighbor_indices_np, axis=-1)
+                sorting_indices_expected = np.argsort(expected_neighbor_indices, axis=-1)
+                sorting_indices = np.argsort(neighbor_indices_np, axis=-1)
 
-                numpy.testing.assert_array_equal(
-                    numpy.take_along_axis(expected_neighbor_indices, sorting_indices_expected, -1),
-                    numpy.take_along_axis(neighbor_indices_np, sorting_indices, -1),
+                np.testing.assert_array_equal(
+                    np.take_along_axis(expected_neighbor_indices, sorting_indices_expected, -1),
+                    np.take_along_axis(neighbor_indices_np, sorting_indices, -1),
                 )
 
-                numpy.testing.assert_almost_equal(
-                    numpy.take_along_axis(expected_neighbor_distances, sorting_indices_expected, -1),
-                    numpy.take_along_axis(neighbor_distances_np, sorting_indices, -1),
+                np.testing.assert_almost_equal(
+                    np.take_along_axis(expected_neighbor_distances, sorting_indices_expected, -1),
+                    np.take_along_axis(neighbor_distances_np, sorting_indices, -1),
                     decimal=6,
                 )

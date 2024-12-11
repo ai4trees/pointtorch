@@ -1,7 +1,7 @@
 """ Tests for the pointtorch.operations.pack_batch function. """
 
 import hypothesis
-import numpy
+import numpy as np
 import torch
 
 from pointtorch.operations.torch import pack_batch
@@ -27,9 +27,7 @@ class TestPackBatch:
         batch, mask = pack_batch(points, point_cloud_sizes)
 
         assert torch.Size((batch_size, point_cloud_size, 3)) == batch.size()
-        numpy.testing.assert_allclose(
-            points.reshape(batch_size, point_cloud_size, -1).cpu().numpy(), batch.cpu().numpy()
-        )
+        np.testing.assert_allclose(points.reshape(batch_size, point_cloud_size, -1).cpu().numpy(), batch.cpu().numpy())
         assert mask.all().item()
 
     @hypothesis.settings(deadline=None)
@@ -50,5 +48,5 @@ class TestPackBatch:
 
         assert torch.Size((batch_size, max_point_cloud_size, 3)) == batch.size()
 
-        numpy.testing.assert_allclose(points.cpu().numpy(), batch[mask].cpu().numpy())
+        np.testing.assert_allclose(points.cpu().numpy(), batch[mask].cpu().numpy())
         assert point_cloud_sizes.sum().item() == mask.sum().item()

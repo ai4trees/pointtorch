@@ -3,7 +3,7 @@
 from typing import Callable, Tuple
 
 from hypothesis import given, strategies as st, settings, HealthCheck
-import numpy
+import numpy as np
 import pytest
 import torch
 
@@ -27,7 +27,7 @@ class TestKnnSearch:
         point_cloud_sizes_support_points: torch.Tensor,
         point_cloud_sizes_query_points: torch.Tensor,
         k: int,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Naive implementation of knn search to compute expected results for arbitrary inputs.
 
@@ -48,19 +48,19 @@ class TestKnnSearch:
         for q_idx, point in enumerate(coords_query_points):
             neighbor_indices = []
             neighbor_dists = []
-            max_dist = numpy.inf
+            max_dist = np.inf
             if q_idx == point_cloud_sizes_query_points[batch_idx]:
                 min_support_point = int(point_cloud_sizes_support_points[batch_idx].item())
                 max_support_point = int(point_cloud_sizes_support_points[batch_idx + 1].item())
                 batch_idx += 1
             for s_idx, support_point in enumerate(coords_support_points[min_support_point:max_support_point, :]):
-                dist = numpy.linalg.norm(point - support_point)
+                dist = np.linalg.norm(point - support_point)
                 if dist < max_dist:
                     neighbor_indices.append(s_idx)
                     neighbor_dists.append(dist)
-                    sorted_indices = numpy.argsort(neighbor_dists)
-                    neighbor_indices = list(numpy.array(neighbor_indices)[sorted_indices])[:k]
-                    neighbor_dists = list(numpy.array(neighbor_dists)[sorted_indices])[:k]
+                    sorted_indices = np.argsort(neighbor_dists)
+                    neighbor_indices = list(np.array(neighbor_indices)[sorted_indices])[:k]
+                    neighbor_dists = list(np.array(neighbor_dists)[sorted_indices])[:k]
                     if len(neighbor_dists) == k:
                         max_dist = float(neighbor_dists[-1])
             all_neighbor_indices.append(neighbor_indices)
@@ -69,13 +69,11 @@ class TestKnnSearch:
         max_neighbors = max(len(neighbor_indices) for neighbor_indices in all_neighbor_indices)
 
         invalid_neighbor_index = len(coords_support_points)
-        all_neighbor_indices_np = numpy.full(
-            (len(coords_query_points), max_neighbors), fill_value=invalid_neighbor_index
-        )
-        all_neighbor_dists_np = numpy.full((len(coords_query_points), max_neighbors), fill_value=numpy.inf)
+        all_neighbor_indices_np = np.full((len(coords_query_points), max_neighbors), fill_value=invalid_neighbor_index)
+        all_neighbor_dists_np = np.full((len(coords_query_points), max_neighbors), fill_value=np.inf)
 
         for idx, neighbor_indices in enumerate(all_neighbor_indices):
-            all_neighbor_indices_np[idx, : len(neighbor_indices)] = numpy.array(neighbor_indices)
+            all_neighbor_indices_np[idx, : len(neighbor_indices)] = np.array(neighbor_indices)
             all_neighbor_dists_np[idx, : len(neighbor_indices)] = all_neighbor_dists[idx]
 
         return all_neighbor_indices_np, all_neighbor_dists_np
@@ -189,9 +187,9 @@ class TestKnnSearch:
                 neighbor_dist = neighbor_dists[idx, neighbor_idx]
                 assert expected_neighbor_dist == pytest.approx(neighbor_dist, 4)
 
-                if previouds_dist is not None and numpy.abs(neighbor_dist - previouds_dist) > eps:
-                    numpy.testing.assert_array_equal(
-                        numpy.sort(numpy.array(expected_equal_indices)), numpy.sort(numpy.array(equal_indices))
+                if previouds_dist is not None and np.abs(neighbor_dist - previouds_dist) > eps:
+                    np.testing.assert_array_equal(
+                        np.sort(np.array(expected_equal_indices)), np.sort(np.array(equal_indices))
                     )
                     expected_equal_indices = []
                     equal_indices = []
@@ -280,7 +278,7 @@ class TestKnnSearch:
         batch_indices_support_points = torch.tensor([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1], dtype=torch.long, device=device)
         point_cloud_sizes_query_points = torch.tensor([2, 3], dtype=torch.long, device=device)
         point_cloud_sizes_support_points = torch.tensor([5, 6], dtype=torch.long, device=device)
-        expected_neighbor_indices = numpy.array(
+        expected_neighbor_indices = np.array(
             [
                 [0, 2, 1, 4, 3, 11],
                 [4, 3, 1, 2, 0, 11],
@@ -293,13 +291,13 @@ class TestKnnSearch:
 
         # compute expected neighbor distances
         max_neighbors = min(k, int(point_cloud_sizes_support_points.amax().item()))
-        expanded_coords = numpy.expand_dims(coords_support_points.cpu().numpy(), axis=1)
-        expanded_coords = numpy.tile(expanded_coords, (1, max_neighbors, 1))
-        expanded_expected_neighbor_indices = numpy.expand_dims(expected_neighbor_indices, axis=-1)
-        expanded_expected_neighbor_indices = numpy.tile(expanded_expected_neighbor_indices, (1, 1, 3))
-        neighbor_coords = numpy.take_along_axis(expanded_coords, expanded_expected_neighbor_indices, axis=0)
-        expected_neighbor_distances = numpy.linalg.norm(
-            neighbor_coords - numpy.expand_dims(coords_query_points.cpu().numpy(), axis=1), axis=-1
+        expanded_coords = np.expand_dims(coords_support_points.cpu().numpy(), axis=1)
+        expanded_coords = np.tile(expanded_coords, (1, max_neighbors, 1))
+        expanded_expected_neighbor_indices = np.expand_dims(expected_neighbor_indices, axis=-1)
+        expanded_expected_neighbor_indices = np.tile(expanded_expected_neighbor_indices, (1, 1, 3))
+        neighbor_coords = np.take_along_axis(expanded_coords, expanded_expected_neighbor_indices, axis=0)
+        expected_neighbor_distances = np.linalg.norm(
+            neighbor_coords - np.expand_dims(coords_query_points.cpu().numpy(), axis=1), axis=-1
         )
 
         # set arguments that differ between implementations
@@ -343,8 +341,8 @@ class TestKnnSearch:
         assert expected_neighbor_indices.shape == neighbor_indices.shape
         assert expected_neighbor_distances.shape == neighbor_distances.shape
 
-        numpy.testing.assert_array_equal(expected_neighbor_indices, neighbor_indices.cpu().numpy())
-        numpy.testing.assert_almost_equal(neighbor_distances.cpu().numpy(), expected_neighbor_distances, decimal=4)
+        np.testing.assert_array_equal(expected_neighbor_indices, neighbor_indices.cpu().numpy())
+        np.testing.assert_almost_equal(neighbor_distances.cpu().numpy(), expected_neighbor_distances, decimal=4)
 
     @pytest.mark.parametrize("k", [2, 100])
     @pytest.mark.parametrize("device", ["cpu", "cuda:0"] if torch.cuda.is_available() else ["cpu"])
@@ -380,8 +378,8 @@ class TestKnnSearch:
         assert ind_cdist.size() == ind_torch_cluster.size()
         assert dists_cdist.size() == dists_torch_cluster.size()
 
-        numpy.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_torch_cluster.cpu().numpy())
-        numpy.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_torch_cluster.cpu().numpy(), decimal=4)
+        np.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_torch_cluster.cpu().numpy())
+        np.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_torch_cluster.cpu().numpy(), decimal=4)
 
         if pytorch3d_is_available():
             ind_pytorch3d, dists_pytorch3d = knn_search_pytorch3d(
@@ -396,8 +394,8 @@ class TestKnnSearch:
             assert ind_cdist.size() == ind_pytorch3d.size()
             assert dists_cdist.size() == dists_pytorch3d.size()
 
-            numpy.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_pytorch3d.cpu().numpy())
-            numpy.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_pytorch3d.cpu().numpy(), decimal=4)
+            np.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_pytorch3d.cpu().numpy())
+            np.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_pytorch3d.cpu().numpy(), decimal=4)
 
         if open3d_is_available() and device != torch.device("cuda:0"):
             ind_open3d, dists_open3d = knn_search_open3d(
@@ -411,5 +409,5 @@ class TestKnnSearch:
             assert ind_cdist.size() == ind_open3d.size()
             assert dists_cdist.size() == dists_open3d.size()
 
-            numpy.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_open3d.cpu().numpy())
-            numpy.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_open3d.cpu().numpy(), decimal=4)
+            np.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_open3d.cpu().numpy())
+            np.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_open3d.cpu().numpy(), decimal=4)
