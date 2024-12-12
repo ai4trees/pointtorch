@@ -110,7 +110,7 @@ class TestKnnSearch:
             monkeypatch.setattr("pointtorch.operations.torch._knn_search.pytorch3d_is_available", lambda: False)
 
         if knn_search_implementation == knn_search_open3d and (  # pylint: disable=comparison-with-callable
-            not open3d_is_available() or not return_sorted or device == torch.device("cuda:0")
+            not open3d_is_available() or not return_sorted or device == "cuda:0"
         ):
             # skip tests of Open3D implementation if Open3D is not installed or return_sorted is False or the device is
             # a GPU (the Open3D implementation does not offer a return_sorted parameter and only works on CPU)
@@ -225,7 +225,7 @@ class TestKnnSearch:
         device: torch.device,
     ):
         if knn_search_implementation == knn_search_open3d and (  # pylint: disable=comparison-with-callable
-            not open3d_is_available() or not return_sorted or device == torch.device("cuda:0")
+            not open3d_is_available() or not return_sorted or device == "cuda:0"
         ):
             # skip tests of Open3D implementation if Open3D is not installed or return_sorted is False or the device is
             # a GPU (the Open3D implementation does not offer a return_sorted parameter and only works on CPU)
@@ -397,7 +397,7 @@ class TestKnnSearch:
             np.testing.assert_array_equal(ind_cdist.cpu().numpy(), ind_pytorch3d.cpu().numpy())
             np.testing.assert_almost_equal(dists_cdist.cpu().numpy(), dists_pytorch3d.cpu().numpy(), decimal=4)
 
-        if open3d_is_available() and device != torch.device("cuda:0"):
+        if open3d_is_available() and device != "cuda:0":
             ind_open3d, dists_open3d = knn_search_open3d(
                 coords_support_points,
                 coords_query_points,
