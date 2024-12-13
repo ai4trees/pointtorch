@@ -5,6 +5,7 @@ __all__ = ["HdfReader"]
 import pathlib
 from typing import List, Optional, Tuple, Union
 
+import h5py
 import pandas as pd
 
 from ._base_point_cloud_reader import BasePointCloudReader
@@ -80,5 +81,9 @@ class HdfReader(BasePointCloudReader):
         Returns:
             Point cloud identifier.
         """
+
+        with h5py.File(file_path, "r") as h5file:
+            identifier = h5file.attrs["identifier"]
+            return identifier if len(identifier) > 0 else None
 
         return str(pd.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
