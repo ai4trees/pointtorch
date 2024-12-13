@@ -58,7 +58,7 @@ class TestLasWriter:
                 if coord not in columns:
                     columns.insert(idx, coord)
 
-            point_cloud_df = point_cloud_df[columns]
+            point_cloud_df = point_cloud_df[columns].copy()
 
         point_cloud_df.rename({"r": "red", "g": "green", "b": "blue"}, axis=1, inplace=True)
 
