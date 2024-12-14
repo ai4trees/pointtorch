@@ -1,6 +1,5 @@
-pointtorch.operations.torch package
-===================================
-
+pointtorch.operations.torch
+===========================
 .. automodule:: pointtorch.operations.torch
    :members:
    :undoc-members:

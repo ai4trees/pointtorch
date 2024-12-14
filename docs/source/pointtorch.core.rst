@@ -1,6 +1,5 @@
-pointtorch.core package
-=======================
-
+pointtorch.core
+===============
 .. automodule:: pointtorch.core
    :members:
    :undoc-members:
