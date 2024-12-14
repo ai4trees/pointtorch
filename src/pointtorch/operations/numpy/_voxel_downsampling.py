@@ -5,6 +5,7 @@ __all__ = ["voxel_downsampling"]
 from typing import Literal, Optional, Tuple
 
 import numpy as np
+import numpy.typing as npt
 import torch
 from torch_scatter.scatter import scatter_min
 
@@ -12,12 +13,12 @@ from ._make_labels_consecutive import make_labels_consecutive
 
 
 def voxel_downsampling(  # pylint: disable=too-many-locals
-    points: np.ndarray,
+    points: npt.NDArray[np.float64],
     voxel_size: float,
     point_aggregation: Literal["nearest_neighbor", "random"] = "random",
     preserve_order: bool = True,
-    start: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    start: Optional[npt.NDArray[np.float64]] = None,
+) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
     r"""
     Voxel-based downsampling of a point cloud.
 

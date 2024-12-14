@@ -4,6 +4,7 @@ from typing import Callable, Tuple
 
 from hypothesis import given, strategies as st, settings, HealthCheck
 import numpy as np
+import numpy.typing as npt
 import pytest
 import torch
 
@@ -27,7 +28,7 @@ class TestKnnSearch:
         point_cloud_sizes_support_points: torch.Tensor,
         point_cloud_sizes_query_points: torch.Tensor,
         k: int,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
         """
         Naive implementation of knn search to compute expected results for arbitrary inputs.
 

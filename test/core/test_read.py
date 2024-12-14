@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import Union
 
-import pandas
+import pandas as pd
 import pytest
 
 from pointtorch.core import read
@@ -29,7 +29,7 @@ class TestRead:
     @pytest.mark.parametrize("file_format", ["csv", "txt", "h5", "hdf", "las", "laz"])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_read(self, point_cloud_writer: PointCloudWriter, cache_dir: str, file_format: str, use_pathlib: bool):
-        point_cloud_df = pandas.DataFrame(
+        point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
