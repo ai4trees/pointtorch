@@ -5,9 +5,9 @@ __all__ = ["voxel_downsampling"]
 from typing import Literal, Optional, Tuple
 
 import torch
-from torch_scatter import segment_csr
+from torch_scatter.scatter import scatter, scatter_min
 
-from ._knn_search import knn_search
+from ._make_labels_consecutive import make_labels_consecutive
 from ._ravel_index import ravel_multi_index, unravel_flat_index
 
 
@@ -94,55 +94,40 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     dimensions = voxel_indices.amax(0) + 1  # (4)
     flattened_indices = ravel_multi_index(voxel_indices, dimensions)  # (N)
 
-    unqiue_cluster_indices, cluster, counts = torch.unique(
-        flattened_indices, sorted=True, return_inverse=True, return_counts=True
-    )
+    unqiue_cluster_indices, cluster = torch.unique(flattened_indices, sorted=True, return_inverse=True)
 
-    # sort points by voxel index
-    sorted_voxel_indices = torch.argsort(cluster)
-    # compute the number of points in each voxel
-    voxel_ranges = torch.cat([counts.new_zeros(1), torch.cumsum(counts, dim=0)])
+    cluster_centers = unravel_flat_index(unqiue_cluster_indices, dimensions)
+    batch_indices = cluster_centers[:, 0]
+    cluster_centers = cluster_centers[:, 1:].float() * voxel_size + 0.5 * voxel_size
 
-    # compute the batch index of each voxel
-    batch_indices = batch_indices[sorted_voxel_indices][voxel_ranges[:-1]]
-    _, point_cloud_sizes = torch.unique(batch_indices, return_counts=True)
+    scatter_indices = make_labels_consecutive(flattened_indices - flattened_indices.min())
 
     if point_aggregation == "nearest_neighbor" or features is not None and feature_aggregation == "nearest_neighbor":
-        # compute center point of each voxel
-        cluster_centers = unravel_flat_index(unqiue_cluster_indices, dimensions)
-        cluster_centers = cluster_centers[:, 1:].float() * voxel_size + 0.5 * voxel_size
-
-        shifted_coords = shifted_coords[sorted_voxel_indices]
-        flattened_indices = flattened_indices[sorted_voxel_indices]
-
         point_indices = torch.arange(len(shifted_coords), device=coords.device, dtype=torch.long)
 
-        point_cloud_sizes_cluster_centers = torch.ones(len(cluster_centers), dtype=torch.long, device=coords.device)
-        selected_indices = knn_search(
-            shifted_coords,
-            cluster_centers,
-            flattened_indices,
-            unqiue_cluster_indices,
-            counts,
-            point_cloud_sizes_cluster_centers,
-            k=1,
-        )[0].flatten()
-        selected_indices = point_indices[sorted_voxel_indices][selected_indices]
+        dists_to_cluster_centers = torch.linalg.norm(  # pylint: disable=not-callable
+            shifted_coords - cluster_centers[cluster], dim=-1
+        )
+
+        _, argmin_indices = scatter_min(dists_to_cluster_centers, scatter_indices)
+
+        selected_indices = point_indices[argmin_indices]
         if preserve_order and point_aggregation == "nearest_neighbor":
             selected_indices, sorting_indices = selected_indices.sort()
 
     if point_aggregation == "nearest_neighbor":
         coords = coords[selected_indices]
     else:
-        coords = segment_csr(coords[sorted_voxel_indices], voxel_ranges, reduce="mean")
+        coords = scatter(coords, scatter_indices, dim=0, reduce="mean")
 
     if features is not None:
         if feature_aggregation == "nearest_neighbor":
             features = features[selected_indices]
         else:
-            # compute the features of each voxel
-            features = segment_csr(features[sorted_voxel_indices], voxel_ranges, reduce=feature_aggregation)
+            features = scatter(features, scatter_indices, dim=0, reduce=feature_aggregation)
             if preserve_order and point_aggregation == "nearest_neighbor":
                 features = features[sorting_indices]  # pylint: disable=used-before-assignment
+
+    point_cloud_sizes = scatter(torch.ones_like(batch_indices), batch_indices, reduce="sum")
 
     return (coords, features, batch_indices, point_cloud_sizes, cluster)

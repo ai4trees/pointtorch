@@ -5,13 +5,13 @@ __all__ = ["voxel_downsampling"]
 from typing import Literal, Optional, Tuple
 
 import numpy as np
-from scipy.spatial import KDTree
 import torch
+from torch_scatter.scatter import scatter_min
 
-from pointtorch.operations.torch import knn_search, ravel_multi_index
+from ._make_labels_consecutive import make_labels_consecutive
 
 
-def voxel_downsampling(  # pylint: disable=too-many-locals, too-many-statements
+def voxel_downsampling(  # pylint: disable=too-many-locals
     points: np.ndarray,
     voxel_size: float,
     point_aggregation: Literal["nearest_neighbor", "random"] = "random",
@@ -68,103 +68,42 @@ def voxel_downsampling(  # pylint: disable=too-many-locals, too-many-statements
 
     shifted_points = points[:, :3] - start_coords
     voxel_indices = np.floor_divide(shifted_points, voxel_size).astype(np.int64)
-    shift = voxel_indices.min(axis=0)
-    voxel_indices -= shift
-    shifted_points -= shift.astype(float) * voxel_size
 
     if point_aggregation == "random":
         _, selected_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_index=True, return_inverse=True)
-        if preserve_order:
-            ordered_indices = selected_indices.argsort()
-            selected_indices = selected_indices[ordered_indices]
-            inverse_indices = np.argsort(ordered_indices)[inverse_indices]
-        return points[selected_indices], selected_indices, inverse_indices
+    else:
+        shift = voxel_indices.min(axis=0)
+        voxel_indices -= shift
+        shifted_points -= shift.astype(float) * voxel_size
 
-    # for the "nearest_neighbor" option, a two-stage approach is used to select the point closest to the center of each
-    # filled voxel: first the entire point cloud is searched for the nearest neighbor of each voxel center
-    # if the nearest neighbor of a voxel center is outside the voxel, the search is refined and only the points within
-    # the voxel are searched for the nearest neighbor of the voxel center
-    # this two-stage approach is used because the first step can be implemented for large point clouds using
-    # a CPU-based KD tree
-    # in the second step, the number of points to be processed is usually much smaller, so the second step can be run on
-    # GPU if one is available
+        filled_voxel_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_inverse=True)
 
-    filled_voxel_indices, inverse_indices, point_count_per_voxel = np.unique(
-        voxel_indices, axis=0, return_inverse=True, return_counts=True
-    )
+        device = "cpu"
 
-    kd_tree = KDTree(shifted_points)
-    voxel_centers = filled_voxel_indices.astype(float) * voxel_size + 0.5 * voxel_size
-    _, selected_indices = kd_tree.query(voxel_centers, k=1)
-
-    # test which neighbors are within the voxel
-    invalid_selection_mask = (voxel_indices[selected_indices] != filled_voxel_indices).any(axis=1)
-
-    if invalid_selection_mask.sum() > 0:
-        # save valid selections from the first step
-        selected_indices = selected_indices[np.logical_not(invalid_selection_mask)]
-
-        # refine remaining selections
-        points_to_refine_mask = invalid_selection_mask[inverse_indices]
-
-        device = torch.device("cpu")
-
-        # check if there is a GPU with sufficient memory to run the second step on GPU
-        # if this is not the case, the second step is run on CPU
+        # check if there is a GPU with sufficient memory to run the scatter_min step on GPU
         if torch.cuda.is_available():
             available_memory = torch.cuda.mem_get_info(device=torch.device("cuda:0"))[0]
-            float_size = torch.empty((0,)).float().element_size()
+            double_size = torch.empty((0,)).double().element_size()
             long_size = torch.empty((0,)).long().element_size()
-            approx_required_memory = points_to_refine_mask.sum() * (
-                3 * float_size + long_size
-            ) + invalid_selection_mask.sum() * (3 * float_size + 2 * long_size)
+            approx_required_memory = len(points) * 2 * (double_size + long_size)
 
             if available_memory > approx_required_memory:
-                device = torch.device("cuda:0")
+                device = "cuda:0"
 
-        support_points = torch.from_numpy(shifted_points[points_to_refine_mask]).float().to(device)
-        del shifted_points
-        voxel_indices_torch = torch.from_numpy(voxel_indices[points_to_refine_mask]).long().to(device)
-        del voxel_indices
-        voxel_centers_torch = torch.from_numpy(voxel_centers[invalid_selection_mask]).float().to(device)
-        del voxel_centers
-        filled_voxel_indices_torch = torch.from_numpy(filled_voxel_indices[invalid_selection_mask]).long().to(device)
-        del filled_voxel_indices
+        voxel_centers = filled_voxel_indices.astype(float) * voxel_size + 0.5 * voxel_size
 
-        point_cloud_sizes_support_points = (
-            torch.from_numpy(point_count_per_voxel[invalid_selection_mask]).long().to(device)
-        )
-        point_cloud_sizes_query_points = torch.ones(len(voxel_centers_torch), dtype=torch.long, device=device)
+        dists_to_voxel_center = np.linalg.norm(shifted_points - voxel_centers[inverse_indices], axis=-1)
 
-        dimensions = voxel_indices_torch.amax(dim=0) + 1
-        batch_indices_support_points = ravel_multi_index(voxel_indices_torch, dimensions)
-        batch_indices_query_points = ravel_multi_index(filled_voxel_indices_torch, dimensions)
-
-        batch_indices_support_points, sorting_indices = torch.sort(batch_indices_support_points)
-        voxel_indices_torch = voxel_indices_torch[sorting_indices]
-        support_points = support_points[sorting_indices]
-        point_indices = torch.arange(len(points), dtype=torch.long, device=device)
-        point_indices = point_indices[points_to_refine_mask][sorting_indices]
-
-        refined_indices, _ = knn_search(
-            support_points,
-            voxel_centers_torch,
-            batch_indices_support_points,
-            batch_indices_query_points,
-            point_cloud_sizes_support_points,
-            point_cloud_sizes_query_points,
-            k=1,
+        dimensions = voxel_indices.max(axis=0) + 1
+        scatter_indices = make_labels_consecutive(
+            np.ravel_multi_index(tuple(voxel_indices[:, dim] for dim in range(voxel_indices.shape[1])), dimensions)
         )
 
-        selected_indices = np.concatenate((selected_indices, point_indices[refined_indices.flatten()].cpu().numpy()))
-
-        flat_voxel_indices = np.arange(len(selected_indices), dtype=np.int64)
-        inverse_index_mapping = np.argsort(
-            np.concatenate(
-                (flat_voxel_indices[np.logical_not(invalid_selection_mask)], flat_voxel_indices[invalid_selection_mask])
-            )
+        _, argmin_indices = scatter_min(
+            torch.from_numpy(dists_to_voxel_center).to(device), torch.from_numpy(scatter_indices).long().to(device)
         )
-        inverse_indices = inverse_index_mapping[inverse_indices]
+
+        selected_indices = np.arange(len(points))[argmin_indices.cpu().numpy()]
 
     if preserve_order:
         ordered_indices = selected_indices.argsort()
