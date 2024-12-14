@@ -4,6 +4,7 @@ from typing import Literal, Optional, Tuple
 
 from hypothesis import given, strategies as st, settings
 import numpy as np
+import numpy.typing as npt
 import pytest
 import torch
 
@@ -111,10 +112,10 @@ class TestSampling:
 
     def sort_results(
         self,
-        downsampled_coords: np.ndarray,
-        downsampled_features: np.ndarray,
-        downsampled_batch_indices: np.ndarray,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        downsampled_coords: npt.NDArray[np.float64],
+        downsampled_features: npt.NDArray[np.float64],
+        downsampled_batch_indices: npt.NDArray[np.int64],
+    ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """Sorts downsampled points to allow for comparisons."""
 
         downsampled_coords = downsampled_coords.copy()
@@ -338,7 +339,7 @@ class TestSampling:
 
     @pytest.mark.parametrize("start", [np.array([1.0, 0.0, 0.0]), np.array([[1.0, 0.0], [1, 0.0]])])
     @pytest.mark.parametrize("device", ["cpu", "cuda:0"] if torch.cuda.is_available() else ["cpu"])
-    def test_voxel_downsampling_invalid_start(self, start: np.ndarray, device: torch.device):
+    def test_voxel_downsampling_invalid_start(self, start: npt.NDArray[np.float64], device: torch.device):
         coords = torch.zeros((20, 3), dtype=torch.float, device=device)
         batch_indices = torch.tensor([0] * 10 + [1] * 10, dtype=torch.long, device=device)
         point_cloud_sizes = torch.tensor([10, 10], dtype=torch.long, device=device)

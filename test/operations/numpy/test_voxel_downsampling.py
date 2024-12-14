@@ -4,6 +4,7 @@ from typing import Literal, Optional, Tuple
 
 from hypothesis import given, strategies as st, settings
 import numpy as np
+import numpy.typing as npt
 import pytest
 
 from pointtorch.operations.numpy import voxel_downsampling
@@ -14,11 +15,11 @@ class TestVoxelDownSampling:
 
     def _naive_voxel_downsampling(  # pylint: disable=too-many-locals
         self,
-        points: np.ndarray,
+        points: npt.NDArray[np.float64],
         voxel_size: float,
         point_aggregation: Literal["nearest_neighbor"],
-        start: Optional[np.ndarray] = None,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        start: Optional[npt.NDArray[np.float64]] = None,
+    ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.float64]]:
         """
         Naive implementation of voxel downsampling to compute expected results for arbitrary inputs.
 
@@ -76,7 +77,7 @@ class TestVoxelDownSampling:
 
         return np.array(selected_points), np.array(selected_indices), inverse_indices, np.array(voxel_centers)
 
-    def _point_grid(self, grid_size: int) -> np.ndarray:
+    def _point_grid(self, grid_size: int) -> npt.NDArray[np.float64]:
         """
         Creates a point cloud with the points being positioned on a regular grid. The created grid ranges from
         `-grid_size` to `+grid_size` along each axis.
@@ -116,7 +117,7 @@ class TestVoxelDownSampling:
         voxel_size: float,
         point_aggregation: Literal["nearest_neighbor"],
         preserve_order: bool,
-        start: Optional[np.ndarray],
+        start: Optional[npt.NDArray[np.float64]],
     ):
         points = np.random.uniform(low=-2 * voxel_size, high=voxel_size * 2, size=(50, 3))
 
