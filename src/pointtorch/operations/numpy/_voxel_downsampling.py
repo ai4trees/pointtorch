@@ -96,7 +96,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
         dists_to_voxel_center = np.linalg.norm(shifted_points - voxel_centers[inverse_indices], axis=-1)
 
         dimensions = voxel_indices.max(axis=0) + 1
-        scatter_indices = make_labels_consecutive(
+        scatter_indices: npt.NDArray[np.int64] = make_labels_consecutive(  # type: ignore[assignment]
             np.ravel_multi_index(tuple(voxel_indices[:, dim] for dim in range(voxel_indices.shape[1])), dimensions)
         )
 
