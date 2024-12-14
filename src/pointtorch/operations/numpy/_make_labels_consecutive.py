@@ -4,16 +4,17 @@ __all__ = ["make_labels_consecutive"]
 
 from typing import Optional, Tuple, Union
 
-import numpy
+import numpy as np
+import numpy.typing as npt
 
 
 def make_labels_consecutive(
-    labels: numpy.ndarray,
+    labels: npt.NDArray[np.int64],
     start_id: int = 0,
     ignore_id: Optional[int] = None,
     inplace: bool = False,
     return_unique_labels: bool = False,
-) -> Union[numpy.ndarray, Tuple[numpy.ndarray, numpy.ndarray]]:
+) -> Union[npt.NDArray[np.int64], Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
     """
     Transforms the input labels into consecutive integer labels starting from a given :code:`start_id`.
 
@@ -33,23 +34,22 @@ def make_labels_consecutive(
 
     if len(labels) == 0:
         if return_unique_labels:
-            return labels, numpy.empty_like(labels)
+            return labels, np.empty_like(labels)
         return labels
 
     if not inplace:
         labels = labels.copy()
 
-    labels_to_remap: Union[numpy.ndarray, numpy.ma.MaskedArray]
     if ignore_id is not None:
         mask = labels != ignore_id
         labels_to_remap = labels[mask]
     else:
         labels_to_remap = labels
 
-    unique_labels = numpy.unique(labels_to_remap)
-    unique_labels = numpy.sort(unique_labels)
-    key = numpy.arange(0, len(unique_labels))
-    index = numpy.digitize(labels_to_remap, unique_labels, right=True)
+    unique_labels = np.unique(labels_to_remap)
+    unique_labels = np.sort(unique_labels)
+    key = np.arange(0, len(unique_labels))
+    index = np.digitize(labels_to_remap, unique_labels, right=True)
     labels_to_remap[:] = key[index]
     labels_to_remap += start_id
 
