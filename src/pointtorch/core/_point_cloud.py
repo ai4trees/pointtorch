@@ -69,7 +69,7 @@ class PointCloud(pd.DataFrame):
         """
 
         if "x" not in self.columns or "y" not in self.columns or "z" not in self.columns:
-            raise RuntimeError("")
+            raise RuntimeError("The point cloud does not contain xyz coordinates.")
 
         return self[["x", "y", "z"]].to_numpy()
 
