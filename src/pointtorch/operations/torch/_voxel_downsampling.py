@@ -100,7 +100,9 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     batch_indices = cluster_centers[:, 0]
     cluster_centers = cluster_centers[:, 1:].float() * voxel_size + 0.5 * voxel_size
 
-    scatter_indices = make_labels_consecutive(flattened_indices - flattened_indices.min())
+    scatter_indices: torch.Tensor = make_labels_consecutive(  # type: ignore[assignment]
+        flattened_indices - flattened_indices.min()
+    )
 
     if point_aggregation == "nearest_neighbor" or features is not None and feature_aggregation == "nearest_neighbor":
         point_indices = torch.arange(len(shifted_coords), device=coords.device, dtype=torch.long)
