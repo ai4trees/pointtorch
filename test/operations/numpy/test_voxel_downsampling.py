@@ -18,13 +18,14 @@ class TestVoxelDownSampling:
         voxel_size: float,
         point_aggregation: Literal["nearest_neighbor"],
         start: Optional[np.ndarray] = None,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Naive implementation of voxel downsampling to compute expected results for arbitrary inputs.
 
         Returns:
             Expected results, i.e., the downsampled point cloud, the indices of the sampled points in the original
-            point cloud, and the indices of the voxels to which each point in the original point cloud belongs.
+            point cloud, the indices of the voxels to which each point in the original point cloud belongs, and the
+            centers of the voxels filled with points.
         """
 
         if start is None:
@@ -39,6 +40,7 @@ class TestVoxelDownSampling:
 
         selected_indices = []
         selected_points = []
+        voxel_centers = []
         inverse_indices = np.empty(len(points), dtype=np.int64)
 
         indices = np.arange(len(points))
@@ -70,8 +72,9 @@ class TestVoxelDownSampling:
                         raise ValueError("Invalid value for point_aggregation.")
                     selected_indices.append(indices_in_voxel[selected_idx])
                     selected_points.append(points_in_voxel[selected_idx])
+                    voxel_centers.append(voxel_center[0] + start_coords)
 
-        return np.array(selected_points), np.array(selected_indices), inverse_indices
+        return np.array(selected_points), np.array(selected_indices), inverse_indices, np.array(voxel_centers)
 
     def _point_grid(self, grid_size: int) -> np.ndarray:
         """
@@ -108,30 +111,55 @@ class TestVoxelDownSampling:
     @pytest.mark.parametrize("start", [None, np.array([0.5, 0.5, 0.5])])
     @given(voxel_size=st.floats(min_value=0.01, max_value=10))
     @settings(deadline=None)
-    def test_voxel_downsampling_random_input(
+    def test_voxel_downsampling_random_input(  # pylint: disable=too-many-locals
         self,
         voxel_size: float,
         point_aggregation: Literal["nearest_neighbor"],
         preserve_order: bool,
         start: Optional[np.ndarray],
     ):
-        points = np.random.uniform(low=-2 * voxel_size, high=voxel_size * 2, size=(10, 3))
+        points = np.random.uniform(low=-2 * voxel_size, high=voxel_size * 2, size=(50, 3))
 
-        expected_downsampled_points, _, expected_inverse_indices = self._naive_voxel_downsampling(
-            points, voxel_size, "nearest_neighbor", start=start
-        )
+        (
+            expected_downsampled_points,
+            _,
+            expected_inverse_indices,
+            expected_voxel_centers,
+        ) = self._naive_voxel_downsampling(points, voxel_size, "nearest_neighbor", start=start)
 
         downsampled_points, downsampled_indices, inverse_indices = voxel_downsampling(
             points, voxel_size, point_aggregation=point_aggregation, preserve_order=preserve_order, start=start
         )
+
+        if start is None:
+            start = np.zeros(3)
+
+        voxel_centers = np.floor((downsampled_points - start) / voxel_size) * voxel_size + 0.5 * voxel_size + start
+        expected_voxel_centers = (
+            np.floor((expected_downsampled_points - start) / voxel_size) * voxel_size + 0.5 * voxel_size + start
+        )
+
+        sorting_indices_voxel_centers = np.lexsort((voxel_centers[:, 0], voxel_centers[:, 1], voxel_centers[:, 2]))
+        sorting_indices_expected_voxel_centers = np.lexsort(
+            (expected_voxel_centers[:, 0], expected_voxel_centers[:, 1], expected_voxel_centers[:, 2])
+        )
+
+        dists_to_center = np.linalg.norm(downsampled_points - voxel_centers, axis=-1)
+        expected_dists_to_center = np.linalg.norm(expected_downsampled_points - expected_voxel_centers, axis=-1)
 
         assert len(expected_downsampled_points) == len(downsampled_points)
         assert len(expected_downsampled_points) == len(downsampled_indices)
         assert len(points) == len(inverse_indices)
 
         np.testing.assert_array_equal(
-            np.unique(expected_downsampled_points, axis=0), np.unique(downsampled_points, axis=0)
+            expected_downsampled_points[sorting_indices_expected_voxel_centers],
+            downsampled_points[sorting_indices_voxel_centers],
         )
+        np.testing.assert_array_equal(
+            expected_dists_to_center[sorting_indices_expected_voxel_centers],
+            dists_to_center[sorting_indices_voxel_centers],
+        )
+
         np.testing.assert_array_equal(downsampled_points, points[downsampled_indices])
         if preserve_order:
             np.testing.assert_array_equal(np.sort(downsampled_indices), downsampled_indices)
@@ -142,7 +170,6 @@ class TestVoxelDownSampling:
     @pytest.mark.parametrize("point_aggregation", ["nearest_neighbor", "random"])
     @pytest.mark.parametrize("preserve_order", [True, False])  # , False])
     @given(voxel_size=st.floats(min_value=0.001, max_value=10))
-    # @given(voxel_size=st.floats(min_value=0.1, max_value=0.1))
     @settings(deadline=None)
     def test_voxel_downsampling_one_point_per_voxel(
         self, voxel_size: float, point_aggregation: Literal["nearest_neighbor", "random"], preserve_order: bool

@@ -145,10 +145,10 @@ class TestSampling:
         device: torch.device,
         voxel_size: float,
     ):
-        coords = torch.rand((20, 3), device=device, dtype=torch.float) * 4 * voxel_size - 2 * voxel_size
-        features = torch.randn((20, 5), device=device, dtype=torch.float) * 10
-        batch_indices = torch.tensor([0] * 10 + [1] * 10, dtype=torch.long, device=device)
-        point_cloud_sizes = torch.tensor([10, 10], dtype=torch.long, device=device)
+        coords = torch.rand((50, 3), device=device, dtype=torch.float) * 4 * voxel_size - 2 * voxel_size
+        features = torch.randn((50, 5), device=device, dtype=torch.float) * 10
+        batch_indices = torch.tensor([0] * 25 + [1] * 25, dtype=torch.long, device=device)
+        point_cloud_sizes = torch.tensor([25, 25], dtype=torch.long, device=device)
 
         expected_result = self.naive_voxel_downsampling(
             coords,
