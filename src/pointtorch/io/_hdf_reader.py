@@ -84,6 +84,4 @@ class HdfReader(BasePointCloudReader):
 
         with h5py.File(file_path, "r") as h5file:
             identifier = h5file.attrs["identifier"]
-            return identifier if len(identifier) > 0 else None
-
-        return str(pd.read_hdf(file_path, key="identifier")["identifier"].iloc[0])
+        return identifier if len(identifier) > 0 else None
