@@ -82,13 +82,13 @@ def radius_search(  # pylint: disable=too-many-positional-arguments
         to :math:`N + 1` where :math:`N` is the number of support points.
 
     Shape:
-        - :attr:`coords_support_points`: :math:`(N, 3)`
-        - :attr:`coords_query_points`: :math:`(N', 3)`
-        - :attr:`batch_indices_support_points`: :math:`(N)`
-        - :attr:`batch_indices_query_points`: :math:`(N')`
-        - :attr:`point_cloud_sizes_support_points`: :math:`(B)`
-        - :attr:`point_cloud_sizes_query_points`: :math:`(B)`
-        - Output: :math:`(N', n_{max})` if :attr:`k` is None or :math:`n_{max} <` :attr:`k`, otherwise :math:`(N', k)`.
+        - :code:`coords_support_points`: :math:`(N, 3)`
+        - :code:`coords_query_points`: :math:`(N', 3)`
+        - :code:`batch_indices_support_points`: :math:`(N)`
+        - :code:`batch_indices_query_points`: :math:`(N')`
+        - :code:`point_cloud_sizes_support_points`: :math:`(B)`
+        - :code:`point_cloud_sizes_query_points`: :math:`(B)`
+        - Output: :math:`(N', n_{max})` if :code:`k` is None or :math:`n_{max} <` :code:`k`, otherwise :math:`(N', k)`.
 
           | where
           |
@@ -178,11 +178,11 @@ def radius_search_cdist(  # pylint: disable=too-many-positional-arguments
         to :math:`N + 1` where :math:`N` is the number of support points.
 
     Shape:
-        - :attr:`coords_support_points`: :math:`(N, 3)`
-        - :attr:`coords_query_points`: :math:`(N', 3)`
-        - :attr:`point_cloud_sizes_support_points`: :math:`(B)`
-        - :attr:`point_cloud_sizes_query_points`: :math:`(B)`
-        - Output: :math:`(N', n_{max})` if :attr:`k` is None or :math:`n_{max} <` :attr:`k`, otherwise :math:`(N', k)`.
+        - :code:`coords_support_points`: :math:`(N, 3)`
+        - :code:`coords_query_points`: :math:`(N', 3)`
+        - :code:`point_cloud_sizes_support_points`: :math:`(B)`
+        - :code:`point_cloud_sizes_query_points`: :math:`(B)`
+        - Output: :math:`(N', n_{max})` if :code:`k` is None or :math:`n_{max} <` :code:`k`, otherwise :math:`(N', k)`.
 
           | where
           |
@@ -251,11 +251,11 @@ def radius_search_open3d(  # pylint: disable=too-many-locals, too-many-positiona
         to :math:`N + 1` where :math:`N` is the number of support points.
 
     Shape:
-        - :attr:`coords_support_points`: :math:`(N, 3)`
-        - :attr:`coords_query_points`: :math:`(N', 3)`
-        - :attr:`point_cloud_sizes_support_points`: :math:`(B)`
-        - :attr:`point_cloud_sizes_query_points`: :math:`(B)`
-        - Output: :math:`(N', n_{max})` if :attr:`k` is None or :math:`n_{max} <` :attr:`k`, otherwise :math:`(N', k)`.
+        - :code:`coords_support_points`: :math:`(N, 3)`
+        - :code:`coords_query_points`: :math:`(N', 3)`
+        - :code:`point_cloud_sizes_support_points`: :math:`(B)`
+        - :code:`point_cloud_sizes_query_points`: :math:`(B)`
+        - Output: :math:`(N', n_{max})` if :code:`k` is None or :math:`n_{max} <` :code:`k`, otherwise :math:`(N', k)`.
 
           | where
           |
@@ -372,13 +372,13 @@ def radius_search_pytorch3d(  # pylint: disable=too-many-locals, too-many-positi
         to :math:`N + 1` where :math:`N` is the number of support points.
 
     Shape:
-        - :attr:`coords_support_points`: :math:`(N, 3)`
-        - :attr:`coords_query_points`: :math:`(N', 3)`
-        - :attr:`batch_indices_support_points`: :math:`(N)`
-        - :attr:`batch_indices_query_points`: :math:`(N')`
-        - :attr:`point_cloud_sizes_support_points`: :math:`(B)`
-        - :attr:`point_cloud_sizes_query_points`: :math:`(B)`
-        - Output: :math:`(N', n_{max})` if :attr:`k` is None or :math:`n_{max} <` :attr:`k`, otherwise :math:`(N', k)`.
+        - :code:`coords_support_points`: :math:`(N, 3)`
+        - :code:`coords_query_points`: :math:`(N', 3)`
+        - :code:`batch_indices_support_points`: :math:`(N)`
+        - :code:`batch_indices_query_points`: :math:`(N')`
+        - :code:`point_cloud_sizes_support_points`: :math:`(B)`
+        - :code:`point_cloud_sizes_query_points`: :math:`(B)`
+        - Output: :math:`(N', n_{max})` if :code:`k` is None or :math:`n_{max} <` :code:`k`, otherwise :math:`(N', k)`.
 
           | where
           |
@@ -502,12 +502,12 @@ def radius_search_torch_cluster(  # pylint: disable=too-many-locals, too-many-po
         to :math:`N + 1` where :math:`N` is the number of support points.
 
     Shape:
-        - :attr:`coords_support_points`: :math:`(N, 3)`
-        - :attr:`coords_query_points`: :math:`(N', 3)`
-        - :attr:`batch_indices_support_points`: :math:`(N)`
-        - :attr:`batch_indices_query_points`: :math:`(N')`
-        - :attr:`point_cloud_sizes_support_points`: :math:`(B)`
-        - Output: :math:`(N', n_{max})` if :attr:`k` is None or :math:`n_{max} <` :attr:`k`, otherwise :math:`(N', k)`.
+        - :code:`coords_support_points`: :math:`(N, 3)`
+        - :code:`coords_query_points`: :math:`(N', 3)`
+        - :code:`batch_indices_support_points`: :math:`(N)`
+        - :code:`batch_indices_query_points`: :math:`(N')`
+        - :code:`point_cloud_sizes_support_points`: :math:`(B)`
+        - Output: :math:`(N', n_{max})` if :code:`k` is None or :math:`n_{max} <` :code:`k`, otherwise :math:`(N', k)`.
 
           | where
           |

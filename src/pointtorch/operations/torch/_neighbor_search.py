@@ -20,8 +20,8 @@ def neighbor_search_cdist(  # pylint: disable=too-many-locals
     return_sorted: bool = False,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     r"""
-    Retrieves the neighbor points within a given search radius or the :attr:`k` nearest neighbors. The implementation of
-    this function is based on PyTorch's :attr:`cdist` function. The memory consumption of this implementation is
+    Retrieves the neighbor points within a given search radius or the :code:`k` nearest neighbors. The implementation of
+    this function is based on PyTorch's :code:`cdist` function. The memory consumption of this implementation is
     quadratic in the number of points, so it can only be used for small point cloud sizes. Internally,
     this function packs the point clouds into a regular batch structure by padding all point clouds to the same size, so
     that all neighbor points can be computed in parallel using PyTorch's `cdist` function.
@@ -32,10 +32,10 @@ def neighbor_search_cdist(  # pylint: disable=too-many-locals
         point_cloud_sizes_support_points: Number of points in each point cloud in the batch of support points.
         point_cloud_sizes_query_points: Number of points in each point cloud in the batch of query points.
         radius: Search radius in which to search for neighbors. Defaults to `None`, which means that an infinite search
-            radius is used. Either :attr:`radius` or :attr:`k` must not be `None`.
-        k: The maximum number of neighbors to search. If :attr:`radius` is not `None` and the radius neighborhood of a
-            point contains more than :attr:`k` points, the :attr:`k` nearest neighbors are selected. Defaults to `None`,
-            which means that all neighbors within the specified radius are searched. Either :attr:`radius` or :attr:`k`
+            radius is used. Either :code:`radius` or :code:`k` must not be `None`.
+        k: The maximum number of neighbors to search. If :code:`radius` is not `None` and the radius neighborhood of a
+            point contains more than :code:`k` points, the :code:`k` nearest neighbors are selected. Defaults to `None`,
+            which means that all neighbors within the specified radius are searched. Either :code:`radius` or :code:`k`
             must not be `None`.
         return_sorted: Whether the returned neighbors should be sorted by their distance to the query point. Defaults to
             `False`.
@@ -48,12 +48,12 @@ def neighbor_search_cdist(  # pylint: disable=too-many-locals
         points and the invalid distances in the second tensor are set to `torch.inf`.
 
     Shape:
-        - :attr:`coords_support_points`: :math:`(N, 3)`
-        - :attr:`coords_query_points`: :math:`(N', 3)`
-        - :attr:`point_cloud_sizes_support_points`: :math:`(B)`
-        - :attr:`point_cloud_sizes_query_points`: :math:`(B)`
-        - Output: Tuple of two tensors, both with shape :math:`(N', n_{max})` if :attr:`k` is None or
-          :math:`n_{max} <` :attr:`k`, otherwise :math:`(N', k)`.
+        - :code:`coords_support_points`: :math:`(N, 3)`
+        - :code:`coords_query_points`: :math:`(N', 3)`
+        - :code:`point_cloud_sizes_support_points`: :math:`(B)`
+        - :code:`point_cloud_sizes_query_points`: :math:`(B)`
+        - Output: Tuple of two tensors, both with shape :math:`(N', n_{max})` if :code:`k` is None or
+          :math:`n_{max} <` :code:`k`, otherwise :math:`(N', k)`.
 
           | where
           |
@@ -63,7 +63,7 @@ def neighbor_search_cdist(  # pylint: disable=too-many-locals
           | :math:`n_{max} = \text{ maximum number of neighbors a query point has}`
 
     Raises:
-        ValueError: If both :attr:`radius` and :attr:`k` are set to `None` or the input point clouds contain too many
+        ValueError: If both :code:`radius` and :code:`k` are set to `None` or the input point clouds contain too many
             points to compute a pairwise distance matrix.
     """
     if radius is None and k is None:

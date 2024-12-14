@@ -57,11 +57,11 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
         ValueError: If `start` is not `None` and has an invalid shape.
 
     Shape:
-        - :attr:`coords`: :math:`(N, 3)`
-        - :attr:`batch_indices`: :math:`(N)`
-        - :attr:`point_cloud_sizes`: :math:`(B)`
-        - :attr:`features`: :math:`(N, D)`
-        - :attr:`start`: :math:`(B, 3)`
+        - :code:`coords`: :math:`(N, 3)`
+        - :code:`batch_indices`: :math:`(N)`
+        - :code:`point_cloud_sizes`: :math:`(B)`
+        - :code:`features`: :math:`(N, D)`
+        - :code:`start`: :math:`(B, 3)`
         - Output: Tuple of five tensors. The first has shape :math:`(N', 3)`. The second has shape :math:`(N', D)`. \
           The third has shape :math:`(N')`. The fourth has shape :math:`(B)`. The fifth has shape :math:`(N)`.
 

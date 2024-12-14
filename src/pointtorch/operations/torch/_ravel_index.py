@@ -51,7 +51,7 @@ def ravel_multi_index(multi_index: torch.Tensor, dims: Union[torch.Size, torch.T
     r"""
     PyTorch implementation of numpy.ravel_multi_index. This operation  is inverse to
     :py:meth:`pointtorch.operations.torch.unravel_flat_index`. Note that, compared to the numpy implementation, the
-    shape of :attr:`multi_index` is transposed.
+    shape of :code:`multi_index` is transposed.
 
     Args:
         multi_index: Tensor containing the indices for each dimension.
@@ -59,11 +59,11 @@ def ravel_multi_index(multi_index: torch.Tensor, dims: Union[torch.Size, torch.T
 
     Returns:
         Indices for the flattened version of the tensor, referring to the same elements as referenced by
-        :attr:`multi_index` for the non-flattened version of the tensor.
+        :code:`multi_index` for the non-flattened version of the tensor.
 
     Shape:
-        - :attr:`multi_index`: :math:`(N, D)`
-        - :attr:`dims`: :math:`(D)`
+        - :code:`multi_index`: :math:`(N, D)`
+        - :code:`dims`: :math:`(D)`
         - Output: :math:`(N)`
 
           | where
@@ -93,11 +93,11 @@ def unravel_flat_index(flat_index: torch.Tensor, dims: Union[torch.Size, torch.T
 
     Returns:
         Indices for the multi-dimensional version of the tensor, referring to the same elements as referenced by
-        :attr:`flat_index` for the flattened version of the tensor.
+        :code:`flat_index` for the flattened version of the tensor.
 
     Shape:
-        - :attr:`flat_index`: :math:`(N)`
-        - :attr:`dims`: :math:`(D)`
+        - :code:`flat_index`: :math:`(N)`
+        - :code:`dims`: :math:`(D)`
         - Output: :math:`(N, D)`
 
           | where

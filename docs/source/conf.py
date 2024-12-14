@@ -46,9 +46,18 @@ napoleon_use_ivar = True
 nitpicky = True
 nitpick_ignore = [
     ("py:class", "abc.ABC"),
+    ("py:class", "numpy.dtype"),
+    ("py:class", "numpy.float64"),
     ("py:class", "numpy.ndarray"),
+    ("py:class", "numpy.int64"),
+    ("py:class", "numpy._typing._nested_sequence._NestedSequence"),
+    ("py:class", "numpy._typing._array_like._SupportsArray"),
     ("py:class", "pandas.core.frame.DataFrame"),
+    ("py:class", "pandas.core.dtypes.base.ExtensionDtype"),
+    ("py:class", "pandas.core.indexes.base.Index"),
+    ("py:class", "pandas.core.series.Series"),
     ("py:class", "pandas.DataFrame"),
+    ("py:class", "pathlib.Path"),
     ("py:class", "torch.Tensor"),
     ("py:class", "torch.Size"),
 ]
@@ -146,6 +155,6 @@ version_tags.sort(reverse=True)
 
 for idx, version_tag in enumerate(version_tags):
     version_url = f"{base_url}/{version_tag}"
-    if idx == len(version_tags) - 1:
+    if idx == 0:
         version_tag = f"{version_tag} (stable)"
     html_context["versions"].append((version_tag, version_url))
