@@ -1,6 +1,5 @@
-pointtorch.io package
-=====================
-
+pointtorch.io
+=============
 .. automodule:: pointtorch.io
    :members:
    :undoc-members:
