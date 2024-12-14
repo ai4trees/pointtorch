@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch_scatter.scatter import scatter_min
 
-from pointtorch.operations.numpy import make_labels_consecutive
+from ._make_labels_consecutive import make_labels_consecutive
 
 
 def voxel_downsampling(  # pylint: disable=too-many-locals
