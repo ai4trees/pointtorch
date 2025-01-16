@@ -48,7 +48,7 @@ def make_labels_consecutive(
 
     unique_labels = np.unique(labels_to_remap)
     unique_labels = np.sort(unique_labels)
-    key = np.arange(0, len(unique_labels))
+    key = np.arange(0, len(unique_labels), dtype=labels.dtype)
     index = np.digitize(labels_to_remap, unique_labels, right=True)
     labels_to_remap[:] = key[index]
     labels_to_remap += start_id

@@ -47,7 +47,7 @@ def make_labels_consecutive(
 
     unique_labels = torch.unique(labels_to_remap)
     unique_labels = torch.sort(unique_labels)[0]
-    key = torch.arange(0, len(unique_labels), device=labels.device)
+    key = torch.arange(0, len(unique_labels), device=labels.device, dtype=labels.dtype)
     index = torch.bucketize(labels_to_remap, unique_labels, right=False)
     labels_to_remap = key[index]
     labels_to_remap += start_id
