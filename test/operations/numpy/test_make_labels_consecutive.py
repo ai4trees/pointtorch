@@ -75,3 +75,14 @@ class TestMakeLabelsConsecutive:
             np.testing.assert_array_equal(labels, transformed_labels)
         else:
             assert (labels != transformed_labels).any()
+
+    @pytest.mark.parametrize("scalar_type", [np.int32, np.int64])
+    def test_data_types(self, scalar_type: np.dtype):
+        labels = np.array([0, 2, 3, -1], dtype=scalar_type)
+
+        transformed_labels, unique_labels = make_labels_consecutive(
+            labels, ignore_id=-1, inplace=False, return_unique_labels=True
+        )
+
+        assert transformed_labels.dtype == scalar_type
+        assert unique_labels.dtype == scalar_type

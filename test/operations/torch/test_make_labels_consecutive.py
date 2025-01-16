@@ -79,3 +79,14 @@ class TestMakeLabelsConsecutive:
             numpy.testing.assert_array_equal(labels.cpu().numpy(), transformed_labels.cpu().numpy())
         else:
             assert (labels != transformed_labels).any()
+
+    @pytest.mark.parametrize("scalar_type", [torch.int, torch.long])
+    def test_data_types(self, scalar_type: torch.dtype):
+        labels = torch.tensor([0, 2, 3, -1], dtype=scalar_type)
+
+        transformed_labels, unique_labels = make_labels_consecutive(
+            labels, ignore_id=-1, inplace=False, return_unique_labels=True
+        )
+
+        assert transformed_labels.dtype == scalar_type
+        assert unique_labels.dtype == scalar_type
