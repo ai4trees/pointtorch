@@ -21,13 +21,16 @@ class BasePointCloudReader(abc.ABC):
             File formats supported by the point cloud file reader.
         """
 
-    def read(self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None) -> PointCloudIoData:
+    def read(
+        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> PointCloudIoData:
         """
         Reads a point cloud file.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud object.
@@ -66,13 +69,16 @@ class BasePointCloudReader(abc.ABC):
         )
 
     @abc.abstractmethod
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def _read_points(
+        self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> pd.DataFrame:
         """
         Reads point data from a point cloud file. This method has to be overriden by child classes.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud data.

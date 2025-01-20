@@ -38,13 +38,16 @@ class LasReader(BasePointCloudReader):
 
         return ["las", "laz"]
 
-    def read(self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None) -> PointCloudIoData:
+    def read(
+        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> PointCloudIoData:
         """
         Reads a point cloud file.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud object.
@@ -56,18 +59,26 @@ class LasReader(BasePointCloudReader):
         # class.
         return super().read(file_path, columns=columns)
 
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def _read_points(
+        self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in las or laz format.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud data.
         """
-        las_data = laspy.read(file_path)
+        if num_rows is None:
+            las_data = laspy.read(file_path)
+        else:
+            with laspy.open(file_path) as file:
+                las_data = next(iter(file.chunk_iterator(num_rows)))
+
         data = np.array([las_data.x, las_data.y, las_data.z]).T
         point_cloud_df = pd.DataFrame(data, columns=["x", "y", "z"])
 

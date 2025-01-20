@@ -27,13 +27,16 @@ class PointCloudReader:
         """
         return list(self._readers.keys())
 
-    def read(self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None) -> PointCloudIoData:
+    def read(
+        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> PointCloudIoData:
         """
         Reads a point cloud file.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud object.
@@ -48,4 +51,4 @@ class PointCloudReader:
         file_format = file_path.suffix.lstrip(".")
         if file_format not in self.supported_file_formats():
             raise ValueError(f"The {file_format} format is not supported by the point cloud reader.")
-        return self._readers[file_format].read(file_path, columns=columns)
+        return self._readers[file_format].read(file_path, columns=columns, num_rows=num_rows)
