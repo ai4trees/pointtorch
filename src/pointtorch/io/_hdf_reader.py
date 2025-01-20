@@ -65,7 +65,9 @@ class HdfReader(BasePointCloudReader):
             start = 0
             stop = num_rows
 
-        return pd.read_hdf(file_path, columns=columns, key="point_cloud", start=start, stop=stop)  # type: ignore[return-value]
+        return pd.read_hdf(  # type: ignore[return-value]
+            file_path, columns=columns, key="point_cloud", start=start, stop=stop
+        )
 
     @staticmethod
     def _read_max_resolutions(file_path: pathlib.Path) -> Tuple[float, float, float]:
