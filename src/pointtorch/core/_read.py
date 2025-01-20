@@ -7,13 +7,16 @@ from pointtorch.core._point_cloud import PointCloud
 from pointtorch.io import PointCloudReader
 
 
-def read(file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None) -> PointCloud:
+def read(
+    file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+) -> PointCloud:
     """
     Method for reading point cloud files.
 
     Args:
         file_path: Path of the point cloud file to be read.
         columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+        num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
     Returns:
         Point cloud object.
@@ -23,7 +26,7 @@ def read(file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = Non
     """
 
     reader = PointCloudReader()
-    point_cloud_data = reader.read(file_path, columns=columns)
+    point_cloud_data = reader.read(file_path, columns=columns, num_rows=num_rows)
     point_cloud = PointCloud(
         point_cloud_data.data,
         identifier=point_cloud_data.identifier,
