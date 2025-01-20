@@ -31,6 +31,7 @@ class TestHdfReader:
 
     @pytest.mark.parametrize("file_format", ["h5", "hdf"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
+    @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_read(
         self,
@@ -39,6 +40,7 @@ class TestHdfReader:
         cache_dir: str,
         file_format: str,
         columns: Optional[List[str]],
+        num_rows: Optional[int],
         use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
@@ -52,14 +54,14 @@ class TestHdfReader:
 
         hdf_writer.write(point_cloud, file_path)
 
-        read_point_cloud = hdf_reader.read(file_path, columns=columns)
+        read_point_cloud = hdf_reader.read(file_path, columns=columns, num_rows=num_rows)
 
         if columns is not None:
             # Test that the x, y, and z columns are always read.
             for idx, coord in enumerate(["x", "y", "z"]):
                 if coord not in columns:
                     columns.insert(idx, coord)
-            point_cloud_df = point_cloud_df[columns]
+            point_cloud_df = point_cloud_df[columns].head(num_rows)
 
         assert (point_cloud_df.to_numpy() == read_point_cloud.data.to_numpy()).all()
         assert "test" == read_point_cloud.identifier

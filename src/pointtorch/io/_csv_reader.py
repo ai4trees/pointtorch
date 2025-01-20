@@ -22,13 +22,16 @@ class CsvReader(BasePointCloudReader):
 
         return ["csv", "txt"]
 
-    def read(self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None) -> PointCloudIoData:
+    def read(
+        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> PointCloudIoData:
         """
         Reads a point cloud file.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud object.
@@ -40,20 +43,23 @@ class CsvReader(BasePointCloudReader):
         # class.
         return super().read(file_path, columns=columns)
 
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def _read_points(
+        self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in csv or txt format.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud data.
         """
 
         file_format = file_path.suffix.lstrip(".")
-        return pd.read_csv(file_path, usecols=columns, sep="," if file_format == "csv" else " ")
+        return pd.read_csv(file_path, usecols=columns, sep="," if file_format == "csv" else " ", nrows=num_rows)
 
     @staticmethod
     def _read_max_resolutions(file_path: pathlib.Path) -> Tuple[float, float, float]:

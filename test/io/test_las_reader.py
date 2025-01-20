@@ -31,6 +31,7 @@ class TestLasReader:
 
     @pytest.mark.parametrize("file_format", ["las", "laz"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
+    @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_read(
         self,
@@ -39,6 +40,7 @@ class TestLasReader:
         cache_dir: str,
         file_format: str,
         columns: Optional[List[str]],
+        num_rows: Optional[int],
         use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
@@ -56,9 +58,9 @@ class TestLasReader:
             for idx, coord in enumerate(["x", "y", "z"]):
                 if coord not in columns:
                     columns.insert(idx, coord)
-            point_cloud_df = point_cloud_df[columns]
+            point_cloud_df = point_cloud_df[columns].head(num_rows)
 
-        read_point_cloud_data = las_reader.read(file_path, columns=columns)
+        read_point_cloud_data = las_reader.read(file_path, columns=columns, num_rows=num_rows)
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
 

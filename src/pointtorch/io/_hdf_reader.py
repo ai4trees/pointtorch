@@ -23,13 +23,16 @@ class HdfReader(BasePointCloudReader):
 
         return ["h5", "hdf"]
 
-    def read(self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None) -> PointCloudIoData:
+    def read(
+        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> PointCloudIoData:
         """
         Reads a point cloud file.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud object.
@@ -41,19 +44,30 @@ class HdfReader(BasePointCloudReader):
         # class.
         return super().read(file_path, columns=columns)
 
-    def _read_points(self, file_path: pathlib.Path, columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def _read_points(
+        self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    ) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in h5 and hdf format.
 
         Args:
             file_path: Path of the point cloud file to be read.
             columns: Name of the point cloud columns to be read. The x, y, and z columns are always read.
+            num_rows: Number of rows to read. If set to :code:`None`, all rows are read. Defaults to :code:`None`.
 
         Returns:
             Point cloud data.
         """
 
-        return pd.read_hdf(file_path, columns=columns, key="point_cloud")  # type: ignore[return-value]
+        start = None
+        stop = None
+        if num_rows is not None:
+            start = 0
+            stop = num_rows
+
+        return pd.read_hdf(  # type: ignore[return-value]
+            file_path, columns=columns, key="point_cloud", start=start, stop=stop
+        )
 
     @staticmethod
     def _read_max_resolutions(file_path: pathlib.Path) -> Tuple[float, float, float]:

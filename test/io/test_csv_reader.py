@@ -32,9 +32,16 @@ class TestCsvReader:
 
     @pytest.mark.parametrize("file_format", ["csv", "txt"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
+    @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_read(
-        self, csv_reader: CsvReader, cache_dir: str, file_format: str, columns: Optional[List[str]], use_pathlib: bool
+        self,
+        csv_reader: CsvReader,
+        cache_dir: str,
+        file_format: str,
+        columns: Optional[List[str]],
+        num_rows: Optional[int],
+        use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
@@ -44,14 +51,14 @@ class TestCsvReader:
             file_path = pathlib.Path(file_path)
         point_cloud_df.to_csv(file_path, index=False, sep="," if file_format == "csv" else " ")
 
-        read_point_cloud = csv_reader.read(file_path, columns=columns)
+        read_point_cloud = csv_reader.read(file_path, columns=columns, num_rows=num_rows)
 
         if columns is not None:
             # Test that the x, y, and z columns are always read.
             for idx, coord in enumerate(["x", "y", "z"]):
                 if coord not in columns:
                     columns.insert(idx, coord)
-            point_cloud_df = point_cloud_df[columns]
+            point_cloud_df = point_cloud_df[columns].head(num_rows)
 
         assert (point_cloud_df.to_numpy() == read_point_cloud.data.to_numpy()).all()
 
