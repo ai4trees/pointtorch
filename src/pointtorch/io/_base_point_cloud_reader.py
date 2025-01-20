@@ -57,7 +57,7 @@ class BasePointCloudReader(abc.ABC):
                 if coord not in columns:
                     columns.insert(idx, coord)
 
-        point_cloud_df = self._read_points(file_path, columns=columns)
+        point_cloud_df = self._read_points(file_path, columns=columns, num_rows=num_rows)
         (x_max_resolution, y_max_resolution, z_max_resolution) = self._read_max_resolutions(file_path)
 
         return PointCloudIoData(
