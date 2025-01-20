@@ -1,5 +1,7 @@
 """ Method for reading point cloud files. """
 
+__all__ = ["read"]
+
 import pathlib
 from typing import List, Optional, Union
 
