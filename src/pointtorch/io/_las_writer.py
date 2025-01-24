@@ -126,9 +126,7 @@ class LasWriter(BasePointCloudWriter):
             las_data.update_header()
             las_data[column_name] = point_cloud[column_name]
 
-        print("crs", crs)
         if crs is not None:
-            print("crs", CRS.from_string(crs))
             las_data.header.add_crs(CRS.from_string(crs))
 
         las_data.write(file_path)

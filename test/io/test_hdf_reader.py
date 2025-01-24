@@ -45,7 +45,7 @@ class TestHdfReader:
         use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
-            [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
+            [[0, 0, 0, 1, 12], [1, 1, 1, 0, 23], [2, 2, 2, 0, 1]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud = PointCloudIoData(point_cloud_df)
         point_cloud.identifier = "test"
@@ -62,7 +62,9 @@ class TestHdfReader:
             for idx, coord in enumerate(["x", "y", "z"]):
                 if coord not in columns:
                     columns.insert(idx, coord)
-            point_cloud_df = point_cloud_df[columns].head(num_rows)
+            point_cloud_df = point_cloud_df[columns]
+        if num_rows is not None:
+            point_cloud_df = point_cloud_df.head(num_rows)
 
         assert (point_cloud_df.to_numpy() == read_point_cloud.data.to_numpy()).all()
         assert "test" == read_point_cloud.identifier
