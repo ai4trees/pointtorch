@@ -17,15 +17,17 @@ class PointCloud(pd.DataFrame):
     `pd.DataFrame <https://pd.pydata.org/docs/reference/api/pd.DataFrame.html>`_
 
     Args:
-        identifier: Point cloud identifier. Defaults to `None`.
-        x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to `None`.
-        y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to `None`.
-        z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to `None`.
+        identifier: Point cloud identifier. Defaults to :code:`None`.
+        crs: ESPG code of the point cloud's coordinate reference system. Defaults to :code:`None`
+        x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+        y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+        z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
 
     For a documentation of other parameters, see the documentation of \
    `pd.DataFrame <https://pd.pydata.org/docs/reference/api/pd.DataFrame.html>`_.
 
     Attributes:
+        crs: ESPG code of the point cloud's coordinate reference system.
         identifier: Point cloud identifier.
         x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter.
         y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter.
@@ -41,12 +43,14 @@ class PointCloud(pd.DataFrame):
         columns: Optional[Union[pd.Index, npt.ArrayLike, List[str]]] = None,
         dtype: Optional[np.dtype] = None,
         copy: Optional[bool] = True,
+        crs: Optional[str] = None,
         identifier: Optional[str] = None,
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
         z_max_resolution: Optional[float] = None,
     ) -> None:
         super().__init__(data=data, index=index, columns=columns, dtype=dtype, copy=copy)  # type: ignore[call-arg]
+        self.crs = crs
         self.identifier = identifier
         self.x_max_resolution = x_max_resolution
         self.y_max_resolution = y_max_resolution
@@ -66,7 +70,7 @@ class PointCloud(pd.DataFrame):
             x, y, and z coordinates of the points in the point cloud.
 
         Raises:
-            RuntimeError: if "x", "y", or "z" are not in `self.columns`.
+            RuntimeError: if "x", "y", or "z" are not in :code:`self.columns`.
         """
 
         if "x" not in self.columns or "y" not in self.columns or "z" not in self.columns:
@@ -83,8 +87,8 @@ class PointCloud(pd.DataFrame):
             columns: Point cloud columns to be written. The x, y, and z columns are always written.
 
         Raises:
-            ValueError: If the point cloud format is not supported by the writer or if `columns` contains a column name
-                that is not existing in the point cloud.
+            ValueError: If the point cloud format is not supported by the writer or if :code:`columns` contains a column
+                name that is not existing in the point cloud.
         """
 
         writer = PointCloudWriter()
@@ -104,10 +108,10 @@ class PointCloudSeries(pd.Series):
     `pd.Series <https://pd.pydata.org/pandas-docs/stable/reference/api/pd.Series.html>`_.
 
     Args:
-        identifier: Point cloud identifier. Defaults to `None`.
-        x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to `None`.
-        y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to `None`.
-        z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to `None`.
+        identifier: Point cloud identifier. Defaults to :code:`None`.
+        x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+        y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+        z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
 
     For a documentation of other parameters, see the documentation of \
         `pd.Series <https://pd.pydata.org/pandas-docs/stable/reference/api/pd.Series.html>`_.

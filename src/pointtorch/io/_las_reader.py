@@ -113,3 +113,21 @@ class LasReader(BasePointCloudReader):
             scales = f.header.scales
 
         return scales
+
+    @staticmethod
+    def _read_crs(file_path: pathlib.Path) -> Optional[str]:  # pylint: disable=unused-argument
+        """
+        Reads the EPSG code of the coordinate reference system from the point cloud file. Information about the
+        coordinate reference system is not supported by all file formats and :code:`None` may be returned when no
+        coordinate reference system is stored in a file.
+
+        Returns:
+            EPSG code of the coordinate reference system or :code:`None` if no coordinate reference system is stored in
+            the file.
+        """
+        with laspy.open(file_path, "r") as f:
+            crs = f.header.parse_crs()
+            if crs is not None:
+                crs = f"EPSG:{crs.to_epsg()}"
+
+        return crs

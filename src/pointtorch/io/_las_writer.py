@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 import laspy
 import numpy as np
 import pandas as pd
+from pyproj import CRS
 
 from ._base_point_cloud_writer import BasePointCloudWriter
 from ._point_cloud_io_data import PointCloudIoData
@@ -67,6 +68,7 @@ class LasWriter(BasePointCloudWriter):
         point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
+        crs: Optional[str] = None,
         identifier: Optional[str] = None,
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
@@ -78,10 +80,11 @@ class LasWriter(BasePointCloudWriter):
         Args:
             point_cloud: Point cloud to be written.
             file_path: Path of the output file.
-            identifier: Identifier of the point cloud.
-            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to `None`.
-            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to `None`.
-            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to `None`.
+            crs: EPSG code of the coordinate reference system of the point cloud. Defaults to :code:`None`.
+            identifier: Identifier of the point cloud. Defaults to :code:`None`.
+            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
         """
 
         if set(["r", "g", "b"]).issubset(point_cloud.columns) and not set(["red", "green", "blue"]).issubset(
@@ -122,6 +125,11 @@ class LasWriter(BasePointCloudWriter):
             las_data.add_extra_dim(laspy.point.ExtraBytesParams(column_name, point_cloud[column_name].dtype))
             las_data.update_header()
             las_data[column_name] = point_cloud[column_name]
+
+        print("crs", crs)
+        if crs is not None:
+            print("crs", CRS.from_string(crs))
+            las_data.header.add_crs(CRS.from_string(crs))
 
         las_data.write(file_path)
 

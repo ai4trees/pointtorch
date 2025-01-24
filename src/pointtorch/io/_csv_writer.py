@@ -47,6 +47,7 @@ class CsvWriter(BasePointCloudWriter):
         point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
+        crs: Optional[str] = None,
         identifier: Optional[str] = None,
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
@@ -58,9 +59,12 @@ class CsvWriter(BasePointCloudWriter):
         Args:
             point_cloud: Point cloud to be written.
             file_path: Path of the output file.
-            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to `None`.
-            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to `None`.
-            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to `None`.
+            crs (str, optional): EPSG code of the coordinate reference system of the point cloud. Defaults to
+                :code:`None`.
+            identifier: Identifier of the point cloud. Defaults to :code:`None`.
+            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
         """
 
         num_decimals = None

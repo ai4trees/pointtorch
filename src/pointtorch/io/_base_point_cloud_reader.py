@@ -49,6 +49,8 @@ class BasePointCloudReader(abc.ABC):
         identifier = self._read_identifier(file_path)
         file_id = file_path.stem if identifier is None else identifier
 
+        crs = self._read_crs(file_path)
+
         if columns is not None:
             columns = columns.copy()
 
@@ -62,6 +64,7 @@ class BasePointCloudReader(abc.ABC):
 
         return PointCloudIoData(
             point_cloud_df,
+            crs=crs,
             identifier=file_id,
             x_max_resolution=x_max_resolution,
             y_max_resolution=y_max_resolution,
@@ -94,7 +97,8 @@ class BasePointCloudReader(abc.ABC):
             file_path: Path of the point cloud file to be read.
 
         Returns:
-            Maximum resolution of the x-, y-, and z-coordinates of the point cloud.
+            Maximum resolution of the x-, y-, and z-coordinates of the point cloud or :code:`None` if no information is
+            about the maximum resolution is included in the file.
         """
 
     @staticmethod
@@ -104,7 +108,21 @@ class BasePointCloudReader(abc.ABC):
         file formats and :code:`None` may be returned when no file identifier is stored in a file.
 
         Returns:
-            Point cloud identifier.
+            Point cloud identifier or :code:`None` if no file identifier is stored in the file.
+        """
+
+        return None
+
+    @staticmethod
+    def _read_crs(file_path: pathlib.Path) -> Optional[str]:  # pylint: disable=unused-argument
+        """
+        Reads the EPSG code of the coordinate reference system from the point cloud file. Information about the
+        coordinate reference system is not supported by all file formats and :code:`None` may be returned when no
+        coordinate reference system is stored in a file.
+
+        Returns:
+            EPSG code of the coordinate reference system or :code:`None` if no coordinate reference system is stored in
+            the file.
         """
 
         return None

@@ -5,8 +5,8 @@ ignore=venv
 max-line-length=120
 
 [DESIGN]
-max-args=10
-max-attributes=10
+max-args=15
+max-attributes=15
 max-positional-arguments=8
 
 [REPORTS]
