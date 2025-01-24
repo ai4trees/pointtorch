@@ -66,6 +66,7 @@ class BasePointCloudWriter(abc.ABC):
         self._write_data(
             point_cloud_df,
             file_path,
+            crs=point_cloud.crs,
             identifier=point_cloud.identifier,
             x_max_resolution=point_cloud.x_max_resolution,
             y_max_resolution=point_cloud.y_max_resolution,
@@ -78,6 +79,7 @@ class BasePointCloudWriter(abc.ABC):
         point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
+        crs: Optional[str] = None,
         identifier: Optional[str] = None,
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
@@ -89,11 +91,9 @@ class BasePointCloudWriter(abc.ABC):
         Args:
             point_cloud: Point cloud to be written.
             file_path: Path of the output file.
-            identifier: Identifier of the point cloud.
-            x_max_resolution (float, optional): Maximum resolution of the point cloud's x-coordinates in meter. Defaults
-                to `None`.
-            y_max_resolution (float, optional): Maximum resolution of the point cloud's y-coordinates in meter. Defaults
-                to `None`.
-            z_max_resolution (float, optional): Maximum resolution of the point cloud's z-coordinates in meter. Defaults
-                to `None`.
+            crs: EPSG code of the coordinate reference system of the point cloud. Defaults to :code:`None`.
+            identifier: Identifier of the point cloud. Defaults to :code:`None`.
+            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
         """

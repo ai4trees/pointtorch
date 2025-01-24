@@ -48,6 +48,7 @@ class HdfWriter(BasePointCloudWriter):
         point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
         *,
+        crs: Optional[str] = None,
         identifier: Optional[str] = None,
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
@@ -59,14 +60,16 @@ class HdfWriter(BasePointCloudWriter):
         Args:
             point_cloud: Point cloud to be written.
             file_path: Path of the output file.
-            identifier: Identifier of the point cloud.
-            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to `None`.
-            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to `None`.
-            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to `None`.
+            crs: EPSG code of the coordinate reference system of the point cloud. Defaults to :code:`None`.
+            identifier: Identifier of the point cloud. Defaults to :code:`None`.
+            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
         """
 
         with h5py.File(file_path, "w") as h5file:
             h5file.attrs["identifier"] = identifier if identifier is not None else ""
+            h5file.attrs["crs"] = crs if crs is not None else ""
 
         point_cloud.to_hdf(file_path, key="point_cloud", format="t", data_columns=True, index=False)
 

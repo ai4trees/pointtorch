@@ -53,6 +53,11 @@ class TestPointCloud:
         assert isinstance(point_cloud_slice, PointCloudSeries)
         assert identifier == point_cloud_slice.identifier
 
+    def test_crs(self, point_cloud):
+        crs = "EPSG:4326"
+        point_cloud = PointCloud(point_cloud, crs=crs)
+        assert crs == point_cloud.crs
+
     def test_identifier(self, point_cloud, identifier):
         assert identifier == point_cloud.identifier
 

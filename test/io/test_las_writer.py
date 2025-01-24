@@ -5,6 +5,7 @@ import pathlib
 import shutil
 from typing import List, Optional, Union
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -127,3 +128,23 @@ class TestLasWriter:
         read_point_cloud_data = las_reader.read(file_path)
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
+
+    @pytest.mark.parametrize("file_format", ["las", "laz"])
+    @pytest.mark.parametrize("use_pathlib", [True, False])
+    def test_write_crs(
+        self, las_reader: LasReader, las_writer: LasWriter, cache_dir: str, file_format: str, use_pathlib: bool
+    ):
+        expected_crs = "EPSG:4326"
+
+        point_cloud_df = pd.DataFrame(np.random.randn(5, 3), columns=["x", "y", "z"])
+        point_cloud_data = PointCloudIoData(point_cloud_df, crs=expected_crs)
+
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
+        if use_pathlib:
+            file_path = pathlib.Path(file_path)
+
+        las_writer.write(point_cloud_data, file_path)
+
+        read_point_cloud_data = las_reader.read(file_path)
+
+        assert expected_crs == read_point_cloud_data.crs

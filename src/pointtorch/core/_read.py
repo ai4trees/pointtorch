@@ -31,6 +31,7 @@ def read(
     point_cloud_data = reader.read(file_path, columns=columns, num_rows=num_rows)
     point_cloud = PointCloud(
         point_cloud_data.data,
+        crs=point_cloud_data.crs,
         identifier=point_cloud_data.identifier,
         x_max_resolution=point_cloud_data.x_max_resolution,
         y_max_resolution=point_cloud_data.y_max_resolution,

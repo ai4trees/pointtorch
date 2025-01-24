@@ -99,3 +99,18 @@ class HdfReader(BasePointCloudReader):
         with h5py.File(file_path, "r") as h5file:
             identifier = h5file.attrs["identifier"]
         return identifier if len(identifier) > 0 else None
+
+    @staticmethod
+    def _read_crs(file_path: pathlib.Path) -> Optional[str]:  # pylint: disable=unused-argument
+        """
+        Reads the EPSG code of the coordinate reference system from the point cloud file. Information about the
+        coordinate reference system is not supported by all file formats and :code:`None` may be returned when no
+        coordinate reference system is stored in a file.
+
+        Returns:
+            EPSG code of the coordinate reference system or :code:`None` if no coordinate reference system is stored in
+            the file.
+        """
+        with h5py.File(file_path, "r") as h5file:
+            crs = h5file.attrs["crs"]
+        return crs if len(crs) > 0 else None

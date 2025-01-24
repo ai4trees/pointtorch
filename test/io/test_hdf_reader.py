@@ -5,6 +5,7 @@ import pathlib
 import shutil
 from typing import List, Optional, Union
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -99,3 +100,24 @@ class TestHdfReader:
         assert expected_x_max_resolution == read_point_cloud.x_max_resolution
         assert expected_y_max_resolution == read_point_cloud.y_max_resolution
         assert expected_z_max_resolution == read_point_cloud.z_max_resolution
+
+    @pytest.mark.parametrize("file_format", ["h5", "hdf"])
+    @pytest.mark.parametrize("use_pathlib", [True, False])
+    def test_read_crs(
+        self, hdf_reader: HdfReader, hdf_writer: HdfWriter, cache_dir: str, file_format: str, use_pathlib: bool
+    ):
+        expected_crs = "EPSG:4326"
+
+        point_cloud = PointCloudIoData(
+            pd.DataFrame(np.random.randn(5, 3), columns=["x", "y", "z"]),
+            crs=expected_crs,
+        )
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
+        if use_pathlib:
+            file_path = pathlib.Path(file_path)
+
+        hdf_writer.write(point_cloud, file_path)
+
+        read_point_cloud = hdf_reader.read(file_path)
+
+        assert expected_crs == read_point_cloud.crs
