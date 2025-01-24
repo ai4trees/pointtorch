@@ -57,7 +57,7 @@ class LasReader(BasePointCloudReader):
         """
         # The method from the base is called explicitly so that the read method appears in the documentation of this
         # class.
-        return super().read(file_path, columns=columns)
+        return super().read(file_path, columns=columns, num_rows=num_rows)
 
     def _read_points(
         self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
@@ -75,14 +75,16 @@ class LasReader(BasePointCloudReader):
         """
         if num_rows is None:
             las_data = laspy.read(file_path)
+            las_header = las_data.header
         else:
             with laspy.open(file_path) as file:
                 las_data = next(iter(file.chunk_iterator(num_rows)))
+                las_header = file.header
 
         data = np.array([las_data.x, las_data.y, las_data.z]).T
         point_cloud_df = pd.DataFrame(data, columns=["x", "y", "z"])
 
-        for column_name in las_data.header.point_format.standard_dimension_names:
+        for column_name in las_header.point_format.standard_dimension_names:
             if column_name.lower() in ["x", "y", "z"] or columns is not None and column_name not in columns:
                 continue
             column_values = np.array(las_data[column_name])
@@ -90,7 +92,7 @@ class LasReader(BasePointCloudReader):
             if (column_values != default_value).any() or not self._ignore_default_columns:
                 point_cloud_df[column_name] = column_values
 
-        for column_name in las_data.header.point_format.extra_dimension_names:
+        for column_name in las_header.point_format.extra_dimension_names:
             if column_name.lower() in ["x", "y", "z"] or columns is not None and column_name not in columns:
                 continue
             point_cloud_df[column_name] = las_data[column_name]

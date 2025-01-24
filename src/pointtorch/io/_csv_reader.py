@@ -41,7 +41,7 @@ class CsvReader(BasePointCloudReader):
         """
         # The method from the base is called explicitly so that the read method appears in the documentation of this
         # class.
-        return super().read(file_path, columns=columns)
+        return super().read(file_path, columns=columns, num_rows=num_rows)
 
     def _read_points(
         self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
