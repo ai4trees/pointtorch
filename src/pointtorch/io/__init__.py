@@ -1,4 +1,4 @@
-""" Tools for reading and writing point cloud files. """
+"""Tools for reading and writing point cloud files."""
 
 from ._csv_reader import *
 from ._csv_writer import *

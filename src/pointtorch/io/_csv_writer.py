@@ -1,4 +1,4 @@
-""" Point cloud file writer for csv and txt files. """
+"""Point cloud file writer for csv and txt files."""
 
 __all__ = ["CsvWriter"]
 

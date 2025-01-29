@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.io.HdfWriter class. """
+"""Tests for the pointtorch.io.HdfWriter class."""
 
 import os
 import pathlib

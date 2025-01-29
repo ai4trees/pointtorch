@@ -1,4 +1,4 @@
-""" Neighborhood search implementation based on computing a pairwise distance matrix. """
+"""Neighborhood search implementation based on computing a pairwise distance matrix."""
 
 __all__ = ["neighbor_search_cdist"]
 

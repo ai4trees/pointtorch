@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.io.PointCloudWriter class. """
+"""Tests for the pointtorch.io.PointCloudWriter class."""
 
 import os
 import pathlib

@@ -1,4 +1,4 @@
-""" Point cloud file writer for las and laz files. """
+"""Point cloud file writer for las and laz files."""
 
 __all__ = ["LasWriter"]
 

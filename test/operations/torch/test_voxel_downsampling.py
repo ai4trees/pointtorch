@@ -1,4 +1,4 @@
-""" Tests for pointtorch.operations.torch.voxel_downsampling. """
+"""Tests for pointtorch.operations.torch.voxel_downsampling."""
 
 from typing import Literal, Optional, Tuple
 

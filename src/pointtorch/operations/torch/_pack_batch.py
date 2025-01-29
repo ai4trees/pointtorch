@@ -1,4 +1,4 @@
-""" Packing of batches containing point clouds of varying size into a regular batch structures. """
+"""Packing of batches containing point clouds of varying size into a regular batch structures."""
 
 __all__ = ["pack_batch"]
 

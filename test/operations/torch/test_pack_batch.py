@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.operations.pack_batch function. """
+"""Tests for the pointtorch.operations.pack_batch function."""
 
 import hypothesis
 import numpy as np
