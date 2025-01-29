@@ -1,4 +1,4 @@
-""" Point cloud file reader for csv and txt files. """
+"""Point cloud file reader for csv and txt files."""
 
 __all__ = ["CsvReader"]
 

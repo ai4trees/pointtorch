@@ -1,4 +1,4 @@
-""" Core data structures for point cloud processing. """
+"""Core data structures for point cloud processing."""
 
 __all__ = ["PointCloud", "PointCloudSeries", "read"]
 

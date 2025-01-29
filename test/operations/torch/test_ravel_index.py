@@ -1,4 +1,4 @@
-""" Tests for the index raveling operations in pointtorch.operations.torch """
+"""Tests for the index raveling operations in pointtorch.operations.torch"""
 
 import numpy as np
 import pytest

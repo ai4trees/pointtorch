@@ -1,4 +1,4 @@
-""" Mapping of multi-dimensional indices to one-dimensional indices. """
+"""Mapping of multi-dimensional indices to one-dimensional indices."""
 
 __all__ = ["ravel_index", "ravel_multi_index", "unravel_flat_index"]
 

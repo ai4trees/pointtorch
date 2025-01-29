@@ -1,4 +1,4 @@
-""" Method for reading point cloud files. """
+"""Method for reading point cloud files."""
 
 __all__ = ["read"]
 

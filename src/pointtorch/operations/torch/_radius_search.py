@@ -1,4 +1,4 @@
-""" Different implementations of radius neighborhood search. """
+"""Different implementations of radius neighborhood search."""
 
 __all__ = [
     "radius_search",

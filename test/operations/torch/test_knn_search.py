@@ -1,4 +1,4 @@
-"""Tests for the kNN implementations in pointtorch.operations """
+"""Tests for the kNN implementations in pointtorch.operations"""
 
 from typing import Callable, Tuple
 

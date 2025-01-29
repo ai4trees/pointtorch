@@ -1,4 +1,4 @@
-""" Point cloud file reader for h5 and hdf files. """
+"""Point cloud file reader for h5 and hdf files."""
 
 __all__ = ["HdfReader"]
 
