@@ -1,4 +1,4 @@
-""" Tests for the file download tools in pointtorch.io """
+"""Tests for the file download tools in pointtorch.io"""
 
 import os
 import pathlib

@@ -1,4 +1,4 @@
-""" Utilities for downloading files. """
+"""Utilities for downloading files."""
 
 __all__ = ["DownloadProgressBar", "download_file"]
 
