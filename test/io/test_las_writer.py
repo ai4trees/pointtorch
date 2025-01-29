@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.io.LasWriter class. """
+"""Tests for the pointtorch.io.LasWriter class."""
 
 import os
 import pathlib

@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.core.read method. """
+"""Tests for the pointtorch.core.read method."""
 
 import os
 import pathlib

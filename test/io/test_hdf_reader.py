@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.io.HdfReader class. """
+"""Tests for the pointtorch.io.HdfReader class."""
 
 import os
 import pathlib

@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.core.PointCloud class. """
+"""Tests for the pointtorch.core.PointCloud class."""
 
 import numpy as np
 import pandas as pd

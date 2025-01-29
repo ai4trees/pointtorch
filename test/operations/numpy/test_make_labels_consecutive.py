@@ -1,4 +1,4 @@
-""" Tests for pointtorch.operations.np.make_labels_consecutive. """
+"""Tests for pointtorch.operations.np.make_labels_consecutive."""
 
 from typing import Optional
 

@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.config module. """
+"""Tests for the pointtorch.config module."""
 
 import sys
 from types import ModuleType

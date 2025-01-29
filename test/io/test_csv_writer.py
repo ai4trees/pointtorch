@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.io.CsvWriter class. """
+"""Tests for the pointtorch.io.CsvWriter class."""
 
 import os
 import pathlib

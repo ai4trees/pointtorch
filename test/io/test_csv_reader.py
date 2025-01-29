@@ -1,4 +1,4 @@
-""" Tests for the pointtorch.io.CsvReader class. """
+"""Tests for the pointtorch.io.CsvReader class."""
 
 import os
 import pathlib
