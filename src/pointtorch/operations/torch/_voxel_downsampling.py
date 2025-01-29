@@ -1,4 +1,4 @@
-""" Voxel-based downsampling of a point cloud. """
+"""Voxel-based downsampling of a point cloud."""
 
 __all__ = ["voxel_downsampling"]
 

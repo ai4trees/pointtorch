@@ -1,4 +1,4 @@
-""" Different implementations of kNN search. """
+"""Different implementations of kNN search."""
 
 __all__ = ["knn_search", "knn_search_cdist", "knn_search_pytorch3d", "knn_search_open3d", "knn_search_torch_cluster"]
 

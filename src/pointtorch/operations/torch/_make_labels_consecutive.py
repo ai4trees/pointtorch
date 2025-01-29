@@ -1,4 +1,4 @@
-""" Transformation of input labels into consecutive integer labels. """
+"""Transformation of input labels into consecutive integer labels."""
 
 __all__ = ["make_labels_consecutive"]
 

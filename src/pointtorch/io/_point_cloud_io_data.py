@@ -1,4 +1,4 @@
-""" Point cloud data structure used for I/O. """
+"""Point cloud data structure used for I/O."""
 
 __all__ = ["PointCloudIoData"]
 

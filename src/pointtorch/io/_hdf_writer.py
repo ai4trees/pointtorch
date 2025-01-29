@@ -1,4 +1,4 @@
-""" Point cloud file writer for h5 and hdf files. """
+"""Point cloud file writer for h5 and hdf files."""
 
 __all__ = ["HdfWriter"]
 

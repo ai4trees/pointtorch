@@ -1,4 +1,4 @@
-""" Abstract base class for implementing point cloud file writers. """
+"""Abstract base class for implementing point cloud file writers."""
 
 __all__ = ["BasePointCloudWriter"]
 

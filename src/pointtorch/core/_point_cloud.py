@@ -1,4 +1,4 @@
-""" Point cloud object. """
+"""Point cloud object."""
 
 __all__ = ["PointCloud", "PointCloudSeries"]
 
