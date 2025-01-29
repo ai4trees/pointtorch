@@ -2,6 +2,7 @@
 
 from ._csv_reader import *
 from ._csv_writer import *
+from ._download_file import *
 from ._hdf_reader import *
 from ._hdf_writer import *
 from ._las_reader import *
