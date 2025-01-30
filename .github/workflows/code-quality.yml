@@ -1,15 +1,12 @@
 name: Code Quality Checks
 
 on:
-  workflow_call:
-    inputs:
-      update-coverage-badge:
-        required: false
-        default: false
-        type: boolean
-    secrets:
-      codecov_token:
-        required: true
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   black:
@@ -65,6 +62,8 @@ jobs:
           pylint src --rcfile=.rcfile
           pylint test --rcfile=.rcfile --disable duplicate-code --disable missing-function-docstring
   test:
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
     runs-on: ubuntu-latest
     # run tests for all supported Python and PyTorch versions
     strategy:
