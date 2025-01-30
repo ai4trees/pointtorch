@@ -8,6 +8,7 @@ from ._knn_search import *
 from ._make_labels_consecutive import *
 from ._neighbor_search import *
 from ._radius_search import *
+from ._random_sampling import *
 from ._ravel_index import *
 from ._voxel_downsampling import *
 
