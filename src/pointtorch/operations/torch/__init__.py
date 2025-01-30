@@ -11,6 +11,7 @@ from ._neighbor_search import *
 from ._radius_search import *
 from ._random_sampling import *
 from ._ravel_index import *
+from ._shuffle import *
 from ._voxel_downsampling import *
 
 __all__ = [name for name in globals().keys() if not name.startswith("_")]
