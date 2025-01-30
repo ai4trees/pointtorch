@@ -1,15 +1,12 @@
 name: Code Quality Checks
 
 on:
-  workflow_call:
-    inputs:
-      update-coverage-badge:
-        required: false
-        default: false
-        type: boolean
-    secrets:
-      codecov_token:
-        required: true
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   black:
@@ -132,5 +129,5 @@ jobs:
         with:
           files: coverage.xml
           fail_ci_if_error: true
-          token: ${{ secrets.codecov_token }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
