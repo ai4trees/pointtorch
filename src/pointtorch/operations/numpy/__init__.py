@@ -4,6 +4,7 @@ Point cloud processing operations for the use with `numpy arrays
 """
 
 from ._make_labels_consecutive import *
+from ._non_max_suppression import *
 from ._voxel_downsampling import *
 
 __all__ = [name for name in globals().keys() if not name.startswith("_")]
