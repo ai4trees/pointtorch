@@ -36,20 +36,26 @@ class TestDownloadFile:
         yield zip_file_path
 
     @pytest.mark.parametrize("progress_bar,progress_bar_desc", [(False, None), (True, None), (True, "test")])
+    @pytest.mark.parametrize("provide_content_length_header", [True, False])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_valid_file(
         self,
         progress_bar: bool,
         progress_bar_desc: Optional[str],
+        provide_content_length_header: bool,
         use_pathlib: bool,
         zip_file_path: str,
         cache_dir: str,
         httpserver: HTTPServer,
     ):
         def send_zip_file(request: werkzeug.Request) -> werkzeug.Response:
-            return werkzeug.utils.send_file(
+            response = werkzeug.utils.send_file(
                 zip_file_path, request.environ, mimetype="application/zip", as_attachment=True
             )
+            if not provide_content_length_header:
+                response.headers.pop("Content-Length", None)
+
+            return response
 
         httpserver.expect_request("/zipfile", method="GET").respond_with_handler(send_zip_file)
 
