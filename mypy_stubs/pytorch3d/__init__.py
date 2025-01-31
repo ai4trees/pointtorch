@@ -1,1 +1,1 @@
-""" Mypy stubs for the pytorch3d package. """
+"""Mypy stubs for the pytorch3d package."""
