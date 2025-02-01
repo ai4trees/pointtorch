@@ -6,6 +6,7 @@ import pathlib
 from typing import List, Optional, Union
 
 import laspy
+from laspy.compression import LazrsBackend
 import numpy as np
 import pandas as pd
 from pyproj import CRS
@@ -50,16 +51,24 @@ class LasWriter(BasePointCloudWriter):
         Returns:
             ID of the chosen las file format.
         """
-        columns = point_cloud.columns
+        columns = set(point_cloud.columns).difference(["x", "y", "z"])
         best_format = 0
         covered_columns = 0
 
         for f in LasWriter._supported_las_formats:
             current_format = laspy.point.format.PointFormat(f)
             columns_covered_by_current_format = len(set(current_format.standard_dimension_names).intersection(columns))
-            if columns_covered_by_current_format > covered_columns:
+
+            # the concept of extra dimensions is introduced in LAS 1.4 but laspy also supports extra dimensions for
+            # earlier LAS versions
+            # with the check f == 6, it is ensured that the LAS 1.4 specification is used if there are any extra
+            # dimensions that are not covered by the standard point record formats (to adhere more stricly to the LAS
+            # specification than laspy does)
+            if columns_covered_by_current_format > covered_columns or f == 6:
                 covered_columns = columns_covered_by_current_format
                 best_format = current_format
+            if covered_columns == len(columns):
+                break
 
         return best_format
 
@@ -119,17 +128,22 @@ class LasWriter(BasePointCloudWriter):
                 default_value = LasWriter._standard_field_defaults.get(column_name, 0)
                 las_data[column_name] = np.full_like(las_data[column_name], fill_value=default_value)
 
+        extra_dims = []
         for column_name in extra_columns:
             if column_name.lower() in ["x", "y", "z"]:
                 continue
-            las_data.add_extra_dim(laspy.point.ExtraBytesParams(column_name, point_cloud[column_name].dtype))
-            las_data.update_header()
-            las_data[column_name] = point_cloud[column_name]
+            extra_dims.append(laspy.point.ExtraBytesParams(column_name, point_cloud[column_name].dtype))
+
+        las_data.add_extra_dims(extra_dims)
+        las_data.update_header()
+
+        for extra_dim in extra_dims:
+            las_data[extra_dim.name] = point_cloud[extra_dim.name]
 
         if crs is not None:
             las_data.header.add_crs(CRS.from_string(crs))
 
-        las_data.write(file_path)
+        las_data.write(file_path, laz_backend=LazrsBackend())
 
     def write(
         self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None
