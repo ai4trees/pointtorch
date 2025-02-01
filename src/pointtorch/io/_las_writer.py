@@ -72,7 +72,7 @@ class LasWriter(BasePointCloudWriter):
 
         return best_format
 
-    def _write_data(
+    def _write_data(  # pylint: disable=too-many-locals
         self,
         point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
