@@ -4,7 +4,7 @@
 
 ![pypi-image](https://badge.fury.io/py/pointtorch.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/ai4trees/pointtorch/actions/workflows/code-quality-main.yml/badge.svg)](https://github.com/ai4trees/pointtorch/actions/workflows/code-quality-main.yml)
+[![CI](https://github.com/ai4trees/pointtorch/actions/workflows/main.yml/badge.svg)](https://github.com/ai4trees/pointtorch/actions/workflows/main.yml)
 [![coverage](https://codecov.io/gh/ai4trees/pointtorch/branch/main/graph/badge.svg)](https://codecov.io/github/ai4trees/pointtorch?branch=main)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pointtorch)
 
