@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV FORCE_CUDA=1
 ENV TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
 
-RUN apt-get update && apt-get install -y --no-install-recommends git lsb-release software-properties-common wget
+RUN apt-get update && apt-get install -y --no-install-recommends git lsb-release software-properties-common wget g++
 
 ######################## Python installation #########################
 
