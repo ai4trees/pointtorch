@@ -1,12 +1,10 @@
 name: Code Quality Checks
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_call:
+    secrets:
+      codecov_token:
+        required: true
 
 jobs:
   black:
@@ -90,6 +88,7 @@ jobs:
         if: ${{ matrix.version.python != '3.13'}}
         shell: bash
         run: |
+          apt-get update && apt-get install -y --no-install-recommends g++
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
@@ -143,5 +142,5 @@ jobs:
         with:
           files: coverage.xml
           fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}
           verbose: true

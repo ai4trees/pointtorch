@@ -1,0 +1,12 @@
+name: CI pipeline for main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    if: ${{ !startsWith(github.event.head_commit.message, 'Automated docs push:') }}
+    uses: ./.github/workflows/code-quality.yml
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
