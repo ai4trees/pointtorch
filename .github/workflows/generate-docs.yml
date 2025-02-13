@@ -35,12 +35,16 @@ jobs:
           python -m pip install --upgrade .'[dev, docs]'
           sphinx-apidoc --force --module-first -t ./docs/source/_templates/ -o ./docs/source ./src
       - name: Commit and push documentation sources
+        shell: bash
         run: |
           cd /github/workspace/
           git config --global --add safe.directory $(realpath .)
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add docs/source/*
-          git pull
-          git commit -m "docs: update docs [${{ github.event.pull_request.title }}] [skip-ci]" --allow-empty
-          git push
+
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add docs/source/*
+            git pull
+            git commit -m "docs: update docs [${{ github.event.pull_request.title }}] [skip-ci]"
+            git push
+          fi
