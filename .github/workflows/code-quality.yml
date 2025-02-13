@@ -2,6 +2,9 @@ name: Code Quality Checks
 
 on:
   workflow_call:
+    secrets:
+      codecov_token:
+        required: true
 
 jobs:
   black:
@@ -139,5 +142,5 @@ jobs:
         with:
           files: coverage.xml
           fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}
           verbose: true
