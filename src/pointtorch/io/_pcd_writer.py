@@ -71,7 +71,12 @@ class PcdWriter(BasePointCloudWriter):
                 :code:`"binary_compressed"`.
         """
 
-        records = point_cloud.to_records(index=False)
+        dtypes = dict(point_cloud.dtypes)
+        dtypes["x"] = np.float32
+        dtypes["y"] = np.float32
+        dtypes["z"] = np.float32
+
+        records = point_cloud.to_records(index=False, column_dtypes=dtypes)
         point_cloud_structured_array = np.array(records, dtype=records.dtype.descr)
 
         type_mapping = dict(numpy_pcd_type_mappings)
@@ -79,8 +84,8 @@ class PcdWriter(BasePointCloudWriter):
         metadata = {
             "version": "0.7",
             "fields": point_cloud.columns,
-            "type": [type_mapping[point_cloud[column].dtype][0] for column in point_cloud.columns],
-            "size": [type_mapping[point_cloud[column].dtype][1] for column in point_cloud.columns],
+            "type": [type_mapping[point_cloud_structured_array[column].dtype][0] for column in point_cloud.columns],
+            "size": [type_mapping[point_cloud_structured_array[column].dtype][1] for column in point_cloud.columns],
             "width": len(point_cloud),
             "height": 1,
             "points": len(point_cloud),
