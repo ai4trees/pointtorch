@@ -14,7 +14,7 @@ from ._point_cloud_io_data import PointCloudIoData
 
 
 class PcdWriter(BasePointCloudWriter):
-    """Point cloud file writer for cpcd files."""
+    """Point cloud file writer for pcd files."""
 
     def supported_file_formats(self) -> List[str]:
         """
