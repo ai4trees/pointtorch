@@ -53,7 +53,7 @@ class PcdWriter(BasePointCloudWriter):
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
         z_max_resolution: Optional[float] = None,
-        file_type: Literal["ascii", "binary", "binary_compressed"] = "ascii",
+        file_type: Literal["ascii", "binary", "binary_compressed"] = "binary_compressed",
     ) -> None:
         """
         Writes a point cloud to a file.
