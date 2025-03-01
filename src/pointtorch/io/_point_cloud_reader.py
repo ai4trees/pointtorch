@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 from ._csv_reader import CsvReader
 from ._hdf_reader import HdfReader
 from ._las_reader import LasReader
+from ._pcd_reader import PcdReader
 from ._point_cloud_io_data import PointCloudIoData
 
 
@@ -16,7 +17,7 @@ class PointCloudReader:
 
     def __init__(self):
         self._readers = {}
-        for reader in [CsvReader(), LasReader(), HdfReader()]:
+        for reader in [CsvReader(), LasReader(), HdfReader(), PcdReader()]:
             for file_format in reader.supported_file_formats():
                 self._readers[file_format] = reader
 
