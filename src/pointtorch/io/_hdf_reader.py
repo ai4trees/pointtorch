@@ -3,7 +3,7 @@
 __all__ = ["HdfReader"]
 
 import pathlib
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import h5py
 import pandas as pd
@@ -15,7 +15,7 @@ from ._point_cloud_io_data import PointCloudIoData
 class HdfReader(BasePointCloudReader):
     """Point cloud file reader for h5 and hdf files."""
 
-    def supported_file_formats(self) -> List[str]:
+    def supported_file_formats(self) -> list[str]:
         """
         Returns:
             File formats supported by the point cloud file reader.
@@ -24,7 +24,7 @@ class HdfReader(BasePointCloudReader):
         return ["h5", "hdf"]
 
     def read(
-        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+        self, file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None, num_rows: Optional[int] = None
     ) -> PointCloudIoData:
         """
         Reads a point cloud file.
@@ -45,7 +45,7 @@ class HdfReader(BasePointCloudReader):
         return super().read(file_path, columns=columns, num_rows=num_rows)
 
     def _read_points(
-        self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+        self, file_path: pathlib.Path, columns: Optional[list[str]] = None, num_rows: Optional[int] = None
     ) -> pd.DataFrame:
         """
         Reads point data from a point cloud file in h5 and hdf format.

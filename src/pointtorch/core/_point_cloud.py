@@ -2,8 +2,9 @@
 
 __all__ = ["PointCloud", "PointCloudSeries"]
 
+from collections.abc import Hashable
 from pathlib import Path
-from typing import Dict, Hashable, Iterable, List, Optional, Union
+from typing import Iterable, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -38,9 +39,9 @@ class PointCloud(pd.DataFrame):
 
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
-        data: Union[npt.ArrayLike, Iterable, Dict, pd.DataFrame],
+        data: Union[npt.ArrayLike, Iterable, dict, pd.DataFrame],
         index: Optional[Union[pd.Index, npt.NDArray[np.int64]]] = None,
-        columns: Optional[Union[pd.Index, npt.ArrayLike, List[str]]] = None,
+        columns: Optional[Union[pd.Index, npt.ArrayLike, list[str]]] = None,
         dtype: Optional[np.dtype] = None,
         copy: Optional[bool] = True,
         crs: Optional[str] = None,
@@ -78,7 +79,7 @@ class PointCloud(pd.DataFrame):
 
         return self[["x", "y", "z"]].astype(np.float64).to_numpy()
 
-    def to(self, file_path: Union[str, Path], columns: Optional[List[str]] = None) -> None:
+    def to(self, file_path: Union[str, Path], columns: Optional[list[str]] = None) -> None:
         """
         Writes the point cloud to a file.
 
@@ -128,7 +129,7 @@ class PointCloudSeries(pd.Series):
 
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
-        data: Optional[Union[npt.ArrayLike, Iterable, Dict, int, float, str]] = None,
+        data: Optional[Union[npt.ArrayLike, Iterable, dict, int, float, str]] = None,
         index: Optional[Union[pd.Index, npt.NDArray[np.int64]]] = None,
         dtype: Optional[Union[str, np.dtype, pd.api.extensions.ExtensionDtype]] = None,
         name: Optional[Hashable] = None,

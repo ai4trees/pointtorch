@@ -3,14 +3,14 @@
 __all__ = ["read"]
 
 import pathlib
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from pointtorch.core._point_cloud import PointCloud
 from pointtorch.io import PointCloudReader
 
 
 def read(
-    file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+    file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None, num_rows: Optional[int] = None
 ) -> PointCloud:
     """
     Method for reading point cloud files.

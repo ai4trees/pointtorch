@@ -3,7 +3,7 @@
 __all__ = ["HdfWriter"]
 
 import pathlib
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import h5py
 import numpy as np
@@ -16,7 +16,7 @@ from ._point_cloud_io_data import PointCloudIoData
 class HdfWriter(BasePointCloudWriter):
     """Point cloud file writer for h5 and hdf files."""
 
-    def supported_file_formats(self) -> List[str]:
+    def supported_file_formats(self) -> list[str]:
         """
         Returns:
             File formats supported by the point cloud file writer.
@@ -25,7 +25,7 @@ class HdfWriter(BasePointCloudWriter):
         return ["h5", "hdf"]
 
     def write(
-        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None
+        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None
     ) -> None:
         """
         Writes a point cloud to a file.

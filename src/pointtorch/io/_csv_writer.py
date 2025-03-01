@@ -4,7 +4,7 @@ __all__ = ["CsvWriter"]
 
 import math
 import pathlib
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -15,7 +15,7 @@ from ._point_cloud_io_data import PointCloudIoData
 class CsvWriter(BasePointCloudWriter):
     """Point cloud file writer for csv and txt files."""
 
-    def supported_file_formats(self) -> List[str]:
+    def supported_file_formats(self) -> list[str]:
         """
         Returns:
             File formats supported by the point cloud file writer.
@@ -24,7 +24,7 @@ class CsvWriter(BasePointCloudWriter):
         return ["csv", "txt"]
 
     def write(
-        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None
+        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None
     ) -> None:
         """
         Writes a point cloud to a file.

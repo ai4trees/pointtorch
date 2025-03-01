@@ -3,7 +3,7 @@
 import os
 import pathlib
 import shutil
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ class TestLasWriter:
         las_writer: LasWriter,
         cache_dir: str,
         file_format: str,
-        columns: Optional[List[str]],
+        columns: Optional[list[str]],
         use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
@@ -94,7 +94,7 @@ class TestLasWriter:
         ],
     )
     def test_write_missing_column(
-        self, las_writer: LasWriter, cache_dir: str, file_format: str, columns: Optional[List[str]]
+        self, las_writer: LasWriter, cache_dir: str, file_format: str, columns: Optional[list[str]]
     ):
         point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
         file_path = os.path.join(cache_dir, f"test_point_cloud.{file_format}")

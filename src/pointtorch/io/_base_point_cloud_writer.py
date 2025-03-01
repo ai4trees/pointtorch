@@ -4,7 +4,7 @@ __all__ = ["BasePointCloudWriter"]
 
 import abc
 import pathlib
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -15,14 +15,14 @@ class BasePointCloudWriter(abc.ABC):
     """Abstract base class for implementing point cloud file writers."""
 
     @abc.abstractmethod
-    def supported_file_formats(self) -> List[str]:
+    def supported_file_formats(self) -> list[str]:
         """
         Returns:
             File formats supported by the point cloud file writer.
         """
 
     def write(
-        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None
+        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None
     ) -> None:
         """
         Writes a point cloud to a file.
