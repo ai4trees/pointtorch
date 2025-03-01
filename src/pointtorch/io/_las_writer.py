@@ -3,7 +3,7 @@
 __all__ = ["LasWriter"]
 
 import pathlib
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import laspy
 from laspy.compression import LazrsBackend
@@ -36,7 +36,7 @@ class LasWriter(BasePointCloudWriter):
         super().__init__()
         self.maximum_resolution = maximum_resolution
 
-    def supported_file_formats(self) -> List[str]:
+    def supported_file_formats(self) -> list[str]:
         """
         Returns:
             File formats supported by the point cloud file writer.
@@ -146,7 +146,7 @@ class LasWriter(BasePointCloudWriter):
         las_data.write(file_path, laz_backend=LazrsBackend())
 
     def write(
-        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None
+        self, point_cloud: PointCloudIoData, file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None
     ) -> None:
         """
         Writes a point cloud to a file.

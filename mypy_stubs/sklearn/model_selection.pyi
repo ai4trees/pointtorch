@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 import numpy
 from numpy.random import RandomState
@@ -10,4 +10,4 @@ def train_test_split(
     random_state: Optional[Union[int, RandomState]] = ...,
     shuffle: bool = ...,
     stratify: Optional[numpy.ndarray] = ...,
-) -> List[numpy.ndarray]: ...
+) -> list[numpy.ndarray]: ...

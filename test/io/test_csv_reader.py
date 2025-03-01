@@ -4,7 +4,7 @@ import os
 import pathlib
 from pathlib import Path
 import shutil
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import pytest
@@ -39,7 +39,7 @@ class TestCsvReader:
         csv_reader: CsvReader,
         cache_dir: str,
         file_format: str,
-        columns: Optional[List[str]],
+        columns: Optional[list[str]],
         num_rows: Optional[int],
         use_pathlib: bool,
     ):

@@ -3,7 +3,7 @@
 import os
 import pathlib
 import shutil
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import pytest
@@ -29,7 +29,7 @@ class TestCsvWriter:
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_writer(
-        self, csv_writer: CsvWriter, cache_dir: str, file_format: str, columns: Optional[List[str]], use_pathlib: bool
+        self, csv_writer: CsvWriter, cache_dir: str, file_format: str, columns: Optional[list[str]], use_pathlib: bool
     ):
         point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122], [1, 1, 1, 0, 23]], columns=["x", "y", "z", "classification", "instance"]
@@ -68,7 +68,7 @@ class TestCsvWriter:
         ],
     )
     def test_write_missing_column(
-        self, csv_writer: CsvWriter, cache_dir: str, file_format: str, columns: Optional[List[str]]
+        self, csv_writer: CsvWriter, cache_dir: str, file_format: str, columns: Optional[list[str]]
     ):
         point_cloud_df = pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(point_cloud_df)

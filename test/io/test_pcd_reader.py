@@ -3,7 +3,7 @@
 import os
 import pathlib
 import shutil
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import pytest
@@ -37,7 +37,7 @@ class TestPcdReader:
         pcd_reader: PcdReader,
         pcd_writer: PcdWriter,
         cache_dir: str,
-        columns: Optional[List[str]],
+        columns: Optional[list[str]],
         num_rows: Optional[int],
         use_pathlib: bool,
     ):

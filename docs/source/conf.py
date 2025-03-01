@@ -3,7 +3,7 @@ from datetime import datetime
 from importlib import metadata
 import os
 import subprocess
-from typing import Any, Dict, List
+from typing import Any
 
 from sphinxawesome_theme import ThemeOptions
 from sphinxawesome_theme.postprocess import Icons
@@ -72,7 +72,7 @@ substitutions = [
 rst_prolog = "\n".join(substitutions)
 
 templates_path = ["_templates"]
-exclude_patterns: List[str] = []
+exclude_patterns: list[str] = []
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -143,7 +143,7 @@ html_sidebars: dict[str, list[str]] = {
 }
 html_additional_pages = {"versions": "versions.html"}
 
-html_context: Dict[str, Any] = {
+html_context: dict[str, Any] = {
     "current_version": release,
     "base_url": base_url,
     "versions": [("main (unstable)", f"{base_url}/main")],

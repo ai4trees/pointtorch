@@ -4,7 +4,7 @@ __all__ = ["BasePointCloudReader"]
 
 import abc
 import pathlib
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import pandas as pd
 
@@ -15,14 +15,14 @@ class BasePointCloudReader(abc.ABC):
     """Abstract base class for implementing point cloud file readers."""
 
     @abc.abstractmethod
-    def supported_file_formats(self) -> List[str]:
+    def supported_file_formats(self) -> list[str]:
         """
         Returns:
             File formats supported by the point cloud file reader.
         """
 
     def read(
-        self, file_path: Union[str, pathlib.Path], columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+        self, file_path: Union[str, pathlib.Path], columns: Optional[list[str]] = None, num_rows: Optional[int] = None
     ) -> PointCloudIoData:
         """
         Reads a point cloud file.
@@ -73,7 +73,7 @@ class BasePointCloudReader(abc.ABC):
 
     @abc.abstractmethod
     def _read_points(
-        self, file_path: pathlib.Path, columns: Optional[List[str]] = None, num_rows: Optional[int] = None
+        self, file_path: pathlib.Path, columns: Optional[list[str]] = None, num_rows: Optional[int] = None
     ) -> pd.DataFrame:
         """
         Reads point data from a point cloud file. This method has to be overriden by child classes.

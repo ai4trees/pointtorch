@@ -3,7 +3,7 @@
 import os
 import pathlib
 import shutil
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import pytest
@@ -36,7 +36,7 @@ class TestPcdWriter:
         pcd_reader: PcdReader,
         pcd_writer: PcdWriter,
         cache_dir: str,
-        columns: Optional[List[str]],
+        columns: Optional[list[str]],
         use_pathlib: bool,
     ):
         point_cloud_df = pd.DataFrame(
@@ -76,7 +76,7 @@ class TestPcdWriter:
             pcd_writer.write(point_cloud_data, file_path)
 
     @pytest.mark.parametrize("columns", [["classification"]])
-    def test_write_missing_column(self, pcd_writer: PcdWriter, cache_dir: str, columns: Optional[List[str]]):
+    def test_write_missing_column(self, pcd_writer: PcdWriter, cache_dir: str, columns: Optional[list[str]]):
         point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
         file_path = os.path.join(cache_dir, "test_point_cloud.pcd")
 
