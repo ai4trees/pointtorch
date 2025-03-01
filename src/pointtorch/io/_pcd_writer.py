@@ -56,7 +56,8 @@ class PcdWriter(BasePointCloudWriter):
         file_type: Literal["ascii", "binary", "binary_compressed"] = "binary_compressed",
     ) -> None:
         """
-        Writes a point cloud to a file.
+        Writes a point cloud to a file. The point coordinates are always stored as 32 bit floating point numbers, as
+        some PCD readers require this.
 
         Args:
             point_cloud: Point cloud to be written.

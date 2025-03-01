@@ -5,6 +5,7 @@ import pathlib
 import shutil
 from typing import Optional, Union
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -62,6 +63,10 @@ class TestPcdWriter:
 
         expected_columns = sorted(point_cloud_df.columns)
         columns = sorted(read_point_cloud_data.data.columns)
+
+        assert read_point_cloud_data.data["x"].dtype == np.float32
+        assert read_point_cloud_data.data["y"].dtype == np.float32
+        assert read_point_cloud_data.data["z"].dtype == np.float32
 
         assert expected_columns == columns
         assert (
