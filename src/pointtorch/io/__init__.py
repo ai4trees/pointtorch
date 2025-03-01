@@ -7,6 +7,8 @@ from ._hdf_reader import *
 from ._hdf_writer import *
 from ._las_reader import *
 from ._las_writer import *
+from ._pcd_reader import *
+from ._pcd_writer import *
 from ._point_cloud_io_data import *
 from ._point_cloud_reader import *
 from ._point_cloud_writer import *
