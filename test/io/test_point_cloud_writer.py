@@ -30,7 +30,7 @@ class TestPointCloudWriter:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
-    @pytest.mark.parametrize("file_format", ["csv", "txt", "h5", "hdf", "las", "laz", "pcd"])
+    @pytest.mark.parametrize("file_format", ["csv", "txt", "h5", "hdf", "las", "laz", "pcd", "ply"])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_writer(
         self,
