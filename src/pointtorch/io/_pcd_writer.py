@@ -4,6 +4,7 @@ __all__ = ["PcdWriter"]
 
 import pathlib
 from typing import List, Literal, Optional, Union
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -78,6 +79,10 @@ class PcdWriter(BasePointCloudWriter):
         """
 
         dtypes = dict(point_cloud.dtypes)
+        if dtypes["x"] != np.float32 or dtypes["y"] != np.float32 or dtypes["z"] != np.float32:
+            warnings.warn(
+                "Converting xyz to 32 bit floating point numbers since pcd only supports coordinates of this type."
+            )
         dtypes["x"] = np.float32
         dtypes["y"] = np.float32
         dtypes["z"] = np.float32

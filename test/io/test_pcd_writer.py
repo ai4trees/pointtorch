@@ -40,7 +40,10 @@ class TestPcdWriter:
         point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122, 56, 28, 245], [1, 1, 1, 0, 23, 128, 128, 128]],
             columns=["x", "y", "z", "classification", "instance", "r", "g", "b"],
+            dtype=np.int32,
         )
+        point_cloud_df[["x", "y", "z"]] = point_cloud_df[["x", "y", "z"]].astype(np.float64)
+        point_cloud_df["instance"] = point_cloud_df["instance"].astype(np.int64)
         point_cloud_data = PointCloudIoData(point_cloud_df)
         file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.pcd")
         if use_pathlib:
@@ -61,14 +64,16 @@ class TestPcdWriter:
         expected_columns = sorted(point_cloud_df.columns)
         columns = sorted(read_point_cloud_data.data.columns)
 
-        assert read_point_cloud_data.data["x"].dtype == np.float32
-        assert read_point_cloud_data.data["y"].dtype == np.float32
-        assert read_point_cloud_data.data["z"].dtype == np.float32
-
         assert expected_columns == columns
         assert (
             point_cloud_df[expected_columns].to_numpy() == read_point_cloud_data.data[expected_columns].to_numpy()
         ).all()
+
+        for column in point_cloud_df.columns:
+            if column in ["x", "y", "z"]:
+                assert read_point_cloud_data.data[column].dtype == np.float32
+            else:
+                assert read_point_cloud_data.data[column].dtype == point_cloud_df[column].dtype
 
     def test_write_unsupported_format(self, pcd_writer: PcdWriter, cache_dir: str):
         point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
