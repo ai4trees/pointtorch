@@ -9,15 +9,16 @@ from ._csv_reader import CsvReader
 from ._hdf_reader import HdfReader
 from ._las_reader import LasReader
 from ._pcd_reader import PcdReader
+from ._ply_reader import PlyReader
 from ._point_cloud_io_data import PointCloudIoData
 
 
 class PointCloudReader:
-    """Point cloud file reader for csv, las, laz, and txt files."""
+    """Point cloud file reader for csv, las, laz, pcd, ply, and txt files."""
 
     def __init__(self):
         self._readers = {}
-        for reader in [CsvReader(), LasReader(), HdfReader(), PcdReader()]:
+        for reader in [CsvReader(), LasReader(), HdfReader(), PcdReader(), PlyReader()]:
             for file_format in reader.supported_file_formats():
                 self._readers[file_format] = reader
 

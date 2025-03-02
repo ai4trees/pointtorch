@@ -1,4 +1,4 @@
-"""Point cloud file writer for csv, las, laz, and txt files."""
+"""Point cloud file writer for csv, las, laz, pcd, ply, and txt files."""
 
 __all__ = ["PointCloudWriter"]
 
@@ -9,6 +9,7 @@ from ._csv_writer import CsvWriter
 from ._hdf_writer import HdfWriter
 from ._las_writer import LasWriter
 from ._pcd_writer import PcdWriter
+from ._ply_writer import PlyWriter
 from ._point_cloud_io_data import PointCloudIoData
 
 
@@ -17,7 +18,7 @@ class PointCloudWriter:
 
     def __init__(self):
         self._writers = {}
-        for writer in [CsvWriter(), LasWriter(), HdfWriter(), PcdWriter()]:
+        for writer in [CsvWriter(), LasWriter(), HdfWriter(), PcdWriter(), PlyWriter()]:
             for file_format in writer.supported_file_formats():
                 self._writers[file_format] = writer
 
