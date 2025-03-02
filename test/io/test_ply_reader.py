@@ -88,7 +88,7 @@ class TestPlyReader:
             y_max_resolution=expected_y_max_resolution,
             z_max_resolution=expected_z_max_resolution,
         )
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 
@@ -110,7 +110,7 @@ class TestPlyReader:
             y_max_resolution="test",
             z_max_resolution="test",
         )
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 
@@ -130,7 +130,7 @@ class TestPlyReader:
             pd.DataFrame(np.random.randn(5, 3), columns=["x", "y", "z"]),
             crs=expected_crs,
         )
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 

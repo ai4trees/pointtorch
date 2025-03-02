@@ -132,7 +132,7 @@ class TestPlyWriter:
         point_cloud_df = pd.DataFrame(np.random.randn(5, 3), columns=["x", "y", "z"])
         point_cloud_data = PointCloudIoData(point_cloud_df, crs=expected_crs)
 
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 
