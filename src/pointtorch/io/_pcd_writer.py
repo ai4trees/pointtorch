@@ -14,7 +14,15 @@ from ._point_cloud_io_data import PointCloudIoData
 
 
 class PcdWriter(BasePointCloudWriter):
-    """Point cloud file writer for pcd files."""
+    """Point cloud file writer for pcd files.
+
+    Args:
+        file_type: File type to use: :code:`"ascii"`, :code:`"binary"`, :code:`"binary_compressed"`. Defaults to
+            :code:`"binary_compressed"`.
+    """
+
+    def __init__(self, file_type: Literal["ascii", "binary", "binary_compressed"] = "binary_compressed"):
+        self._file_type = file_type
 
     def supported_file_formats(self) -> List[str]:
         """
@@ -53,7 +61,6 @@ class PcdWriter(BasePointCloudWriter):
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
         z_max_resolution: Optional[float] = None,
-        file_type: Literal["ascii", "binary", "binary_compressed"] = "binary_compressed",
     ) -> None:
         """
         Writes a point cloud to a file. The point coordinates are always stored as 32 bit floating point numbers, as
@@ -68,8 +75,6 @@ class PcdWriter(BasePointCloudWriter):
             x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
             y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
             z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
-            file_type: File type to use: :code:`"ascii"`, :code:`"binary"`, :code:`"binary_compressed"`. Defaults to
-                :code:`"binary_compressed"`.
         """
 
         dtypes = dict(point_cloud.dtypes)
@@ -91,9 +96,9 @@ class PcdWriter(BasePointCloudWriter):
             "height": 1,
             "points": len(point_cloud),
             "viewpoint": "0 0 0 1 0 0 0",
-            "data": file_type,
+            "data": self._file_type,
             "count": [1 for _ in range(len(point_cloud.columns))],
         }
 
         point_cloud_pypcd = PointCloud(metadata, point_cloud_structured_array)
-        point_cloud_pypcd.save_pcd(file_path, compression=file_type)
+        point_cloud_pypcd.save_pcd(file_path, compression=self._file_type)

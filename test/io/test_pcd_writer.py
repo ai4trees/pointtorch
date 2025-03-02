@@ -32,14 +32,11 @@ class TestPcdWriter:
 
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
+    @pytest.mark.parametrize("file_type", ["ascii", "binary", "binary_compressed"])
     def test_writer(
-        self,
-        pcd_reader: PcdReader,
-        pcd_writer: PcdWriter,
-        cache_dir: str,
-        columns: Optional[list[str]],
-        use_pathlib: bool,
+        self, pcd_reader: PcdReader, cache_dir: str, columns: Optional[list[str]], use_pathlib: bool, file_type: str
     ):
+        pcd_writer = PcdWriter(file_type=file_type)
         point_cloud_df = pd.DataFrame(
             [[0, 0, 0, 1, 122, 56, 28, 245], [1, 1, 1, 0, 23, 128, 128, 128]],
             columns=["x", "y", "z", "classification", "instance", "r", "g", "b"],
