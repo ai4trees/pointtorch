@@ -61,9 +61,6 @@ class PlyReader(BasePointCloudReader):
 
         plydata = PlyData.read(file_path)
 
-        print("plydata", plydata)
-        print("plydata['vertex']", plydata["vertex"].data)
-
         point_cloud = plydata["vertex"].data[:num_rows]
 
         if columns is not None:
