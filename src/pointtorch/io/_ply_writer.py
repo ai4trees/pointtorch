@@ -53,7 +53,7 @@ class PlyWriter(BasePointCloudWriter):
         # class.
         super().write(point_cloud, file_path, columns=columns)
 
-    def _write_data(
+    def _write_data(  # pylint: disable=too-many-locals
         self,
         point_cloud: pd.DataFrame,
         file_path: pathlib.Path,
@@ -63,7 +63,6 @@ class PlyWriter(BasePointCloudWriter):
         x_max_resolution: Optional[float] = None,
         y_max_resolution: Optional[float] = None,
         z_max_resolution: Optional[float] = None,
-        file_type: Literal["ascii", "binary", "binary_compressed"] = "binary_compressed",
     ) -> None:
         """
         Writes a point cloud to a file.
@@ -77,8 +76,6 @@ class PlyWriter(BasePointCloudWriter):
             x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
             y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
             z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
-            file_type: File type to use: :code:`"ascii"`, :code:`"binary"`, :code:`"binary_compressed"`. Defaults to
-                :code:`"binary_compressed"`.
         """
 
         data_types = dict(point_cloud.dtypes)
