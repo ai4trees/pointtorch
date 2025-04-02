@@ -5,7 +5,7 @@ import numpy as np
 from pointtorch.operations.numpy import resolve_instance_overlaps
 
 
-class TestResolveInstanceOverlaps:
+class TestResolveInstanceOverlaps:  # pylint: disable = too-few-public-methods
     """Tests for pointtorch.operations.numpy.resolve_instance_overlaps."""
 
     def test_resolve_instance_overlaps(self):

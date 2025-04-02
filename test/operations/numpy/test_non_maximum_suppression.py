@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pointtorch.operations.numpy import compute_pairwise_ious, non_max_suppression, resolve_instance_overlaps
+from pointtorch.operations.numpy import compute_pairwise_ious, non_max_suppression
 
 
 class TestNonMaximumSuppression:
