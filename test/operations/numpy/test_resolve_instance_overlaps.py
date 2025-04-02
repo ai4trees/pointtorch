@@ -24,3 +24,16 @@ class TestResolveInstanceOverlaps:  # pylint: disable = too-few-public-methods
         np.testing.assert_array_equal(expected_filtered_instances, filtered_instances)
         np.testing.assert_array_equal(filtere_instance_batch_indices, filtere_instance_batch_indices)
         np.testing.assert_array_equal(expected_filtered_instance_sizes, filtered_instance_sizes)
+
+    def test_empty_input(self):
+        instances = np.array([], dtype=np.int64)
+        instance_sizes = np.array([], dtype=np.int64)
+        scores = np.array([], dtype=np.float32)
+
+        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes = resolve_instance_overlaps(
+            instances, instance_sizes, scores
+        )
+
+        assert len(filtered_instances) == 0
+        assert len(filtere_instance_batch_indices) == 0
+        assert len(filtered_instance_sizes) == 0
