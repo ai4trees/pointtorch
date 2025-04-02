@@ -39,6 +39,9 @@ def resolve_instance_overlaps(
           | :math:`N_i' = \text{ number of points belonging to the i-th instance after the filtering}`
     """
 
+    if len(instances) == 0:
+        return np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64)
+
     sorted_indices = scores.argsort()[::-1]
 
     is_assigned = np.zeros(instances.max() + 1, dtype=bool)
