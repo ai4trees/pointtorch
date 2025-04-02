@@ -3,9 +3,10 @@
 __all__ = ["non_max_suppression", "compute_pairwise_ious"]
 
 import numpy as np
+import numpy.typing as npt
 
 
-def compute_pairwise_ious(instances: np.ndarray, instance_sizes: np.ndarray, eps: float = 1e-8) -> np.ndarray:
+def compute_pairwise_ious(instances: npt.NDArray, instance_sizes: npt.NDArray, eps: float = 1e-8) -> npt.NDArray:
     r"""
     Computes pairwise intersection over union (IoU) between instances.
 
@@ -43,7 +44,7 @@ def compute_pairwise_ious(instances: np.ndarray, instance_sizes: np.ndarray, eps
     return ious
 
 
-def non_max_suppression(ious: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndarray:
+def non_max_suppression(ious: npt.NDArray, scores: npt.NDArray, iou_threshold: float) -> npt.NDArray:
     r"""
     Non-maximum suppression operation for instance detection.
 
