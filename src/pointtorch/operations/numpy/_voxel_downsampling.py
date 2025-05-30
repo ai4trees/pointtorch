@@ -5,20 +5,20 @@ __all__ = ["voxel_downsampling"]
 from typing import Literal, Optional, Tuple
 
 import numpy as np
-import numpy.typing as npt
 import torch
 from torch_scatter.scatter import scatter_min
 
+from pointtorch.type_aliases import FloatArray, LongArray
 from ._make_labels_consecutive import make_labels_consecutive
 
 
 def voxel_downsampling(  # pylint: disable=too-many-locals
-    points: npt.NDArray[np.float64],
+    points: FloatArray,
     voxel_size: float,
     point_aggregation: Literal["nearest_neighbor", "random"] = "random",
     preserve_order: bool = True,
-    start: Optional[npt.NDArray[np.float64]] = None,
-) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+    start: Optional[FloatArray] = None,
+) -> Tuple[FloatArray, LongArray, LongArray]:
     r"""
     Voxel-based downsampling of a point cloud.
 
@@ -96,7 +96,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
         dists_to_voxel_center = np.linalg.norm(shifted_points - voxel_centers[inverse_indices], axis=-1)
 
         dimensions = voxel_indices.max(axis=0) + 1
-        scatter_indices: npt.NDArray[np.int64] = make_labels_consecutive(  # type: ignore[assignment]
+        scatter_indices: LongArray = make_labels_consecutive(  # type: ignore[assignment]
             np.ravel_multi_index(tuple(voxel_indices[:, dim] for dim in range(voxel_indices.shape[1])), dimensions)
         )
 

@@ -14,3 +14,13 @@ pointtorch
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+
+pointtorch.type\_aliases
+------------------------
+
+.. automodule:: pointtorch.type_aliases
+   :members:
+   :undoc-members:
+   :show-inheritance:

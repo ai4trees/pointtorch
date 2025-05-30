@@ -8,6 +8,7 @@ import numpy.typing as npt
 import pytest
 
 from pointtorch.operations.numpy import voxel_downsampling
+from pointtorch.type_aliases import FloatArray, LongArray
 
 
 class TestVoxelDownSampling:
@@ -15,11 +16,11 @@ class TestVoxelDownSampling:
 
     def _naive_voxel_downsampling(  # pylint: disable=too-many-locals
         self,
-        points: npt.NDArray[np.float64],
+        points: FloatArray,
         voxel_size: float,
         point_aggregation: Literal["nearest_neighbor"],
-        start: Optional[npt.NDArray[np.float64]] = None,
-    ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.float64]]:
+        start: Optional[FloatArray] = None,
+    ) -> Tuple[FloatArray, LongArray, LongArray, FloatArray]:
         """
         Naive implementation of voxel downsampling to compute expected results for arbitrary inputs.
 
@@ -97,7 +98,7 @@ class TestVoxelDownSampling:
             (-1, 3)
         )
 
-        return coords.astype(float)
+        return coords.astype(np.float64)
 
     def test_voxel_downsampling_negative_voxel_size(self):
         points = np.random.uniform(low=-2, high=2, size=(50, 3))
@@ -117,7 +118,7 @@ class TestVoxelDownSampling:
         voxel_size: float,
         point_aggregation: Literal["nearest_neighbor"],
         preserve_order: bool,
-        start: Optional[npt.NDArray[np.float64]],
+        start: Optional[FloatArray],
     ):
         points = np.random.uniform(low=-2 * voxel_size, high=voxel_size * 2, size=(50, 3))
 

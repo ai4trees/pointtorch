@@ -2,11 +2,16 @@
 
 __all__ = ["non_max_suppression", "compute_pairwise_ious"]
 
+from typing import Type
+
 import numpy as np
-import numpy.typing as npt
+
+from pointtorch.type_aliases import FloatArray, LongArray
 
 
-def compute_pairwise_ious(instances: npt.NDArray, instance_sizes: npt.NDArray, eps: float = 1e-8) -> npt.NDArray:
+def compute_pairwise_ious(
+    instances: LongArray, instance_sizes: LongArray, eps: float = 1e-8, dtype: Type = np.float64
+) -> FloatArray:
     r"""
     Computes pairwise intersection over union (IoU) between instances.
 
@@ -14,6 +19,7 @@ def compute_pairwise_ious(instances: npt.NDArray, instance_sizes: npt.NDArray, e
         instances: List of instances where each instance is represented by a set of point indices that are stored
             consecutively.
         instance_sizes: Number of points belonging to each instance.
+        dtype: Data type of the returned array. Defaults to :code:`np.float64`.
 
     Returns:
         Pairwise IoU scores.
@@ -30,10 +36,10 @@ def compute_pairwise_ious(instances: npt.NDArray, instance_sizes: npt.NDArray, e
     """
 
     if len(instance_sizes) == 0 or instance_sizes.sum() == 0:
-        return np.empty((0, 0), dtype=np.float32)
+        return np.empty((0, 0), dtype=dtype)
 
     split_instances = np.split(instances, np.cumsum(instance_sizes)[:-1])
-    ious = np.zeros((len(instance_sizes), len(instance_sizes)), dtype=np.float64)
+    ious = np.zeros((len(instance_sizes), len(instance_sizes)), dtype=dtype)
 
     for idx_1, instance_proposal in enumerate(split_instances):
         for idx_2, second_instance_proposal in enumerate(split_instances):
@@ -44,7 +50,7 @@ def compute_pairwise_ious(instances: npt.NDArray, instance_sizes: npt.NDArray, e
     return ious
 
 
-def non_max_suppression(ious: npt.NDArray, scores: npt.NDArray, iou_threshold: float) -> npt.NDArray:
+def non_max_suppression(ious: FloatArray, scores: FloatArray, iou_threshold: float) -> LongArray:
     r"""
     Non-maximum suppression operation for instance detection.
 

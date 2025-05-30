@@ -4,7 +4,6 @@ from typing import Callable, Optional
 
 from hypothesis import given, strategies as st, settings
 import numpy as np
-import numpy.typing as npt
 import pytest
 import torch
 
@@ -17,6 +16,7 @@ from pointtorch.operations.torch import (
     radius_search_torch_cluster,
 )
 from pointtorch.operations.numpy import voxel_downsampling
+from pointtorch.type_aliases import LongArray
 
 
 class TestRadiusSearch:
@@ -31,7 +31,7 @@ class TestRadiusSearch:
         radius: float,
         k: Optional[int],
         return_sorted: bool = False,
-    ) -> npt.NDArray[np.int64]:
+    ) -> LongArray:
         """
         Naive implementation of radius search to compute expected results for arbitrary inputs.
 

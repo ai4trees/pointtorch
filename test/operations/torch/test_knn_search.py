@@ -15,6 +15,7 @@ from pointtorch.operations.torch import (
     knn_search_open3d,
     knn_search_torch_cluster,
 )
+from pointtorch.type_aliases import LongArray
 from pointtorch.config import open3d_is_available, pytorch3d_is_available
 
 
@@ -28,7 +29,7 @@ class TestKnnSearch:
         point_cloud_sizes_support_points: torch.Tensor,
         point_cloud_sizes_query_points: torch.Tensor,
         k: int,
-    ) -> Tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
+    ) -> Tuple[LongArray, npt.NDArray[np.float64]]:
         """
         Naive implementation of knn search to compute expected results for arbitrary inputs.
 
