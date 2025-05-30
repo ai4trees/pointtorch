@@ -4,7 +4,6 @@ from typing import Callable, Optional
 
 from hypothesis import given, strategies as st, settings
 import numpy as np
-import numpy.typing as npt
 import pytest
 import torch
 
