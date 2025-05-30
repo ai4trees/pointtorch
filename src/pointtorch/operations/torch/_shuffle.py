@@ -17,7 +17,7 @@ def shuffle(
     Args:
         points: Batch of point clouds to shuffle.
         point_cloud_sizes: Number of points contained in each input point cloud.
-        generator: Random generator to be used for shuffling. Defaults to `None`.
+        generator: Random generator to be used for shuffling. Defaults to :code:`None`.
 
     Returns:
         Tuple of two tensors. The first is the shuffled tensor. The second contains the index of each point after \

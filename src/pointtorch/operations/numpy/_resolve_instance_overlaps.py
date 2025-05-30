@@ -5,12 +5,13 @@ __all__ = ["resolve_instance_overlaps"]
 from typing import Tuple
 
 import numpy as np
-import numpy.typing as npt
+
+from pointtorch.type_aliases import FloatArray, LongArray
 
 
 def resolve_instance_overlaps(
-    instances: npt.NDArray, instance_sizes: npt.NDArray, scores: npt.NDArray
-) -> Tuple[npt.NDArray, npt.NDArray, npt.NDArray]:
+    instances: LongArray, instance_sizes: LongArray, scores: FloatArray
+) -> Tuple[LongArray, LongArray, LongArray]:
     r"""
     Resolves overlaps between instances by assigning points that are included in multiple instances to the instance
     with the highest score.

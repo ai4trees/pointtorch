@@ -11,6 +11,7 @@ import numpy.typing as npt
 import pandas as pd
 
 from pointtorch.io import PointCloudIoData, PointCloudWriter
+from pointtorch.type_aliases import LongArray
 
 
 class PointCloud(pd.DataFrame):
@@ -40,7 +41,7 @@ class PointCloud(pd.DataFrame):
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         data: Union[npt.ArrayLike, Iterable, dict, pd.DataFrame],
-        index: Optional[Union[pd.Index, npt.NDArray[np.int64]]] = None,
+        index: Optional[Union[pd.Index, LongArray]] = None,
         columns: Optional[Union[pd.Index, npt.ArrayLike, list[str]]] = None,
         dtype: Optional[np.dtype] = None,
         copy: Optional[bool] = True,
@@ -130,7 +131,7 @@ class PointCloudSeries(pd.Series):
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         data: Optional[Union[npt.ArrayLike, Iterable, dict, int, float, str]] = None,
-        index: Optional[Union[pd.Index, npt.NDArray[np.int64]]] = None,
+        index: Optional[Union[pd.Index, LongArray]] = None,
         dtype: Optional[Union[str, np.dtype, pd.api.extensions.ExtensionDtype]] = None,
         name: Optional[Hashable] = None,
         copy: Optional[bool] = True,

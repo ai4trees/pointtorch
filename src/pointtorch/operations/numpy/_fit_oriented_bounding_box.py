@@ -8,9 +8,10 @@ import numpy
 from sklearn.decomposition import PCA
 
 from pointtorch import BoundingBox
+from pointtorch.type_aliases import FloatArray
 
 
-def fit_oriented_bounding_box(coords: numpy.ndarray, dim: int) -> Tuple[BoundingBox, numpy.ndarray, numpy.ndarray]:
+def fit_oriented_bounding_box(coords: FloatArray, dim: int) -> Tuple[BoundingBox, FloatArray, FloatArray]:
     r"""
     Computes the oriented bounding box of a point cloud. The principal components of the point distribution are computed
     and used as a coordinate basis. The point coordinates are transformed into the coordinate system spanned by this

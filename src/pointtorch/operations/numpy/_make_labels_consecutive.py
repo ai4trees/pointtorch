@@ -7,14 +7,16 @@ from typing import Optional, Tuple, Union
 import numpy as np
 import numpy.typing as npt
 
+from pointtorch.type_aliases import LongArray
+
 
 def make_labels_consecutive(
-    labels: npt.NDArray[np.int64],
+    labels: LongArray,
     start_id: int = 0,
     ignore_id: Optional[int] = None,
     inplace: bool = False,
     return_unique_labels: bool = False,
-) -> Union[npt.NDArray[np.int64], Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
+) -> Union[LongArray, Tuple[LongArray, LongArray]]:
     """
     Transforms the input labels into consecutive integer labels starting from a given :code:`start_id`.
 
