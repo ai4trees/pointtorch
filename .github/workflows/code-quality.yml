@@ -90,11 +90,8 @@ jobs:
         run: |
           apt-get update && apt-get install -y --no-install-recommends g++
           python -m pip install torch==${{ matrix.version.torch }}
-          python -m pip freeze
           python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
-          python -m pip freeze
           python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
-          python -m pip freeze
           python -m pip install --upgrade -e .'[dev, docs]'
       - name: Install package and dependencies
         if: ${{ matrix.version.python == '3.13'}}
