@@ -5,7 +5,6 @@ __all__ = ["make_labels_consecutive"]
 from typing import Optional, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from pointtorch.type_aliases import LongArray
 

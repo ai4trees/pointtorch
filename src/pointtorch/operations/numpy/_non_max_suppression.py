@@ -2,13 +2,15 @@
 
 __all__ = ["non_max_suppression", "compute_pairwise_ious"]
 
+from typing import Type
+
 import numpy as np
 
 from pointtorch.type_aliases import FloatArray, LongArray
 
 
 def compute_pairwise_ious(
-    instances: LongArray, instance_sizes: LongArray, eps: float = 1e-8, dtype: np.dtype = np.float64
+    instances: LongArray, instance_sizes: LongArray, eps: float = 1e-8, dtype: Type = np.float64
 ) -> FloatArray:
     r"""
     Computes pairwise intersection over union (IoU) between instances.
