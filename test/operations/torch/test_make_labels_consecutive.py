@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-import numpy
+import numpy as np
 import pytest
 import torch
 
@@ -43,24 +43,33 @@ class TestMakeLabelsConsecutive:
             labels, ignore_id=None, inplace=False, return_unique_labels=True
         )
 
-        numpy.testing.assert_array_equal(labels.cpu().numpy(), transformed_labels.cpu().numpy())
-        numpy.testing.assert_array_equal(labels.cpu().numpy(), unique_labels.cpu().numpy())
+        np.testing.assert_array_equal(labels.cpu().numpy(), transformed_labels.cpu().numpy())
+        np.testing.assert_array_equal(labels.cpu().numpy(), unique_labels.cpu().numpy())
 
     @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
-    @pytest.mark.parametrize("ignore_id", [-1, None])
+    @pytest.mark.parametrize("ignore_id", [-1, 0, None])
+    @pytest.mark.parametrize("start_id", [None, 5])
     @pytest.mark.parametrize("inplace", [True, False])
     @pytest.mark.parametrize("return_unique_labels", [True, False])
     def test_make_labels_consecutive_remapping_necessary(
-        self, device: str, ignore_id: Optional[int], inplace: bool, return_unique_labels: bool
+        self, device: str, ignore_id: Optional[int], start_id: Optional[int], inplace: bool, return_unique_labels: bool
     ):
         labels = torch.tensor([10, -1, 20, 20, 10, 30], device=device)
-        start_id = 5
-        if ignore_id is not None:
-            expected_transformed_labels = numpy.array([5, -1, 6, 6, 5, 7])
-            expected_unique_labels = numpy.arange(start_id, start_id + 3)
+        if start_id is not None:
+            expected_start_id = start_id
         else:
-            expected_transformed_labels = numpy.array([6, 5, 7, 7, 6, 8])
-            expected_unique_labels = numpy.arange(start_id, start_id + 4)
+            expected_start_id = 0 if ignore_id is None else ignore_id + 1
+
+        if ignore_id is not None:
+            expected_transformed_labels = np.array([0, -1, 1, 1, 0, 2]) + expected_start_id
+            expected_transformed_labels[labels.cpu().numpy() == -1] = ignore_id
+            expected_unique_labels = np.arange(expected_start_id, expected_start_id + 3)
+        else:
+            expected_transformed_labels = np.array([1, 0, 2, 2, 1, 3]) + expected_start_id
+            expected_unique_labels = np.arange(expected_start_id, expected_start_id + 4)
+        if ignore_id is not None:
+            labels[labels == -1] = ignore_id
+            expected_transformed_labels[expected_transformed_labels == -1] = ignore_id
 
         output = make_labels_consecutive(
             labels, start_id, ignore_id=ignore_id, inplace=inplace, return_unique_labels=return_unique_labels
@@ -69,14 +78,14 @@ class TestMakeLabelsConsecutive:
         if return_unique_labels:
             transformed_labels, unique_labels = output
 
-            numpy.testing.assert_array_equal(expected_unique_labels, unique_labels.cpu().numpy())
+            np.testing.assert_array_equal(expected_unique_labels, unique_labels.cpu().numpy())
         else:
             transformed_labels = output
 
-        numpy.testing.assert_array_equal(expected_transformed_labels, transformed_labels.cpu().numpy())
+        np.testing.assert_array_equal(expected_transformed_labels, transformed_labels.cpu().numpy())
 
         if inplace:
-            numpy.testing.assert_array_equal(labels.cpu().numpy(), transformed_labels.cpu().numpy())
+            np.testing.assert_array_equal(labels.cpu().numpy(), transformed_labels.cpu().numpy())
         else:
             assert (labels != transformed_labels).any()
 

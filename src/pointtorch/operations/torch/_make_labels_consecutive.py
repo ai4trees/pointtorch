@@ -9,7 +9,7 @@ import torch
 
 def make_labels_consecutive(
     labels: torch.Tensor,
-    start_id: int = 0,
+    start_id: Optional[int] = None,
     ignore_id: Optional[int] = None,
     inplace: bool = False,
     return_unique_labels: bool = False,
@@ -39,17 +39,22 @@ def make_labels_consecutive(
     if not inplace:
         labels = labels.clone()
 
+    if start_id is None:
+        if ignore_id is not None:
+            start_id = ignore_id + 1
+        else:
+            start_id = 0
+
     if ignore_id is not None:
         mask = labels != ignore_id
         labels_to_remap = labels[mask]
     else:
         labels_to_remap = labels
 
-    unique_labels = torch.unique(labels_to_remap)
-    unique_labels = torch.sort(unique_labels)[0]
+    unique_labels = torch.unique(labels_to_remap, sorted=True)
     key = torch.arange(0, len(unique_labels), device=labels.device, dtype=labels.dtype)
-    index = torch.bucketize(labels_to_remap, unique_labels, right=False)
-    labels_to_remap = key[index]
+    idx = torch.bucketize(labels_to_remap, unique_labels, right=False)
+    labels_to_remap = key[idx]
     labels_to_remap += start_id
 
     if ignore_id is not None:
