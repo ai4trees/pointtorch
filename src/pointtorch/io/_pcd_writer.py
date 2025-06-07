@@ -4,11 +4,9 @@ __all__ = ["PcdWriter"]
 
 import pathlib
 from typing import List, Literal, Optional, Union
-import warnings
 
-import numpy as np
 import pandas as pd
-from pypcd.pypcd import PointCloud, numpy_pcd_type_mappings
+from pypcd4 import PointCloud, Encoding
 
 from ._base_point_cloud_writer import BasePointCloudWriter
 from ._point_cloud_io_data import PointCloudIoData
@@ -23,7 +21,7 @@ class PcdWriter(BasePointCloudWriter):
     """
 
     def __init__(self, file_type: Literal["ascii", "binary", "binary_compressed"] = "binary_compressed"):
-        self._file_type = file_type
+        self._encoding = Encoding(file_type)
 
     def supported_file_formats(self) -> List[str]:
         """
@@ -78,32 +76,10 @@ class PcdWriter(BasePointCloudWriter):
             z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
         """
 
-        dtypes = dict(point_cloud.dtypes)
-        if dtypes["x"] != np.float32 or dtypes["y"] != np.float32 or dtypes["z"] != np.float32:
-            warnings.warn(
-                "Converting xyz to 32 bit floating point numbers since pcd only supports coordinates of this type."
-            )
-        dtypes["x"] = np.float32
-        dtypes["y"] = np.float32
-        dtypes["z"] = np.float32
+        fields = point_cloud.columns
+        types = [point_cloud[column].dtype for column in point_cloud.columns]
 
-        records = point_cloud.to_records(index=False, column_dtypes=dtypes)
-        point_cloud_structured_array = np.array(records, dtype=records.dtype.descr)
-
-        type_mapping = dict(numpy_pcd_type_mappings)
-
-        metadata = {
-            "version": "0.7",
-            "fields": point_cloud.columns,
-            "type": [type_mapping[point_cloud_structured_array[column].dtype][0] for column in point_cloud.columns],
-            "size": [type_mapping[point_cloud_structured_array[column].dtype][1] for column in point_cloud.columns],
-            "width": len(point_cloud),
-            "height": 1,
-            "points": len(point_cloud),
-            "viewpoint": "0 0 0 1 0 0 0",
-            "data": self._file_type,
-            "count": [1 for _ in range(len(point_cloud.columns))],
-        }
-
-        point_cloud_pypcd = PointCloud(metadata, point_cloud_structured_array)
-        point_cloud_pypcd.save_pcd(file_path, compression=self._file_type)
+        point_cloud_pypcd = PointCloud.from_points(
+            [point_cloud[column].to_numpy() for column in point_cloud.columns], fields, types
+        )
+        point_cloud_pypcd.save(file_path, encoding=self._encoding)
