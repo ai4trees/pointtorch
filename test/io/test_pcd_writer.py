@@ -70,10 +70,7 @@ class TestPcdWriter:
         ).all()
 
         for column in point_cloud_df.columns:
-            if column in ["x", "y", "z"]:
-                assert read_point_cloud_data.data[column].dtype == np.float32
-            else:
-                assert read_point_cloud_data.data[column].dtype == point_cloud_df[column].dtype
+            assert read_point_cloud_data.data[column].dtype == point_cloud_df[column].dtype
 
     def test_write_unsupported_format(self, pcd_writer: PcdWriter, cache_dir: str):
         point_cloud_data = PointCloudIoData(pd.DataFrame([[0, 0, 0]], columns=["x", "y", "z"]))
