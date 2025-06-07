@@ -6,7 +6,7 @@ import pathlib
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
-from pypcd.pypcd import PointCloud
+from pypcd4 import PointCloud
 
 from ._base_point_cloud_reader import BasePointCloudReader
 from ._point_cloud_io_data import PointCloudIoData
