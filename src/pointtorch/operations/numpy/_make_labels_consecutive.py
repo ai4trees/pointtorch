@@ -11,7 +11,7 @@ from pointtorch.type_aliases import LongArray
 
 def make_labels_consecutive(
     labels: LongArray,
-    start_id: int = 0,
+    start_id: Optional[int] = None,
     ignore_id: Optional[int] = None,
     inplace: bool = False,
     return_unique_labels: bool = False,
@@ -21,7 +21,8 @@ def make_labels_consecutive(
 
     Args:
         labels: An array of original labels.
-        start_id: The starting ID for the consecutive labels. Defaults to zero.
+        start_id: The starting ID for the consecutive labels. If set to :code:`None`, the starting ID is set to
+            :code:`ignore_id + 1` if :code:`ignore_id` is not :code:`None` and zero otherwise. Defaults to :code:`None`.
         ignore_id: A label ID that should not be changed when transforming the labels.
         inplace: Whether the transformation should be applied inplace to the :code:`labels` array. Defaults to
             :code:`False`.
@@ -38,6 +39,12 @@ def make_labels_consecutive(
             return labels, np.empty_like(labels)
         return labels
 
+    if start_id is None:
+        if ignore_id is not None:
+            start_id = ignore_id + 1
+        else:
+            start_id = 0
+
     if not inplace:
         labels = labels.copy()
 
@@ -48,10 +55,9 @@ def make_labels_consecutive(
         labels_to_remap = labels
 
     unique_labels = np.unique(labels_to_remap)
-    unique_labels = np.sort(unique_labels)
     key = np.arange(0, len(unique_labels), dtype=labels.dtype)
-    index = np.digitize(labels_to_remap, unique_labels, right=True)
-    labels_to_remap[:] = key[index]
+    idx = np.digitize(labels_to_remap, unique_labels, right=True)
+    labels_to_remap[:] = key[idx]
     labels_to_remap += start_id
 
     if ignore_id is not None:
