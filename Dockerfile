@@ -38,6 +38,7 @@ RUN python -m pip install torch-cluster==1.6.3 -f https://data.pyg.org/whl/torch
 RUN python -m pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
 RUN python -m pip install spconv-cu124
 RUN python -m pip install flash-attn --no-build-isolation
+RUN python -m pip install --extra-index-url=https://pypi.nvidia.com "cuml-cu12==25.6.*"
 
 # ######################## Open3D build #################################
 
