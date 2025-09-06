@@ -33,6 +33,7 @@ def unzip(
 
     Raises:
         FileNotFoundError: If the zip file does not exist.
+        KeyError: If :code:`items` contains items not existing in the zip archive.
     """
     if isinstance(dest_path, str):
         dest_path = pathlib.Path(dest_path)
@@ -43,6 +44,12 @@ def unzip(
             prog_bar = tqdm(desc=progress_bar_desc, unit="B", unit_scale=True, unit_divisor=1000, total=total_size)
         else:
             prog_bar = None
+
+        if items is not None:
+            valid_items = [item.filename for item in zip_file.infolist()]
+            invalid_items = [item for item in items if item not in valid_items]
+            if len(invalid_items) > 0:
+                raise KeyError(f"The following items are not contained in the zipfile: {invalid_items}.")
 
         for item in zip_file.infolist():
             if items is not None and item.filename not in items:
