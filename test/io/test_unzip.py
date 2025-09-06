@@ -64,6 +64,21 @@ class TestUnzip:
             file_content = file.read()
             assert "Test1" == file_content
 
+    def test_selected_items(
+        self,
+        zip_file_path: Union[str, pathlib.Path],
+        cache_dir: str,
+    ):
+        cache_dir = pathlib.Path(cache_dir)
+
+        unzip(zip_file_path, cache_dir, items="test/test1.txt")
+
+        file_path_0 = cache_dir / "test0.txt"
+        file_path_1 = cache_dir / "test/test1.txt"
+
+        assert not file_path_0.exists()
+        assert file_path_1.exists()
+
     def test_file_not_existing(self, cache_dir: str):
         with pytest.raises(FileNotFoundError):
             unzip(os.path.join(cache_dir, "test.zip"), cache_dir)
