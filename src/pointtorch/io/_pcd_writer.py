@@ -76,10 +76,10 @@ class PcdWriter(BasePointCloudWriter):
             z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
         """
 
-        fields = point_cloud.columns
+        fields = list(point_cloud.columns)
         types = [point_cloud[column].dtype for column in point_cloud.columns]
 
         point_cloud_pypcd = PointCloud.from_points(
-            [point_cloud[column].to_numpy() for column in point_cloud.columns], fields, types
+            [point_cloud[column].to_numpy() for column in point_cloud.columns], fields, types  # type: ignore[arg-type]
         )
         point_cloud_pypcd.save(file_path, encoding=self._encoding)
