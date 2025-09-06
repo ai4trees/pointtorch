@@ -9,13 +9,11 @@ from urllib import request, error as urllib_error
 
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 class DownloadProgressBar:  # pylint: disable=too-few-public-methods
     """
-    Progress bar showing the progress of file download.
+    Progress bar showing the progress of file download. If the server does not provide a content-length header for the
+    downloaded file, the description is printed to the log instead.
 
     Args:
         desc: Label of the progess bar. Defaults to `None`.
@@ -23,7 +21,11 @@ class DownloadProgressBar:  # pylint: disable=too-few-public-methods
 
     def __init__(self, desc: Optional[str] = None):
         self._desc = desc
+        self._initialized = False
         self._progress_bar = None
+
+        self._logger = logging.getLogger(__name__)
+        self._logger.setLevel(logging.INFO)
 
     def __call__(self, block_num, block_size, total_size):
         """
@@ -35,21 +37,30 @@ class DownloadProgressBar:  # pylint: disable=too-few-public-methods
             total_size: Total size of the file to be downloaded in bytes.
         """
 
-        if self._progress_bar is None:
-            self._progress_bar = tqdm(
-                desc=self._desc,
-                total=total_size,
-                unit="B",
-                unit_scale=True,
-                unit_divisor=1000,
-            )
+        if not self._initialized:
+            self._initialized = True
 
-        downloaded = block_num * block_size
-        if downloaded < total_size:
-            self._progress_bar.update(block_size)
-        else:
-            self._progress_bar.close()
-            self._progress_bar = None
+            # only if the server provides a a content-length header, the file size is known in advance
+            # therefore, a progress bar is only created when such a header is provided (which is the case when total
+            # size > 0)
+            if total_size > 0:
+                self._progress_bar = tqdm(
+                    desc=self._desc,
+                    total=total_size,
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1000,
+                )
+            else:
+                self._logger.info(self._desc)
+
+        if self._progress_bar is not None:
+            downloaded = block_num * block_size
+            if downloaded < total_size:
+                self._progress_bar.update(block_size)
+            else:
+                self._progress_bar.close()
+                self._progress_bar = None
 
 
 def download_file(
@@ -70,16 +81,7 @@ def download_file(
     """
 
     try:
-        # only if the server provides a a content-length header, the file size is known in advance
-        # therefore, a progress bar is only created when such a header is provided
-        has_content_length_header = False
-        with request.urlopen(url) as response:
-            headers = response.info()
-            if headers.get("Content-Length") is not None:
-                has_content_length_header = True
-        prog_bar = DownloadProgressBar(desc=progress_bar_desc) if (progress_bar and has_content_length_header) else None
-        if progress_bar and prog_bar is None:
-            logger.info(progress_bar_desc)
+        prog_bar = DownloadProgressBar(desc=progress_bar_desc) if progress_bar else None
 
         file_path, _ = request.urlretrieve(url, file_path, prog_bar)
     except (urllib_error.URLError, urllib_error.HTTPError) as error:
