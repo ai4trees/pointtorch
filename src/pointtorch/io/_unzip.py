@@ -5,6 +5,7 @@ __all__ = ["unzip"]
 import pathlib
 from shutil import copyfileobj
 from typing import IO, Optional, Union
+import zipfile_deflate64  # pylint: disable: unused-import # needed to patch zipfile
 import zipfile
 
 from tqdm import tqdm
