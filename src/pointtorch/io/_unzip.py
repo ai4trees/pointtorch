@@ -39,7 +39,10 @@ def unzip(
         dest_path = pathlib.Path(dest_path)
 
     with zipfile.ZipFile(zip_path) as zip_file:
-        total_size = sum(getattr(item, "file_size", 0) for item in zip_file.infolist())
+        total_size = 0
+        for item in zip_file.infolist():
+            if items is None or item.filename in items:
+                total_size += getattr(item, "file_size", 0)
         if progress_bar:
             prog_bar = tqdm(desc=progress_bar_desc, unit="B", unit_scale=True, unit_divisor=1000, total=total_size)
         else:
