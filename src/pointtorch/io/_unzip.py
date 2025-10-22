@@ -12,7 +12,7 @@ from tqdm.utils import CallbackIOWrapper
 import zipfile_deflate64  # pylint: disable=unused-import # needed to patch zipfile
 
 
-def unzip(
+def unzip(  # pylint. disable=too-many-branches
     zip_path: Union[str, pathlib.Path],
     dest_path: Union[str, pathlib.Path],
     items: Optional[List[str]] = None,
