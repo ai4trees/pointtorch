@@ -30,7 +30,7 @@ def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.
     """
     min_label = labels.min()
 
-    one_hot_labels = F.one_hot(labels - min_label)
+    one_hot_labels = F.one_hot(labels - min_label)  # pylint: disable=not-callable
 
     label_counts = scatter_add(one_hot_labels, batch_indices, dim=0)
 
