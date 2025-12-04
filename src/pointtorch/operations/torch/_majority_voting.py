@@ -28,10 +28,12 @@ def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.
           | :math:`B` = batch size
           | :math:`N` = number of points
     """
-    one_hot_labels = F.one_hot(labels)
+    min_label = labels.min()
+
+    one_hot_labels = F.one_hot(labels - min_label)
 
     label_counts = scatter_add(one_hot_labels, batch_indices, dim=0)
 
-    majority_labels = torch.argmax(label_counts, dim=-1)
+    majority_labels = torch.argmax(label_counts, dim=-1) + min_label
 
     return majority_labels

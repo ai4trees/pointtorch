@@ -20,3 +20,14 @@ class TestMajorityVoting:
         majority_labels = majority_voting(labels, batch_indices)
 
         np.testing.assert_array_equal(expected_majority_labels, majority_labels.cpu().numpy())
+
+    @pytest.mark.parametrize("device", ("cpu", "cuda") if torch.cuda.is_available() else ("cpu",))
+    def test_negativ_labels(self, device: str):
+        labels = torch.tensor([0, 1, 1, 2, -1, -1, 3], dtype=torch.long, device=device)
+        batch_indices = torch.tensor([0] * 4 + [1] * 3, dtype=torch.long, device=device)
+
+        expected_majority_labels = np.array([1, -1], dtype=np.int64)
+
+        majority_labels = majority_voting(labels, batch_indices)
+
+        np.testing.assert_array_equal(expected_majority_labels, majority_labels.cpu().numpy())
