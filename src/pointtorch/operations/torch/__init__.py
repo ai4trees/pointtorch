@@ -5,6 +5,7 @@ Point cloud processing operations for the use with
 
 from ._pack_batch import *
 from ._knn_search import *
+from ._majority_voting import *
 from ._make_labels_consecutive import *
 from ._max_pooling import *
 from ._neighbor_search import *
