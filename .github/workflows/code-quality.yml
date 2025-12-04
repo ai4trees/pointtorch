@@ -100,7 +100,8 @@ jobs:
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
-          python -m pip install --no-use-pep517 torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          git clone https://github.com/rusty1s/pytorch_scatter.git
+          cd pytorch_scatter && python setup.py install
           python -m pip freeze
           python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
           python -m pip freeze
