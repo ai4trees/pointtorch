@@ -24,3 +24,10 @@ def scatter_min(
     out: Optional[torch.Tensor] = ...,
     dim_size: Optional[int] = ...,
 ) -> Tuple[torch.Tensor, torch.Tensor]: ...
+def scatter_add(
+    src: torch.Tensor,
+    index: torch.Tensor,
+    dim: int = ...,
+    out: Optional[torch.Tensor] = ...,
+    dim_size: Optional[int] = ...,
+) -> torch.Tensor: ...
