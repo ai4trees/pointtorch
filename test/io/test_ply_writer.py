@@ -30,11 +30,18 @@ class TestPlyWriter:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
+    @pytest.mark.parametrize("file_format", ["ply", "PLY"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     @pytest.mark.parametrize("file_type", ["binary", "ascii"])
-    def test_writer(
-        self, ply_reader: PlyReader, cache_dir: str, columns: Optional[list[str]], use_pathlib: bool, file_type: str
+    def test_writer(  # pylint: disable=too-many-locals
+        self,
+        ply_reader: PlyReader,
+        cache_dir: str,
+        file_format: str,
+        columns: Optional[list[str]],
+        use_pathlib: bool,
+        file_type: str,
     ):
         ply_writer = PlyWriter(file_type=file_type)
         point_cloud_df = pd.DataFrame(
@@ -47,7 +54,7 @@ class TestPlyWriter:
         point_cloud_df[["r", "g", "b"]] = point_cloud_df[["r", "g", "b"]].astype(np.uint32)
         point_cloud_data = PointCloudIoData(point_cloud_df)
         point_cloud_data.identifier = "test"
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 

@@ -29,6 +29,7 @@ class TestPcdReader:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
+    @pytest.mark.parametrize("file_format", ["pcd", "PCD"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])
@@ -37,6 +38,7 @@ class TestPcdReader:
         pcd_reader: PcdReader,
         pcd_writer: PcdWriter,
         cache_dir: str,
+        file_format: str,
         columns: Optional[list[str]],
         num_rows: Optional[int],
         use_pathlib: bool,
@@ -45,7 +47,7 @@ class TestPcdReader:
             [[0, 0, 0, 1, 12], [1, 1, 1, 0, 23], [2, 2, 2, 0, 1]], columns=["x", "y", "z", "classification", "instance"]
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.pcd")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 

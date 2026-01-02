@@ -30,7 +30,7 @@ class TestCsvReader:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
-    @pytest.mark.parametrize("file_format", ["csv", "txt"])
+    @pytest.mark.parametrize("file_format", ["csv", "txt", "CSV"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])
@@ -49,7 +49,7 @@ class TestCsvReader:
         file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
-        point_cloud_df.to_csv(file_path, index=False, sep="," if file_format == "csv" else " ")
+        point_cloud_df.to_csv(file_path, index=False, sep="," if file_format.lower() == "csv" else " ")
 
         read_point_cloud = csv_reader.read(file_path, columns=columns, num_rows=num_rows)
 

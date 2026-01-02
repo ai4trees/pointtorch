@@ -30,6 +30,7 @@ class TestPlyReader:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
+    @pytest.mark.parametrize("file_format", ["ply", "PLY"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])
@@ -38,6 +39,7 @@ class TestPlyReader:
         ply_reader: PlyReader,
         ply_writer: PlyWriter,
         cache_dir: str,
+        file_format: str,
         columns: Optional[list[str]],
         num_rows: Optional[int],
         use_pathlib: bool,
@@ -47,7 +49,7 @@ class TestPlyReader:
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
         point_cloud_data.identifier = "test"
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 

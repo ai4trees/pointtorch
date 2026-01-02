@@ -58,7 +58,7 @@ class CsvReader(BasePointCloudReader):
             Point cloud data.
         """
 
-        file_format = file_path.suffix.lstrip(".")
+        file_format = file_path.suffix.lstrip(".").lower()
         return pd.read_csv(file_path, usecols=columns, sep="," if file_format == "csv" else " ", nrows=num_rows)
 
     @staticmethod
@@ -73,7 +73,7 @@ class CsvReader(BasePointCloudReader):
             Maximum resolution of the x-, y-, and z-coordinates of the point cloud.
         """
 
-        file_format = file_path.suffix.lstrip(".")
+        file_format = file_path.suffix.lstrip(".").lower()
         df = pd.read_csv(file_path, usecols=["x", "y", "z"], sep="," if file_format == "csv" else " ", dtype=str)
 
         # The precision of each coordinate is calculated by counting the digits after the decimal.

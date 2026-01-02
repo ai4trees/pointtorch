@@ -30,11 +30,18 @@ class TestPcdWriter:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
+    @pytest.mark.parametrize("file_format", ["pcd", "PCD"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     @pytest.mark.parametrize("file_type", ["ascii", "binary", "binary_compressed"])
-    def test_writer(
-        self, pcd_reader: PcdReader, cache_dir: str, columns: Optional[list[str]], use_pathlib: bool, file_type: str
+    def test_writer(  # pylint: disable=too-many-locals
+        self,
+        pcd_reader: PcdReader,
+        cache_dir: str,
+        file_format: str,
+        columns: Optional[list[str]],
+        use_pathlib: bool,
+        file_type: str,
     ):
         pcd_writer = PcdWriter(file_type=file_type)
         point_cloud_df = pd.DataFrame(
@@ -45,7 +52,7 @@ class TestPcdWriter:
         point_cloud_df[["x", "y", "z"]] = point_cloud_df[["x", "y", "z"]].astype(np.float64)
         point_cloud_df["instance"] = point_cloud_df["instance"].astype(np.int64)
         point_cloud_data = PointCloudIoData(point_cloud_df)
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.pcd")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 
