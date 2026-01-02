@@ -49,7 +49,7 @@ class TestPlyReader:
         )
         point_cloud_data = PointCloudIoData(point_cloud_df)
         point_cloud_data.identifier = "test"
-        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, "test_point_cloud.ply")
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
 

@@ -30,7 +30,10 @@ class TestPointCloudReader:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
-    @pytest.mark.parametrize("file_format", ["csv", "CSV", "txt", "TXT", "h5", "H5", "hdf", "HDF", "las", "LAS", "laz", "LAZ", "pcd", "PCD", "ply", "PLY"])
+    @pytest.mark.parametrize(
+        "file_format",
+        ["csv", "CSV", "txt", "TXT", "h5", "H5", "hdf", "HDF", "las", "LAS", "laz", "LAZ", "pcd", "PCD", "ply", "PLY"],
+    )
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_read(
         self,

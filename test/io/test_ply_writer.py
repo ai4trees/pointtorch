@@ -34,8 +34,14 @@ class TestPlyWriter:
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     @pytest.mark.parametrize("file_type", ["binary", "ascii"])
-    def test_writer(
-        self, ply_reader: PlyReader, cache_dir: str, file_format: str, columns: Optional[list[str]], use_pathlib: bool, file_type: str
+    def test_writer(  # pylint: disable=too-many-locals
+        self,
+        ply_reader: PlyReader,
+        cache_dir: str,
+        file_format: str,
+        columns: Optional[list[str]],
+        use_pathlib: bool,
+        file_type: str,
     ):
         ply_writer = PlyWriter(file_type=file_type)
         point_cloud_df = pd.DataFrame(
