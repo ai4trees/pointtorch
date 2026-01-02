@@ -30,7 +30,7 @@ class TestHdfReader:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
-    @pytest.mark.parametrize("file_format", ["h5", "hdf"])
+    @pytest.mark.parametrize("file_format", ["h5", "hdf", "HDF"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("num_rows", [None, 2])
     @pytest.mark.parametrize("use_pathlib", [True, False])

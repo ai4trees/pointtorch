@@ -30,7 +30,7 @@ class TestLasWriter:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
-    @pytest.mark.parametrize("file_format", ["las", "laz"])
+    @pytest.mark.parametrize("file_format", ["las", "laz", "LAZ"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_writer(

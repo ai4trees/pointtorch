@@ -50,7 +50,7 @@ class PointCloudReader:
         if isinstance(file_path, str):
             file_path = pathlib.Path(file_path)
 
-        file_format = file_path.suffix.lstrip(".")
+        file_format = file_path.suffix.lstrip(".").lower()
         if file_format not in self.supported_file_formats():
             raise ValueError(f"The {file_format} format is not supported by the point cloud reader.")
         return self._readers[file_format].read(file_path, columns=columns, num_rows=num_rows)

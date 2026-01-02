@@ -41,7 +41,7 @@ class BasePointCloudWriter(abc.ABC):
             file_path = pathlib.Path(file_path)
 
         file_format = file_path.suffix.lstrip(".")
-        if file_format not in self.supported_file_formats():
+        if file_format.lower() not in self.supported_file_formats():
             raise ValueError(f"The {file_format} format is not supported by the point cloud writer.")
 
         point_cloud_df = point_cloud.data
