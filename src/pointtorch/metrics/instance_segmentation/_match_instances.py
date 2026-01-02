@@ -9,7 +9,7 @@ import torch
 from torch_scatter import scatter_max, scatter_min
 
 
-def match_instances(  # pylint: disable=too-many-locals, too-many-statements
+def match_instances(  # pylint: disable=too-many-locals, too-many-statements, too-many-return-statements, too-many-branches
     target: torch.Tensor,
     prediction: torch.Tensor,
     xyz: Optional[torch.Tensor] = None,
@@ -88,8 +88,8 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
           tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric values
-          are set to zero.
+          and recall between the matched instances. For target instances not matched to any prediction, the metric
+          values are set to zero.
 
     Raises:
         ValueError: If :code:`target` and :code:`prediction` don't have the same length.
@@ -185,7 +185,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements
         )
     if method == "point2tree":
         return match_instances_point2tree(
-            xyz,
+            xyz,  # type: ignore[arg-type]
             target,
             unique_target_ids,
             prediction,
@@ -198,7 +198,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements
         )
     if method == "for_instance":
         return match_instances_point2tree(
-            xyz,
+            xyz,  # type: ignore[arg-type]
             target,
             unique_target_ids,
             prediction,
@@ -224,7 +224,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements
     raise ValueError(f"Invalid matching method: {method}.")
 
 
-def match_instances_iou(  # pylint: disable=too-many-locals, too-many-positional-arguments
+def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals, too-many-positional-arguments
     target: torch.Tensor,
     unique_target_ids: torch.Tensor,
     prediction: torch.Tensor,
@@ -295,8 +295,8 @@ def match_instances_iou(  # pylint: disable=too-many-locals, too-many-positional
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
           tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric values
-          are set to zero.
+          and recall between the matched instances. For target instances not matched to any prediction, the metric
+          values are set to zero.
 
     Shape:
         - :code:`target`: :math:`(N)`
@@ -413,7 +413,7 @@ def match_instances_iou(  # pylint: disable=too-many-locals, too-many-positional
     return matched_target_ids, matched_predicted_ids, metrics
 
 
-def match_instances_point2tree(  # pylint: disable=too-many-locals, too-many-positional-arguments
+def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many-locals, too-many-positional-arguments
     xyz: torch.Tensor,
     target: torch.Tensor,
     unique_target_ids: torch.Tensor,
@@ -484,8 +484,8 @@ def match_instances_point2tree(  # pylint: disable=too-many-locals, too-many-pos
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
           tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric values
-          are set to zero.
+          and recall between the matched instances. For target instances not matched to any prediction, the metric
+          values are set to zero.
 
     Shape:
         - :code:`xyz`: :math:`(N, 3)`
@@ -619,7 +619,7 @@ def match_instances_point2tree(  # pylint: disable=too-many-locals, too-many-pos
     return matched_target_ids, matched_predicted_ids, metrics
 
 
-def match_instances_tree_learn(  # pylint: disable=too-many-locals, too-many-positional-arguments
+def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many-locals, too-many-positional-arguments
     target: torch.Tensor,
     unique_target_ids: torch.Tensor,
     prediction: torch.Tensor,
@@ -656,8 +656,8 @@ def match_instances_tree_learn(  # pylint: disable=too-many-locals, too-many-pos
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
           tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric values
-          are set to zero.
+          and recall between the matched instances. For target instances not matched to any prediction, the metric
+          values are set to zero.
 
     Shape:
         - :code:`target`: :math:`(N)`
@@ -879,7 +879,6 @@ def _get_matching_candidates(
         | :math:`N` = number of points
         | :math:`P` = number of pairs of target and predicted instances that overlap
     """
-    device = target.device
 
     valid_pair_mask = torch.logical_and((target != invalid_instance_id), (prediction != invalid_instance_id))
     valid_pair_target = target[valid_pair_mask]
