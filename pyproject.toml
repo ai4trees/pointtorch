@@ -56,7 +56,6 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-httpserver",
-    "scipy-stubs",
     "types-tqdm",
 ]
 docs = [
