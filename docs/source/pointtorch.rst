@@ -8,6 +8,7 @@ pointtorch
    pointtorch.config
    pointtorch.core
    pointtorch.io
+   pointtorch.metrics
    pointtorch.operations
 
 .. automodule:: pointtorch
