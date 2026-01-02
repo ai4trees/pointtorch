@@ -21,7 +21,7 @@ class TestMetrics:
         "method", ["panoptic_segmentation", "point2tree", "tree_learn", "for_instance", "for_ai_net"]
     )
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_match_instances(self, method: str, invalid_instance_id: int, device: str):
+    def test_match_instances(self, method: str, invalid_instance_id: int, device: str):  # pylint: disable=too-many-locals
         start_instance_id = invalid_instance_id + 1
         target = torch.tensor([1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 1, 3, 3, 3, 3, -1], dtype=torch.long, device=device)
         prediction = torch.tensor(
@@ -231,7 +231,7 @@ class TestMetrics:
             )
 
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_prediction_with_multiple_matches(self, invalid_instance_id: int, device: str):
+    def test_prediction_with_multiple_matches(self, invalid_instance_id: int, device: str):  # pylint: disable=too-many-locals
         start_instance_id = invalid_instance_id + 1
 
         target = torch.tensor([0, -1, 2, 2, 3, -1, -1, 1, 1, 1], device=device) + start_instance_id
@@ -240,8 +240,6 @@ class TestMetrics:
         prediction = torch.tensor([0, 0, 0, 0, 0, -1, -1, 2, 2, 1], device=device) + start_instance_id
         unique_prediction_ids = torch.unique(prediction)
         unique_prediction_ids = unique_prediction_ids[unique_prediction_ids != invalid_instance_id]
-
-        iou_threshold = 0.1
 
         expected_matched_target_ids = np.array([2, -1, 1], dtype=np.int64) + start_instance_id
         expected_matched_predicted_ids = np.array([0, 2, 0, 0], dtype=np.int64) + start_instance_id
@@ -379,7 +377,7 @@ class TestMetrics:
     @pytest.mark.parametrize("accept_equal_iou", [True, False])
     @pytest.mark.parametrize("sort_by_target_height", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_match_instances_point2tree_sort_target_by_height(
+    def test_match_instances_point2tree_sort_target_by_height(  # pylint: disable=too-many-locals, too-many-branches
         self,
         min_iou_treshold: float,
         accept_equal_iou: bool,
@@ -504,7 +502,7 @@ class TestMetrics:
     @pytest.mark.parametrize("min_iou_treshold", [None, 0.2, 0.5])
     @pytest.mark.parametrize("accept_equal_iou", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1])  # , 0])
-    def test_match_instances_tree_learn(
+    def test_match_instances_tree_learn(  # pylint: disable=too-many-locals
         self, min_iou_treshold: float, accept_equal_iou: bool, invalid_instance_id: int, device: str
     ):
         start_instance_id = invalid_instance_id + 1
@@ -580,7 +578,7 @@ class TestMetrics:
     @pytest.mark.parametrize("min_iou_treshold", [None, 0.2, 0.4, 0.5])
     @pytest.mark.parametrize("accept_equal_iou", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_match_instances_for_ai_net_coverage(
+    def test_match_instances_for_ai_net_coverage(  # pylint: disable=too-many-locals
         self, min_iou_treshold: float, accept_equal_iou: bool, invalid_instance_id: int, device: str
     ):
         start_instance_id = invalid_instance_id + 1
