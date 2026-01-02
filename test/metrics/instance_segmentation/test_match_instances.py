@@ -21,7 +21,9 @@ class TestMetrics:
         "method", ["panoptic_segmentation", "point2tree", "tree_learn", "for_instance", "for_ai_net"]
     )
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_match_instances(self, method: str, invalid_instance_id: int, device: str):  # pylint: disable=too-many-locals
+    def test_match_instances(  # pylint: disable=too-many-locals
+        self, method: str, invalid_instance_id: int, device: str
+    ):
         start_instance_id = invalid_instance_id + 1
         target = torch.tensor([1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 1, 3, 3, 3, 3, -1], dtype=torch.long, device=device)
         prediction = torch.tensor(
@@ -231,7 +233,9 @@ class TestMetrics:
             )
 
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_prediction_with_multiple_matches(self, invalid_instance_id: int, device: str):  # pylint: disable=too-many-locals
+    def test_prediction_with_multiple_matches(  # pylint: disable=too-many-locals
+        self, invalid_instance_id: int, device: str
+    ):
         start_instance_id = invalid_instance_id + 1
 
         target = torch.tensor([0, -1, 2, 2, 3, -1, -1, 1, 1, 1], device=device) + start_instance_id
