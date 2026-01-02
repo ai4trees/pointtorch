@@ -25,7 +25,7 @@ class TestCsvWriter:
         yield cache_dir
         shutil.rmtree(cache_dir)
 
-    @pytest.mark.parametrize("file_format", ["csv", "txt"])
+    @pytest.mark.parametrize("file_format", ["csv", "txt", "CSV"])
     @pytest.mark.parametrize("columns", [None, ["classification"], ["x", "y", "z", "classification"]])
     @pytest.mark.parametrize("use_pathlib", [True, False])
     def test_writer(
@@ -49,7 +49,7 @@ class TestCsvWriter:
 
             point_cloud_df = point_cloud_df[columns]
 
-        read_point_cloud_df = pd.read_csv(file_path, sep="," if file_format == "csv" else " ")
+        read_point_cloud_df = pd.read_csv(file_path, sep="," if file_format.lower() == "csv" else " ")
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_df.to_numpy()).all()
 

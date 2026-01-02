@@ -80,5 +80,5 @@ class CsvWriter(BasePointCloudWriter):
 
         float_format = f"%.{num_decimals}f" if num_decimals is not None else None
 
-        file_format = file_path.suffix.lstrip(".")
+        file_format = file_path.suffix.lstrip(".").lower()
         point_cloud.to_csv(file_path, sep="," if file_format == "csv" else " ", index=False, float_format=float_format)
