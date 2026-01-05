@@ -86,10 +86,11 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
           instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
-        - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
-          tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric
-          values are set to zero.
+        - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
+          tensors whose length is equal to the number of target instances and that contain the number of true positive,
+          false positive, and false negative points between the matched instances. For target instances not matched to
+          any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
+          points.
 
     Raises:
         ValueError: If :code:`target` and :code:`prediction` don't have the same length.
@@ -120,8 +121,10 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
     if target.numel() != prediction.numel():
         raise ValueError("Target and prediction must have the same length.")
 
-    unique_target_ids = torch.unique(target)
-    unique_target_ids = unique_target_ids[unique_target_ids != invalid_instance_id]
+    unique_target_ids, target_sizes = torch.unique(target, return_counts=True)
+    valid_mask = unique_target_ids != invalid_instance_id
+    unique_target_ids = unique_target_ids[valid_mask]
+    target_sizes = target_sizes[valid_mask]
 
     unique_prediction_ids = torch.unique(prediction)
     unique_prediction_ids = unique_prediction_ids[unique_prediction_ids != invalid_instance_id]
@@ -130,7 +133,9 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
     num_predicted_instances = len(unique_prediction_ids)
 
     if num_predicted_instances == 0 or num_target_instances == 0:
-        return _initialize_matching_results(num_target_instances, num_predicted_instances, invalid_instance_id, device)
+        return _initialize_matching_results(
+            num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
 
     start_instance_id_target = unique_target_ids.min()
     start_instance_id_prediction = unique_prediction_ids.min()
@@ -293,10 +298,11 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
           instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
-        - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
-          tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric
-          values are set to zero.
+        - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
+          tensors whose length is equal to the number of target instances and that contain the number of true positive,
+          false positive, and false negative points between the matched instances. For target instances not matched to
+          any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
+          points.
 
     Shape:
         - :code:`target`: :math:`(N)`
@@ -337,24 +343,25 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
 
     matching_candidates = _get_matching_candidates(target, prediction, num_predicted_instances, -1)
 
+    target_sizes, predicted_sizes = _get_instance_sizes(
+        target, prediction, num_target_instances, num_predicted_instances, -1
+    )
+
     if matching_candidates is None:
-        return _initialize_matching_results(num_target_instances, num_predicted_instances, invalid_instance_id, device)
+        return _initialize_matching_results(
+            num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
 
     paired_target_ids, paired_predicted_ids, pair_counts = matching_candidates
 
     matched_target_ids, matched_predicted_ids, metrics = _initialize_matching_results(
-        num_target_instances, num_predicted_instances, -1, device
+        num_target_instances, num_predicted_instances, target_sizes, -1, device
     )
 
     target_ids_to_match, target_batch_indices = torch.unique_consecutive(paired_target_ids, return_inverse=True)
 
     tp, best_predicted_ids = scatter_max(pair_counts, target_batch_indices, dim=0)
-    tp = tp.to(torch.float)
     predicted_ids_to_match = paired_predicted_ids[best_predicted_ids]
-
-    target_sizes, predicted_sizes = _get_instance_sizes(
-        target, prediction, num_target_instances, num_predicted_instances, -1
-    )
 
     has_overlap = tp > 0
     tp = tp[has_overlap]
@@ -367,7 +374,7 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
     fp = predicted_sizes - tp
     fn = target_sizes - tp
 
-    iou = tp / (tp + fp + fn)
+    iou = tp.to(torch.float) / (tp.to(torch.float) + fp + fn)
 
     if accept_equal_iou:
         matching_mask = iou >= min_iou_treshold
@@ -378,9 +385,6 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
     tp = tp[matching_mask]
     fp = fp[matching_mask]
     fn = fn[matching_mask]
-
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
 
     matched_target_indices = target_ids_to_match[matching_mask]
     matched_predicted_indices = predicted_ids_to_match[matching_mask]
@@ -398,9 +402,9 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
 
         matched_target_ids[unique_matched_predicted_indices] = matched_target_indices[best_target_indices]
 
-    metrics["iou"][matched_target_indices] = iou
-    metrics["precision"][matched_target_indices] = precision
-    metrics["recall"][matched_target_indices] = recall
+    metrics["tp"][matched_target_indices] = tp
+    metrics["fp"][matched_target_indices] = fp
+    metrics["fn"][matched_target_indices] = fn
 
     invalid_matches_mask = matched_target_ids == -1
     matched_target_ids = matched_target_ids + start_instance_id
@@ -482,10 +486,11 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
           instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
-        - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
-          tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric
-          values are set to zero.
+        - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
+          tensors whose length is equal to the number of target instances and that contain the number of true positive,
+          false positive, and false negative points between the matched instances. For target instances not matched to
+          any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
+          points.
 
     Shape:
         - :code:`xyz`: :math:`(N, 3)`
@@ -526,13 +531,19 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
 
     matching_candidates = _get_matching_candidates(target, prediction, num_predicted_instances, -1)
 
+    target_sizes, predicted_sizes = _get_instance_sizes(
+        target, prediction, num_target_instances, num_predicted_instances, -1
+    )
+
     if matching_candidates is None:
-        return _initialize_matching_results(num_target_instances, num_predicted_instances, invalid_instance_id, device)
+        return _initialize_matching_results(
+            num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
 
     paired_target_ids, paired_predicted_ids, pair_counts = matching_candidates
 
     matched_target_ids, matched_predicted_ids, metrics = _initialize_matching_results(
-        num_target_instances, num_predicted_instances, -1, device
+        num_target_instances, num_predicted_instances, target_sizes, -1, device
     )
 
     # Find segment starts/ends for each target that appears
@@ -547,15 +558,13 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
     remap_target_indices = torch.full((num_target_instances,), -1, device=device, dtype=torch.long)
     remap_target_indices[target_ids_to_match] = torch.arange(len(target_ids_to_match), device=device, dtype=torch.long)
 
-    target_sizes, predicted_sizes = _get_instance_sizes(
-        target, prediction, num_target_instances, num_predicted_instances, -1
-    )
-
     valid_target_mask = target != -1
     valid_target = target[valid_target_mask]
 
-    true_positives = pair_counts.to(torch.float)
-    ious = true_positives / (target_sizes[paired_target_ids] + predicted_sizes[paired_predicted_ids] - true_positives)
+    true_positives = pair_counts
+    ious = true_positives.to(torch.float) / (
+        target_sizes[paired_target_ids] + predicted_sizes[paired_predicted_ids] - true_positives.to(torch.float)
+    )
 
     if sort_by_target_height:
         z = xyz[valid_target_mask, 2]
@@ -604,9 +613,9 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
         if accept(iou):
             matched_target_ids[predicted_id] = target_id
             matched_predicted_ids[target_id] = predicted_id
-            metrics["iou"][target_id] = iou
-            metrics["precision"][target_id] = tp / predicted_sizes[predicted_id]
-            metrics["recall"][target_id] = tp / target_sizes[target_id]
+            metrics["tp"][target_id] = tp
+            metrics["fp"][target_id] = predicted_sizes[predicted_id] - tp
+            metrics["fn"][target_id] = target_sizes[target_id] - tp
 
     invalid_matches_mask = matched_target_ids == -1
     matched_target_ids = matched_target_ids + start_instance_id
@@ -654,10 +663,11 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
           instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
           instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
-        - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
-          tensors whose length is equal to the number of target instances and that contain the pointwise IoU, precision,
-          and recall between the matched instances. For target instances not matched to any prediction, the metric
-          values are set to zero.
+        - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
+          tensors whose length is equal to the number of target instances and that contain the number of true positive,
+          false positive, and false negative points between the matched instances. For target instances not matched to
+          any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
+          points.
 
     Shape:
         - :code:`target`: :math:`(N)`
@@ -697,18 +707,20 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
 
     matching_candidates = _get_matching_candidates(target, prediction, num_predicted_instances, -1)
 
-    if matching_candidates is None:
-        return _initialize_matching_results(num_target_instances, num_predicted_instances, invalid_instance_id, device)
-
-    matched_target_ids, matched_predicted_ids, metrics = _initialize_matching_results(
-        num_target_instances, num_predicted_instances, -1, device
-    )
-
-    paired_target_ids, paired_predicted_ids, pair_counts = matching_candidates
-
     target_sizes, predicted_sizes = _get_instance_sizes(
         target, prediction, num_target_instances, num_predicted_instances, -1
     )
+
+    if matching_candidates is None:
+        return _initialize_matching_results(
+            num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
+
+    matched_target_ids, matched_predicted_ids, metrics = _initialize_matching_results(
+        num_target_instances, num_predicted_instances, target_sizes, -1, device
+    )
+
+    paired_target_ids, paired_predicted_ids, pair_counts = matching_candidates
 
     iou_matrix = torch.zeros((num_predicted_instances, num_target_instances), dtype=torch.float, device=device)
     tp_matrix = torch.zeros((num_predicted_instances, num_target_instances), dtype=torch.long, device=device)
@@ -734,7 +746,6 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
             keep = iou > float(min_iou_treshold)
         matched_predicted_indices = matched_predicted_indices[keep]
         matched_target_indices = matched_target_indices[keep]
-        iou = iou[keep]
         tp = tp[keep]
 
     matched_target_ids[matched_predicted_indices] = matched_target_indices
@@ -743,9 +754,9 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
     fp = predicted_sizes[matched_predicted_indices] - tp
     fn = target_sizes[matched_target_indices] - tp
 
-    metrics["iou"][matched_target_indices] = iou
-    metrics["precision"][matched_target_indices] = torch.where((tp + fp) > 0, tp / (tp + fp), torch.zeros_like(tp))
-    metrics["recall"][matched_target_indices] = torch.where((tp + fn) > 0, tp / (tp + fn), torch.zeros_like(tp))
+    metrics["tp"][matched_target_indices] = tp
+    metrics["fp"][matched_target_indices] = fp
+    metrics["fn"][matched_target_indices] = fn
 
     invalid_matches_mask = matched_target_ids == -1
     matched_target_ids = matched_target_ids + start_instance_id
@@ -759,7 +770,11 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
 
 
 def _initialize_matching_results(
-    num_target_instances: int, num_predicted_instances: int, invalid_instance_id: int, device: torch.device
+    num_target_instances: int,
+    num_predicted_instances: int,
+    target_sizes: torch.Tensor,
+    invalid_instance_id: int,
+    device: torch.device,
 ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
     """
     Initializes the output data structures for instance matching.
@@ -767,6 +782,7 @@ def _initialize_matching_results(
     Args:
         num_target_instances: Number of target instances.
         num_predicted_instances: Number of predicted instances.
+        target_sizes: Number of points belonging to each target instance.
         invalid_instance_id: ID to use as default value for the matched instance IDs.
         device: Device on which to create the data structures.
 
@@ -775,8 +791,9 @@ def _initialize_matching_results(
             :code:`invalid_tree_id`.
         - :code:`matched_predicted_ids`: Tensor of length :code:`num_target_instances` with all values set to
             :code:`invalid_tree_id`.
-        - :code:`metrics`: Dictionary with the keys :code:`"iou"`, :code:`"precision"`, :code:`"recall"`. The values are
-          tensors whose length is equal to the number of target instances and all values set to zero.
+        - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
+          tensors whose length is equal to the number of target instances. code:`"tp"` and :code:`"fp"` are initialized
+          with zero values, while :code:`fp` is initialized with the target sizes.
     """
 
     matched_target_ids = torch.full(
@@ -787,9 +804,9 @@ def _initialize_matching_results(
     )
 
     metrics = {
-        "iou": torch.zeros(num_target_instances, device=device, dtype=torch.float),
-        "precision": torch.zeros(num_target_instances, device=device, dtype=torch.float),
-        "recall": torch.zeros(num_target_instances, device=device, dtype=torch.float),
+        "tp": torch.zeros(num_target_instances, device=device, dtype=torch.long),
+        "fp": torch.zeros(num_target_instances, device=device, dtype=torch.long),
+        "fn": target_sizes.clone().detach(),
     }
 
     return matched_target_ids, matched_predicted_ids, metrics

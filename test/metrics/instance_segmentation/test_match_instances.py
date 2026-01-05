@@ -46,18 +46,18 @@ class TestMetrics:
             expected_matched_predicted_ids = np.array([0, 2, 3, -1], dtype=np.int64)
 
             expected_metrics = {
-                "iou": np.array([2 / 3, 4 / 5, 1 / 4, 0], dtype=np.float32),
-                "precision": np.array([1, 4 / 5, 1, 0], dtype=np.float32),
-                "recall": np.array([2 / 3, 1, 1 / 4, 0], dtype=np.float32),
+                "tp": np.array([2, 4, 1, 0], dtype=np.int64),
+                "fp": np.array([0, 1, 0, 0], dtype=np.int64),
+                "fn": np.array([1, 0, 3, 4], dtype=np.int64),
             }
         else:
             expected_matched_target_ids = np.array([0, -1, 1, -1], dtype=np.int64)
             expected_matched_predicted_ids = np.array([0, 2, -1, -1], dtype=np.int64)
 
             expected_metrics = {
-                "iou": np.array([2 / 3, 4 / 5, 0, 0], dtype=np.float32),
-                "precision": np.array([1, 4 / 5, 0, 0], dtype=np.float32),
-                "recall": np.array([2 / 3, 1, 0, 0], dtype=np.float32),
+                "tp": np.array([2, 4, 0, 0], dtype=np.int64),
+                "fp": np.array([0, 1, 0, 0], dtype=np.int64),
+                "fn": np.array([1, 0, 4, 4], dtype=np.int64),
             }
 
         expected_matched_target_ids += start_instance_id
@@ -115,10 +115,9 @@ class TestMetrics:
         np.testing.assert_array_equal(expected_matched_target_ids, matched_target_ids.cpu().numpy())
         np.testing.assert_array_equal(expected_matched_predicted_ids, matched_predicted_ids.cpu().numpy())
 
-        for key in ["iou", "precision", "recall"]:
-            np.testing.assert_array_equal(
-                np.ones(len(matched_target_ids), dtype=np.float32), metrics[key].cpu().numpy()
-            )
+        np.testing.assert_array_equal(np.array([2, 2, 2], dtype=np.int64), metrics["tp"].cpu().numpy())
+        for key in ["fp", "fn"]:
+            np.testing.assert_array_equal(np.zeros(len(matched_target_ids), dtype=np.int64), metrics[key].cpu().numpy())
 
     @pytest.mark.parametrize(
         "method",
@@ -151,9 +150,11 @@ class TestMetrics:
             np.full((3,), fill_value=invalid_instance_id, dtype=np.int64), matched_predicted_ids.cpu().numpy()
         )
 
-        for key in ["iou", "precision", "recall"]:
+        np.testing.assert_array_equal(np.array([2, 2, 2], dtype=np.int64), metrics["fn"].cpu().numpy())
+
+        for key in ["tp", "fp"]:
             np.testing.assert_array_equal(
-                np.zeros(len(matched_predicted_ids), dtype=np.float32), metrics[key].cpu().numpy()
+                np.zeros(len(matched_predicted_ids), dtype=np.int64), metrics[key].cpu().numpy()
             )
 
     @pytest.mark.parametrize(
@@ -188,10 +189,8 @@ class TestMetrics:
         )
         np.testing.assert_array_equal(np.array([], dtype=np.int64), matched_predicted_ids.cpu().numpy())
 
-        for key in ["iou", "precision", "recall"]:
-            np.testing.assert_array_equal(
-                np.zeros(len(matched_predicted_ids), dtype=np.float32), metrics[key].cpu().numpy()
-            )
+        for key in ["tp", "fp", "fn"]:
+            assert 0 == len(metrics[key])
 
     @pytest.mark.parametrize(
         "method",
@@ -227,9 +226,11 @@ class TestMetrics:
             np.full((1,), fill_value=invalid_instance_id, dtype=np.int64), matched_predicted_ids.cpu().numpy()
         )
 
-        for key in ["iou", "precision", "recall"]:
+        np.testing.assert_array_equal(np.array([3], dtype=np.int64), metrics["fn"].cpu().numpy())
+
+        for key in ["tp", "fp"]:
             np.testing.assert_array_equal(
-                np.zeros(len(matched_predicted_ids), dtype=np.float32), metrics[key].cpu().numpy()
+                np.zeros(len(matched_predicted_ids), dtype=np.int64), metrics[key].cpu().numpy()
             )
 
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
@@ -248,9 +249,9 @@ class TestMetrics:
         expected_matched_target_ids = np.array([2, -1, 1], dtype=np.int64) + start_instance_id
         expected_matched_predicted_ids = np.array([0, 2, 0, 0], dtype=np.int64) + start_instance_id
         expected_metrics = {
-            "iou": np.array([1 / 5, 2 / 3, 2 / 5, 1 / 5], dtype=np.float32),
-            "precision": np.array([1 / 5, 1, 2 / 5, 1 / 5], dtype=np.float32),
-            "recall": np.array([1, 2 / 3, 1, 1], dtype=np.float32),
+            "tp": np.array([1, 2, 2, 1], dtype=np.int64),
+            "fp": np.array([4, 0, 3, 4], dtype=np.int64),
+            "fn": np.array([0, 1, 0, 0], dtype=np.int64),
         }
 
         matched_target_ids, matched_predicted_ids, metrics = match_instances_iou(
@@ -381,7 +382,7 @@ class TestMetrics:
     @pytest.mark.parametrize("accept_equal_iou", [True, False])
     @pytest.mark.parametrize("sort_by_target_height", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_match_instances_point2tree_sort_target_by_height(  # pylint: disable=too-many-locals, too-many-branches
+    def test_match_instances_point2tree_sort_target_by_height(  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         self,
         min_iou_treshold: float,
         accept_equal_iou: bool,
@@ -405,6 +406,7 @@ class TestMetrics:
             device=device,
         )
         target = torch.tensor([0, 0, 1, 1, 1, 1, 2, 2], dtype=torch.long, device=device) + start_instance_id
+        target_sizes = np.array([2, 4, 2], dtype=np.int64)
         prediction = torch.tensor([0, 0, 0, 0, -1, -1, 1, -1], dtype=torch.long, device=device) + start_instance_id
 
         unique_target_ids = torch.tensor([0, 1, 2], dtype=torch.long, device=device) + start_instance_id
@@ -424,9 +426,9 @@ class TestMetrics:
         )
 
         expected_metrics = {
-            "iou": np.array([0.5, 0, 0.5], dtype=np.float32),
-            "precision": np.array([0.5, 0, 1], dtype=np.float32),
-            "recall": np.array([1, 0, 0.5], dtype=np.float32),
+            "tp": np.array([2, 0, 1], dtype=np.float32),
+            "fp": np.array([2, 0, 0], dtype=np.float32),
+            "fn": np.array([0, 4, 1], dtype=np.float32),
         }
 
         if min_iou_treshold is not None and min_iou_treshold >= 0.4:
@@ -442,9 +444,9 @@ class TestMetrics:
                 expected_matched_predicted_ids = np.array([-1, 0, 1], dtype=np.int64)
 
                 expected_metrics = {
-                    "iou": np.array([0, 2 / 6, 0.5], dtype=np.float32),
-                    "precision": np.array([0, 0.5, 1], dtype=np.float32),
-                    "recall": np.array([0, 0.5, 0.5], dtype=np.float32),
+                    "tp": np.array([0, 2, 1], dtype=np.float32),
+                    "fp": np.array([0, 2, 0], dtype=np.float32),
+                    "fn": np.array([2, 2, 1], dtype=np.float32),
                 }
             else:
                 expected_matched_target_ids = np.array([0, 2], dtype=np.int64)
@@ -452,9 +454,10 @@ class TestMetrics:
         expected_matched_target_ids = expected_matched_target_ids + start_instance_id
         expected_matched_predicted_ids = expected_matched_predicted_ids + start_instance_id
 
-        for key, metric in expected_metrics.items():
-            metric[expected_matched_predicted_ids == invalid_instance_id] = 0
-            expected_metrics[key] = metric
+        unmatched_mask = expected_matched_predicted_ids == invalid_instance_id
+        for key in ["tp", "fp"]:
+            expected_metrics[key][unmatched_mask] = 0
+        expected_metrics["fn"][unmatched_mask] = target_sizes[unmatched_mask]
 
         np.testing.assert_array_equal(expected_matched_target_ids, matched_target_ids.cpu().numpy())
         np.testing.assert_array_equal(expected_matched_predicted_ids, matched_predicted_ids.cpu().numpy())
@@ -525,27 +528,27 @@ class TestMetrics:
                 expected_matched_predicted_ids = np.array([-1, -1, 2], dtype=np.int64)
 
                 expected_metrics = {
-                    "iou": np.array([0, 0, 0.5], dtype=np.float32),
-                    "precision": np.array([0, 0, 1], dtype=np.float32),
-                    "recall": np.array([0, 0, 0.5], dtype=np.float32),
+                    "tp": np.array([0, 0, 1], dtype=np.int64),
+                    "fp": np.array([0, 0, 0], dtype=np.int64),
+                    "fn": np.array([7, 2, 1], dtype=np.int64),
                 }
             else:
                 expected_matched_target_ids = np.array([-1, -1, -1], dtype=np.int64)
                 expected_matched_predicted_ids = np.array([-1, -1, -1], dtype=np.int64)
 
                 expected_metrics = {
-                    "iou": np.array([0, 0, 0], dtype=np.float32),
-                    "precision": np.array([0, 0, 0], dtype=np.float32),
-                    "recall": np.array([0, 0, 0], dtype=np.float32),
+                    "tp": np.array([0, 0, 0], dtype=np.int64),
+                    "fp": np.array([0, 0, 0], dtype=np.int64),
+                    "fn": np.array([7, 2, 2], dtype=np.int64),
                 }
         else:
             expected_matched_target_ids = np.array([1, 0, 2], dtype=np.int64)
             expected_matched_predicted_ids = np.array([1, 0, 2], dtype=np.int64)
 
             expected_metrics = {
-                "iou": np.array([2 / 7, 2 / 7, 0.5], dtype=np.float32),
-                "precision": np.array([1, 2 / 7, 1], dtype=np.float32),
-                "recall": np.array([2 / 7, 1, 0.5], dtype=np.float32),
+                "tp": np.array([2, 2, 1], dtype=np.int64),
+                "fp": np.array([0, 5, 0], dtype=np.int64),
+                "fn": np.array([5, 0, 1], dtype=np.int64),
             }
 
         expected_matched_target_ids = expected_matched_target_ids + start_instance_id
@@ -590,6 +593,7 @@ class TestMetrics:
         target = (
             torch.tensor([0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4], dtype=torch.long, device=device) + start_instance_id
         )
+        target_sizes = np.array([2, 3, 2, 2, 4], dtype=np.int64)
         prediction = (
             torch.tensor([0, 0, 0, 0, -1, 1, -1, -1, -1, 2, 3, 3, 3], dtype=torch.long, device=device)
             + start_instance_id
@@ -622,13 +626,14 @@ class TestMetrics:
             expected_matched_predicted_ids = np.array([-1, -1, -1, -1, 3], dtype=np.int64)
 
         expected_metrics = {
-            "iou": torch.tensor([0.5, 2 / 5, 0.5, 0, 3 / 4]),
-            "precision": torch.tensor([0.5, 0.5, 1, 0, 1]),
-            "recall": torch.tensor([1, 2 / 3, 0.5, 0, 3 / 4]),
+            "tp": np.array([2, 2, 1, 0, 3], dtype=np.int64),
+            "fp": np.array([2, 2, 0, 0, 0], dtype=np.int64),
+            "fn": np.array([0, 1, 1, 2, 1], dtype=np.int64),
         }
-        for key, metric in expected_metrics.items():
-            metric[expected_matched_predicted_ids == -1] = 0
-            expected_metrics[key] = metric
+        unmatched_mask = expected_matched_predicted_ids == -1
+        for key in ["tp", "fp"]:
+            expected_metrics[key][unmatched_mask] = 0
+        expected_metrics["fn"][unmatched_mask] = target_sizes[unmatched_mask]
 
         expected_matched_target_ids = expected_matched_target_ids + start_instance_id
         expected_matched_predicted_ids = expected_matched_predicted_ids + start_instance_id
