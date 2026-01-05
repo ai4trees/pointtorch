@@ -382,7 +382,7 @@ class TestMetrics:
     @pytest.mark.parametrize("accept_equal_iou", [True, False])
     @pytest.mark.parametrize("sort_by_target_height", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_match_instances_point2tree_sort_target_by_height(  # pylint: disable=too-many-locals, too-many-branches
+    def test_match_instances_point2tree_sort_target_by_height(  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         self,
         min_iou_treshold: float,
         accept_equal_iou: bool,
