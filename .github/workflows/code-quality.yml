@@ -89,8 +89,6 @@ jobs:
         if: ${{ matrix.version.torch < '2.9.0'}}
         shell: bash
         run: |
-          # libhdf5-dev is needed to build pytables from source
-          apt-get update && apt-get install -y --no-install-recommends g++ libhdf5-dev
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
           python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
@@ -99,9 +97,12 @@ jobs:
         if: ${{ matrix.version.torch >= '2.9.0'}}
         shell: bash
         run: |
+          # libhdf5-dev is needed to build pytables from source
+          apt-get update && apt-get install -y --no-install-recommends g++ libhdf5-dev
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
+          python -m pip install python -m pip install git+https://github.com/PyTables/PyTables
           git clone https://github.com/rusty1s/pytorch_scatter.git
           cd pytorch_scatter && python setup.py install && python setup.py clean --all && cd .. && rm -r pytorch_scatter
           git clone https://github.com/rusty1s/pytorch_cluster.git
