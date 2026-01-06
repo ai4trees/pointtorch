@@ -60,7 +60,10 @@ jobs:
   #         pylint src --rcfile=.rcfile
   #         pylint test --rcfile=.rcfile --disable duplicate-code --disable missing-function-docstring
   test:
-    runs-on: ubuntu-latest
+    container:
+      image: debian:latest
+      volumes:
+        - ${{ github.workspace }}:/github/workspace
     # run tests for all supported Python and PyTorch versions
     strategy:
       matrix:
@@ -97,6 +100,7 @@ jobs:
         if: ${{ matrix.version.torch >= '2.9.0'}}
         shell: bash
         run: |
+          cd /github/workspace/
           sudo apt-get update && sudo apt-get install -y g++ libhdf5-serial-dev pkg-config
           ls /usr/include/hdf5/serial
           ls /usr/lib/x86_64-linux-gnu/hdf5/serial
@@ -127,6 +131,7 @@ jobs:
       - name: Executing tests
         shell: bash
         run: |
+          cd /github/workspace/
           pytest --cov --cov-report=xml
   # test-with-optional-dependencies:
   #   runs-on: ubuntu-latest
