@@ -99,7 +99,8 @@ jobs:
         run: |
           # libhdf5-dev is needed to build pytables from source
           apt-get update && apt-get install -y --no-install-recommends g++ libhdf5-dev
-          find / -name "*H5public.h"
+          ls /usr/local/include/
+          ls /usr/include/
           ls /usr/include/hdf5
           ls /usr/include/hdf5/serial
           HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
