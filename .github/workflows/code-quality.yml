@@ -91,6 +91,7 @@ jobs:
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
           python -m pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.version.torch }}+cpu.html
+          cd /github/workspace/
           python -m pip install --upgrade -e .'[dev, docs]'
       - name: Install package and dependencies
         if: ${{ matrix.version.torch >= '2.9.0'}}
