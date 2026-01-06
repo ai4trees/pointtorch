@@ -98,12 +98,9 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update && sudo apt-get install -y --no-install-recommends g++ libhdf5-dev
-          ls /usr/local/include/
-          ls /usr/include/
-          ls /usr/include/hdf5
           ls /usr/include/hdf5/serial
           python --version
-          HDF5_DIR=/usr/include/hdf5/serial python -m pip install --no-build-isolation git+https://github.com/PyTables/PyTables
+          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools

@@ -1,50 +1,50 @@
-# This workflow updates the sources of the Sphinx documentation based on the Python docstrings
+# # This workflow updates the sources of the Sphinx documentation based on the Python docstrings
 
-name: Update Sphinx Documentation
-on:
-  pull_request:
-    branches:
-      - main
+# name: Update Sphinx Documentation
+# on:
+#   pull_request:
+#     branches:
+#       - main
 
-  # Allows to run this workflow manually from the Actions tab
-  workflow_dispatch:
+#   # Allows to run this workflow manually from the Actions tab
+#   workflow_dispatch:
 
-concurrency:
-  group: generate-docs
-  cancel-in-progress: false
+# concurrency:
+#   group: generate-docs
+#   cancel-in-progress: false
 
-jobs:
-  generate-docs:
-    runs-on: ubuntu-latest
-    container:
-      image: josafatburmeister/pointtorch:latest
-      volumes:
-        - ${{ github.workspace }}:/github/workspace
-    steps:
-      - name: Clean up potential remnants of past jobs
-        uses: AutoModality/action-clean@v1.1.0
-      - name: Checkout out repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-      - name: Generate sphinx documentation sources from docstrings
-        shell: bash
-        run: |
-          cd /github/workspace/
-          python -m pip install --upgrade .'[dev, docs]'
-          sphinx-apidoc --force --module-first -t ./docs/source/_templates/ -o ./docs/source ./src
-      - name: Commit and push documentation sources
-        shell: bash
-        run: |
-          cd /github/workspace/
-          git config --global --add safe.directory $(realpath .)
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+# jobs:
+#   generate-docs:
+#     runs-on: ubuntu-latest
+#     container:
+#       image: josafatburmeister/pointtorch:latest
+#       volumes:
+#         - ${{ github.workspace }}:/github/workspace
+#     steps:
+#       - name: Clean up potential remnants of past jobs
+#         uses: AutoModality/action-clean@v1.1.0
+#       - name: Checkout out repository
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.head_ref }}
+#           fetch-depth: 0
+#       - name: Generate sphinx documentation sources from docstrings
+#         shell: bash
+#         run: |
+#           cd /github/workspace/
+#           python -m pip install --upgrade .'[dev, docs]'
+#           sphinx-apidoc --force --module-first -t ./docs/source/_templates/ -o ./docs/source ./src
+#       - name: Commit and push documentation sources
+#         shell: bash
+#         run: |
+#           cd /github/workspace/
+#           git config --global --add safe.directory $(realpath .)
+#           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+#           git config --global user.name "github-actions[bot]"
 
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git add docs/source/*
-            git pull
-            git commit -m "docs: update docs [${{ github.event.pull_request.title }}] [skip-ci]"
-            git push
-          fi
+#           if [[ -n "$(git status --porcelain)" ]]; then
+#             git add docs/source/*
+#             git pull
+#             git commit -m "docs: update docs [${{ github.event.pull_request.title }}] [skip-ci]"
+#             git push
+#           fi
