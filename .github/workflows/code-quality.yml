@@ -109,7 +109,8 @@ jobs:
           echo $HDF5_INCLUDE_DIR
           echo $CFLAGS
           echo $HDF5_PKGCONFIG_NAME
-          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
+          pip install numpy cython packaging
+          HDF5_DIR=/usr/include/hdf5/serial python -m pip install --no-build-isolation git+https://github.com/PyTables/PyTables
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
