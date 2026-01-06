@@ -102,6 +102,7 @@ jobs:
           ls /usr/lib/x86_64-linux-gnu/hdf5/serial
           python --version
           echo $HDF5_INCLUDE_DIR
+          echo $CFLAGS
           HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
@@ -116,6 +117,8 @@ jobs:
           HDF5_DIR: /usr
           HDF5_INCLUDE_DIR: /usr/include/hdf5/serial
           HDF5_LIB_DIR: /usr/lib/x86_64-linux-gnu/hdf5/serial
+          CFLAGS: -I/usr/include/hdf5/serial
+          LDFLAGS: -L/usr/lib/x86_64-linux-gnu/hdf5/serial
       - name: Install compatible numpy version
         if: ${{ matrix.version.python == '3.9' || matrix.version.python == '3.10' || matrix.version.python == '3.11' }}
         shell: bash
