@@ -79,10 +79,12 @@ jobs:
     #     ]
     strategy:
       matrix:
-        image: ["python:3.14-trixie"]
+        version: [
+          {image: "python:3.14-trixie", python: "3.14", torch: "2.9.0"}
+        ]
 
     container:
-      image: ${{ matrix.image }}
+      image: ${{ matrix.version.image }}
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
