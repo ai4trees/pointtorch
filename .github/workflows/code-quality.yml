@@ -101,7 +101,7 @@ jobs:
           ls /usr/include/hdf5/serial
           ls /usr/lib/x86_64-linux-gnu/hdf5/serial
           python --version
-          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables --hdf=/usr/include/hdf5/serial
+          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
