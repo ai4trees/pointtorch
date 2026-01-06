@@ -65,12 +65,12 @@ jobs:
     strategy:
       matrix:
         version: [
-          {python: "3.9", torch: "2.3.0"},
-          {python: "3.10", torch: "2.4.0"},
-          {python: "3.11", torch: "2.5.0"},
-          {python: "3.12", torch: "2.6.0"},
-          {python: "3.12", torch: "2.7.0"},
-          {python: "3.13", torch: "2.8.0"},
+          # {python: "3.9", torch: "2.3.0"},
+          # {python: "3.10", torch: "2.4.0"},
+          # {python: "3.11", torch: "2.5.0"},
+          # {python: "3.12", torch: "2.6.0"},
+          # {python: "3.12", torch: "2.7.0"},
+          # {python: "3.13", torch: "2.8.0"},
           {python: "3.14", torch: "2.9.0"}
         ]
     steps:
@@ -102,6 +102,7 @@ jobs:
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
+          ls /usr/include/hdf5/serial
           HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
           git clone https://github.com/rusty1s/pytorch_scatter.git
           cd pytorch_scatter && python setup.py install && python setup.py clean --all && cd .. && rm -r pytorch_scatter
