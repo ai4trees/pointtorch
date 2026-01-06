@@ -61,10 +61,10 @@ jobs:
   #         pylint test --rcfile=.rcfile --disable duplicate-code --disable missing-function-docstring
   test:
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
-      volumes:
-        - ${{ github.workspace }}:/github/workspace
+    # container:
+    #   image: debian:latest
+    #   volumes:
+    #     - ${{ github.workspace }}:/github/workspace
     # run tests for all supported Python and PyTorch versions
     # strategy:
     #   matrix:
@@ -83,6 +83,8 @@ jobs:
 
     container:
       image: ${{ matrix.image }}
+      volumes:
+        - ${{ github.workspace }}:/github/workspace
     steps:
       - name: Clean up potential remnants of past jobs
         uses: AutoModality/action-clean@v1.1.0
