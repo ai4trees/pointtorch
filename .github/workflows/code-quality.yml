@@ -102,7 +102,7 @@ jobs:
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
-          python -m pip install git+https://github.com/PyTables/PyTables
+          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
           git clone https://github.com/rusty1s/pytorch_scatter.git
           cd pytorch_scatter && python setup.py install && python setup.py clean --all && cd .. && rm -r pytorch_scatter
           git clone https://github.com/rusty1s/pytorch_cluster.git
