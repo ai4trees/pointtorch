@@ -102,7 +102,7 @@ jobs:
         shell: bash
         run: |
           cd /github/workspace/
-          apt-get update && apt-get install -y g++ libhdf5-serial-dev pkg-config
+          apt-get update && apt-get install -y g++ libhdf5-serial-dev pkg-config git
           ls /usr/include/hdf5/serial
           ls /usr/lib/x86_64-linux-gnu/hdf5/serial
           python --version
