@@ -99,6 +99,8 @@ jobs:
         run: |
           # libhdf5-dev is needed to build pytables from source
           apt-get update && apt-get install -y --no-install-recommends g++ libhdf5-dev
+          find . -name "*H5public.h"
+          ls /usr/include/hdf5
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
