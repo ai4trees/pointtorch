@@ -89,8 +89,8 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-            python${{ matrix.python }} \
-            python${{ matrix.python }}-dev \
+            python${{ matrix.version.python }} \
+            python${{ matrix.version.python }}-dev \
             python3-pip \
             libhdf5-dev \
             pkg-config
