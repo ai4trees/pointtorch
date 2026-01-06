@@ -97,7 +97,7 @@ jobs:
         if: ${{ matrix.version.torch >= '2.9.0'}}
         shell: bash
         run: |
-          sudo apt-get update && sudo apt-get install -y g++ libhdf5-dev
+          sudo apt-get update && sudo apt-get install -y g++ libhdf5-serial-dev pkg-config
           ls /usr/include/hdf5/serial
           ls /usr/lib/x86_64-linux-gnu/hdf5/serial
           python --version
