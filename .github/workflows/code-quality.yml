@@ -85,10 +85,15 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-      - name: Setup up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.version.python }}
+      - name: Setup Python
+        run: |
+          apt-get update
+          apt-get install -y \
+            python${{ matrix.python }} \
+            python${{ matrix.python }}-dev \
+            python3-pip \
+            libhdf5-dev \
+            pkg-config
       - name: Install package and dependencies
         if: ${{ matrix.version.torch < '2.9.0'}}
         shell: bash
@@ -109,8 +114,7 @@ jobs:
           echo $HDF5_INCLUDE_DIR
           echo $CFLAGS
           echo $HDF5_PKGCONFIG_NAME
-          pip install numpy cython packaging
-          HDF5_DIR=/usr/include/hdf5/serial python -m pip install --no-build-isolation git+https://github.com/PyTables/PyTables
+          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
