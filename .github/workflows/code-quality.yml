@@ -66,17 +66,23 @@ jobs:
       volumes:
         - ${{ github.workspace }}:/github/workspace
     # run tests for all supported Python and PyTorch versions
+    # strategy:
+    #   matrix:
+    #     version: [
+    #       # {python: "3.9", torch: "2.3.0"},
+    #       # {python: "3.10", torch: "2.4.0"},
+    #       # {python: "3.11", torch: "2.5.0"},
+    #       # {python: "3.12", torch: "2.6.0"},
+    #       # {python: "3.12", torch: "2.7.0"},
+    #       # {python: "3.13", torch: "2.8.0"},
+    #       {python: "3.14", torch: "2.9.0"}
+    #     ]
     strategy:
       matrix:
-        version: [
-          # {python: "3.9", torch: "2.3.0"},
-          # {python: "3.10", torch: "2.4.0"},
-          # {python: "3.11", torch: "2.5.0"},
-          # {python: "3.12", torch: "2.6.0"},
-          # {python: "3.12", torch: "2.7.0"},
-          # {python: "3.13", torch: "2.8.0"},
-          {python: "3.14", torch: "2.9.0"}
-        ]
+        image: ["python:3.14-trixie"]
+
+    container:
+      image: ${{ matrix.image }}
     steps:
       - name: Clean up potential remnants of past jobs
         uses: AutoModality/action-clean@v1.1.0
@@ -85,15 +91,15 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-      - name: Setup Python
-        run: |
-          apt-get update
-          apt-get install -y \
-            python${{ matrix.version.python }} \
-            python${{ matrix.version.python }}-dev \
-            python3-pip \
-            libhdf5-dev \
-            pkg-config
+      # - name: Setup Python
+      #   run: |
+      #     apt-get update
+      #     apt-get install -y \
+      #       python${{ matrix.version.python }} \
+      #       python${{ matrix.version.python }}-dev \
+      #       python3-pip \
+      #       libhdf5-dev \
+      #       pkg-config
       - name: Install package and dependencies
         if: ${{ matrix.version.torch < '2.9.0'}}
         shell: bash
@@ -107,14 +113,9 @@ jobs:
         shell: bash
         run: |
           cd /github/workspace/
-          apt-get update && apt-get install -y g++ libhdf5-serial-dev pkg-config git
-          ls /usr/include/hdf5/serial
-          ls /usr/lib/x86_64-linux-gnu/hdf5/serial
+          apt-get update && apt-get install -y libhdf5-dev
           python --version
-          echo $HDF5_INCLUDE_DIR
-          echo $CFLAGS
-          echo $HDF5_PKGCONFIG_NAME
-          HDF5_DIR=/usr/include/hdf5/serial python -m pip install git+https://github.com/PyTables/PyTables
+          python -m pip install git+https://github.com/PyTables/PyTables
           python -m pip install torch==${{ matrix.version.torch }}
           python -m pip freeze
           python -m pip install wheel setuptools
@@ -124,13 +125,13 @@ jobs:
           cd pytorch_cluster && python setup.py install && python setup.py clean --all && cd .. && rm -r pytorch_cluster
           python -m pip freeze
           python -m pip install --upgrade -e .'[dev, docs]'
-        env:
-          HDF5_DIR: /usr
-          HDF5_INCLUDE_DIR: /usr/include/hdf5/serial
-          HDF5_LIB_DIR: /usr/lib/x86_64-linux-gnu/hdf5/serial
-          CFLAGS: -I/usr/include/hdf5/serial
-          LDFLAGS: -L/usr/lib/x86_64-linux-gnu/hdf5/serial
-          HDF5_PKGCONFIG_NAME: hdf5-serial
+        # env:
+        #   HDF5_DIR: /usr
+        #   HDF5_INCLUDE_DIR: /usr/include/hdf5/serial
+        #   HDF5_LIB_DIR: /usr/lib/x86_64-linux-gnu/hdf5/serial
+        #   CFLAGS: -I/usr/include/hdf5/serial
+        #   LDFLAGS: -L/usr/lib/x86_64-linux-gnu/hdf5/serial
+        #   HDF5_PKGCONFIG_NAME: hdf5-serial
       - name: Install compatible numpy version
         if: ${{ matrix.version.python == '3.9' || matrix.version.python == '3.10' || matrix.version.python == '3.11' }}
         shell: bash
