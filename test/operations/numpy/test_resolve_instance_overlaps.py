@@ -18,8 +18,8 @@ class TestResolveInstanceOverlaps:  # pylint: disable = too-few-public-methods
         expected_filtered_instance_sizes = np.array([5, 2, 2], dtype=np.int64)
         expected_selected_indices = np.array([1, 2, 4])
 
-        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes, selected_indices = resolve_instance_overlaps(
-            instances, instance_sizes, scores
+        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes, selected_indices = (
+            resolve_instance_overlaps(instances, instance_sizes, scores)
         )
 
         np.testing.assert_array_equal(expected_filtered_instances, filtered_instances)
@@ -32,8 +32,8 @@ class TestResolveInstanceOverlaps:  # pylint: disable = too-few-public-methods
         instance_sizes = np.array([], dtype=np.int64)
         scores = np.array([], dtype=np.float32)
 
-        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes, selected_indices = resolve_instance_overlaps(
-            instances, instance_sizes, scores
+        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes, selected_indices = (
+            resolve_instance_overlaps(instances, instance_sizes, scores)
         )
 
         assert len(filtered_instances) == 0
@@ -48,8 +48,8 @@ class TestResolveInstanceOverlaps:  # pylint: disable = too-few-public-methods
 
         expected_filtered_instance_batch_indices = np.array([0], dtype=np.int64)
 
-        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes, selected_indices = resolve_instance_overlaps(
-            instances, instance_sizes, scores
+        filtered_instances, filtere_instance_batch_indices, filtered_instance_sizes, selected_indices = (
+            resolve_instance_overlaps(instances, instance_sizes, scores)
         )
 
         np.testing.assert_array_equal(instances, filtered_instances)

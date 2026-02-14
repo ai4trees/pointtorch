@@ -27,7 +27,7 @@ def resolve_instance_overlaps(
         - :code:`new_instance_batch_indices`: Indices indicating to which instance each index in :code:`new_instances`
           belongs.
         - :code:`new_instance_sizes`: Number of points belonging to each updated instance.
-        - :code:`selected_indices`: Indices of the instances remaining after resolving overlaps (instances fully 
+        - :code:`selected_indices`: Indices of the instances remaining after resolving overlaps (instances fully
           overlapping with other instances can be removed).
 
     Shape:
@@ -44,7 +44,12 @@ def resolve_instance_overlaps(
     """
 
     if len(instances) == 0:
-        return np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64)
+        return (
+            np.empty((0,), dtype=np.int64),
+            np.empty((0,), dtype=np.int64),
+            np.empty((0,), dtype=np.int64),
+            np.empty((0,), dtype=np.int64),
+        )
 
     instance_ids_per_point = np.repeat(np.arange(len(instance_sizes)), instance_sizes)
     scores_per_point = scores[instance_ids_per_point]
