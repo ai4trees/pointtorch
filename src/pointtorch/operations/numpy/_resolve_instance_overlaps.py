@@ -11,7 +11,7 @@ from pointtorch.type_aliases import FloatArray, LongArray
 
 def resolve_instance_overlaps(
     instances: LongArray, instance_sizes: LongArray, scores: FloatArray
-) -> Tuple[LongArray, LongArray, LongArray]:
+) -> Tuple[LongArray, LongArray, LongArray, LongArray]:
     r"""
     Resolves overlaps between instances by assigning points that are included in multiple instances to the instance
     with the highest score.
@@ -22,10 +22,13 @@ def resolve_instance_overlaps(
         instance_sizes: Number of points belonging to each instance.
         scores: Confidence score for each instance.
 
-    Returns:
-        Tuple of two arrays: The first represents the updated instance assignments in the same format as
-            :code:`instances`. The second contains the indices indicating to which instance each index in the first
-            array belongs. The third contains the number of points belonging to each updated instance.
+    Returns: :Tuple with the following elements:
+        - :code:`new_instances`: Updated instance assignments in the same format and order as :code:`instances`.
+        - :code:`new_instance_batch_indices`: Indices indicating to which instance each index in :code:`new_instances`
+          belongs.
+        - :code:`new_instance_sizes`: Number of points belonging to each updated instance.
+        - :code:`selected_indices`: Indices of the instances remaining after resolving overlaps (instances fully 
+          overlapping with other instances can be removed).
 
     Shape:
         - :attr:`instances`: :math:`(N_1 + ... + N_I)`
@@ -34,32 +37,34 @@ def resolve_instance_overlaps(
 
           | where
           |
-          | :math:`I = \text{ number of instances before the filtering}`
-          | :math:`I' = \text{ number of instances after the filtering}`
-          | :math:`N_i = \text{ number of points belonging to the i-th instance before the filtering}`
-          | :math:`N_i' = \text{ number of points belonging to the i-th instance after the filtering}`
+          | :math:`I` = number of instances before the filtering
+          | :math:`I'` = number of instances after the filtering
+          | :math:`N_i` = number of points belonging to the i-th instance before the filtering
+          | :math:`N_i'` = number of points belonging to the i-th instance after the filtering
     """
 
     if len(instances) == 0:
-        return np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64)
+        return np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64)
 
-    sorted_indices = scores.argsort()[::-1]
+    instance_ids_per_point = np.repeat(np.arange(len(instance_sizes)), instance_sizes)
+    scores_per_point = scores[instance_ids_per_point]
 
-    is_assigned = np.zeros(instances.max() + 1, dtype=bool)
+    sorting_indices = np.lexsort((-scores_per_point, instances))
+    point_indices_sorted = instances[sorting_indices]
+    instance_ids_per_point = instance_ids_per_point[sorting_indices]
 
-    split_instances = np.split(instances, instance_sizes.cumsum()[:-1])
+    unique_points_mask = np.ones(len(point_indices_sorted), dtype=bool)
+    unique_points_mask[1:] = point_indices_sorted[1:] != point_indices_sorted[:-1]
 
-    new_instances = []
-    new_instance_sizes = []
+    best_instance_id_per_point = instance_ids_per_point[unique_points_mask]
 
-    for i in sorted_indices:
-        instance = split_instances[i]
-        instance = instance[~is_assigned[instance]]
-        is_assigned[instance] = True
+    sorting_indices = np.argsort(best_instance_id_per_point)
 
-        if len(instance) > 0:
-            new_instances.append(instance)
-            new_instance_sizes.append(len(instance))
+    new_instances = point_indices_sorted[unique_points_mask][sorting_indices]
 
+    new_instance_sizes = np.bincount(best_instance_id_per_point, minlength=len(instance_sizes))
+    selected_indices = np.nonzero(new_instance_sizes > 0)[0]
+    new_instance_sizes = new_instance_sizes[selected_indices]
     new_instance_batch_indices = np.repeat(np.arange(len(new_instance_sizes), dtype=np.int64), new_instance_sizes)
-    return np.concatenate(new_instances), new_instance_batch_indices, np.array(new_instance_sizes, dtype=np.int64)
+
+    return new_instances, new_instance_batch_indices, new_instance_sizes, selected_indices
