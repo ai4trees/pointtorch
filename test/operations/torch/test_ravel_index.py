@@ -44,3 +44,13 @@ class TestRavelIndex:
 
         np.testing.assert_array_equal(raveled_index_np, raveled_index.cpu().numpy())
         np.testing.assert_array_equal(torch.column_stack(multi_index).cpu().numpy(), unraveled_index.cpu().numpy())
+
+    @pytest.mark.parametrize("device", ["cpu", "cuda:0"] if torch.cuda.is_available() else ["cpu"])
+    def test_large_ravel_multi_index(self, device: torch.device):
+        dims = torch.tensor([5000, 5000, 5000], dtype=torch.long)
+        multi_index = torch.tensor([[4999, 4999, 4999]], dtype=torch.long)
+
+        ravel_index = ravel_multi_index(multi_index, dims)
+        unraveled_index = unravel_flat_index(ravel_index, dims)
+
+        np.testing.assert_array_equal(multi_index.cpu().numpy(), unraveled_index.cpu().numpy())
