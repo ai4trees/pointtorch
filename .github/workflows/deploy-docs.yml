@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   deploy-docs:
-    if: github.repository == 'ai4trees/pointtorch'
+    if: github.repository == 'ai4trees/pointtorch' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -45,8 +45,10 @@ jobs:
       - name: Clean up potential remnants of past jobs
         uses: AutoModality/action-clean@v1.1.0
       - name: Checkout out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
       - name: Prepare docs build
         shell: bash
@@ -85,7 +87,7 @@ jobs:
           cd /github/workspace/
           git config --global --add safe.directory $(realpath .)
           cd docs
-          git checkout ${{ github.head_ref }}
+          git checkout ${{ github.ref_name }}
           export POINTTORCH_VERSION="main (unstable)"
           make clean
           make html
@@ -114,7 +116,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           # Upload entire repository
           path: './docs/all_builds'

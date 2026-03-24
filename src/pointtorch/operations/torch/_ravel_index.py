@@ -112,8 +112,8 @@ def unravel_flat_index(flat_index: torch.Tensor, dims: Union[torch.Size, torch.T
     multi_index = torch.zeros((len(flat_index), len(dims)), dtype=torch.long, device=flat_index.device)
 
     for idx in range(len(dims)):
-        divisor = float(torch.prod(dims[idx + 1 :]).item()) if idx < len(dims) else 1.0
-        multi_index[:, idx] = torch.floor_divide(flat_index, divisor)
+        divisor = torch.prod(dims[idx + 1 :]).item()
+        multi_index[:, idx] = flat_index // divisor
         flat_index = flat_index % divisor
 
     return multi_index

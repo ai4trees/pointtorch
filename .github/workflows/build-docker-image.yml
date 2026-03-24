@@ -24,7 +24,7 @@ jobs:
           rm -rf /usr/local/android /usr/share/dotnet /usr/local/share/boost /opt/ghc
           docker system prune --all --volumes --force
       - name: Checkout out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Get latest package version
