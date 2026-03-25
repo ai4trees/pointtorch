@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder
+FROM nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder
 
 WORKDIR /workspace
 
@@ -107,7 +107,7 @@ RUN python -m pip uninstall -y yapf wheel packaging
 ######################### Target Image #############################
 ####################################################################
 
-FROM nvcr.io/nvidia/cuda:12.9.1-runtime-ubuntu24.04
+FROM nvidia/cuda:12.9.1-runtime-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
