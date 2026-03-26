@@ -48,6 +48,9 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           dockerfile: Dockerfile_cpu
           context: .
+      - name: Delete previously built images to free disk space
+        run: |
+          docker system prune --all --volumes --force
       - name: Build and push GPU docker image with pointtorch installation (version tag)
         uses: elgohr/Publish-Docker-Github-Action@v5
         with:
