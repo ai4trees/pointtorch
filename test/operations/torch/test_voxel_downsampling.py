@@ -104,8 +104,8 @@ class TestSampling:
             start_idx = end_idx
 
         return (
-            torch.row_stack(downsampled_coords),
-            torch.row_stack(downsampled_features) if features is not None else None,
+            torch.vstack(downsampled_coords),
+            torch.vstack(downsampled_features) if features is not None else None,
             torch.tensor(downsampled_batch_indices, dtype=torch.long, device=device),
             torch.tensor(downsampled_point_cloud_sizes, dtype=torch.long, device=device),
         )
@@ -124,7 +124,7 @@ class TestSampling:
         for batch_index in np.unique(downsampled_batch_indices):
             # numpy unique returns the elements in sorted order
             downsampled_coords[downsampled_batch_indices == batch_index], sorted_index = np.unique(
-                downsampled_coords[downsampled_batch_indices == batch_index], axis=0, return_index=True, sorted=True
+                downsampled_coords[downsampled_batch_indices == batch_index], axis=0, return_index=True
             )
             downsampled_features[downsampled_batch_indices == batch_index] = downsampled_features[
                 downsampled_batch_indices == batch_index
