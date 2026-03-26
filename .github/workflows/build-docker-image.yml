@@ -35,7 +35,7 @@ jobs:
       - name: Build and push CPU docker image with pointtorch installation (version tag)
         uses: elgohr/Publish-Docker-Github-Action@v5
         with:
-          name: josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0+cpu
+          name: josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cpu
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           dockerfile: Dockerfile_cpu
@@ -51,7 +51,7 @@ jobs:
       - name: Build and push GPU docker image with pointtorch installation (version tag)
         uses: elgohr/Publish-Docker-Github-Action@v5
         with:
-          name: josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0+cu129
+          name: josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cu129
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           dockerfile: Dockerfile_gpu
