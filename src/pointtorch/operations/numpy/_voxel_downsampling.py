@@ -77,7 +77,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
         voxel_indices -= shift
         shifted_points -= shift.astype(float) * voxel_size
 
-        filled_voxel_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_inverse=True)
+        filled_voxel_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_inverse=True, sorted=True)
 
         device = "cpu"
 

@@ -104,7 +104,9 @@ class TestVoxelDownSampling:
         points = np.random.uniform(low=-2, high=2, size=(50, 3))
         downsampled_points, downsampled_indices, inverse_indices = voxel_downsampling(points, -1)
 
-        np.testing.assert_array_equal(np.unique(points, axis=0), np.unique(downsampled_points, axis=0))
+        np.testing.assert_array_equal(
+            np.unique(points, axis=0, sorted=True), np.unique(downsampled_points, axis=0, sorted=True)
+        )
         np.testing.assert_array_equal(np.arange(len(points)), np.sort(downsampled_indices))
         np.testing.assert_array_equal(np.arange(len(points)), inverse_indices)
 
@@ -184,7 +186,9 @@ class TestVoxelDownSampling:
 
         assert len(points) == len(downsampled_points)
         assert len(points) == len(downsampled_indices)
-        np.testing.assert_array_equal(np.unique(points, axis=0), np.unique(downsampled_points, axis=0))
+        np.testing.assert_array_equal(
+            np.unique(points, axis=0, sorted=True), np.unique(downsampled_points, axis=0, sorted=True)
+        )
         np.testing.assert_array_equal(np.arange(len(points)), np.sort(downsampled_indices))
         if preserve_order:
             np.testing.assert_array_equal(np.sort(downsampled_indices), downsampled_indices)
@@ -207,7 +211,9 @@ class TestVoxelDownSampling:
 
         assert len(points) == len(downsampled_points)
         assert len(points) == len(downsampled_indices)
-        np.testing.assert_array_equal(np.unique(points, axis=0), np.unique(downsampled_points, axis=0))
+        np.testing.assert_array_equal(
+            np.unique(points, axis=0, sorted=True), np.unique(downsampled_points, axis=0, sorted=True)
+        )
         np.testing.assert_array_equal(downsampled_points, duplicated_points[downsampled_indices])
         if preserve_order:
             np.testing.assert_array_equal(np.sort(downsampled_indices), downsampled_indices)

@@ -124,7 +124,7 @@ class TestSampling:
         for batch_index in np.unique(downsampled_batch_indices):
             # numpy unique returns the elements in sorted order
             downsampled_coords[downsampled_batch_indices == batch_index], sorted_index = np.unique(
-                downsampled_coords[downsampled_batch_indices == batch_index], axis=0, return_index=True
+                downsampled_coords[downsampled_batch_indices == batch_index], axis=0, return_index=True, sorted=True
             )
             downsampled_features[downsampled_batch_indices == batch_index] = downsampled_features[
                 downsampled_batch_indices == batch_index

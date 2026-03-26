@@ -54,7 +54,7 @@ def make_labels_consecutive(
     else:
         labels_to_remap = labels
 
-    unique_labels = np.unique(labels_to_remap)
+    unique_labels = np.unique(labels_to_remap, sorted=True)
     key = np.arange(0, len(unique_labels), dtype=labels.dtype)
     idx = np.digitize(labels_to_remap, unique_labels, right=True)
     labels_to_remap[:] = key[idx]
