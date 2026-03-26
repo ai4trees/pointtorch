@@ -27,7 +27,7 @@ jobs:
   mypy:
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
@@ -44,7 +44,7 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
@@ -112,7 +112,7 @@ jobs:
   test-with-optional-dependencies:
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
