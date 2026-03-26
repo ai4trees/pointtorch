@@ -18,6 +18,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libgl1 \
     libgomp1 \
     liblzma-dev \
+    libsqlite3-dev \
     lsb-release \
     libssl-dev \
     libx11-xcb1 \
