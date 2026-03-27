@@ -29,6 +29,9 @@ concurrency:
   group: deploy-docs
   cancel-in-progress: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy-docs:
     if: github.repository == 'ai4trees/pointtorch' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
@@ -37,7 +40,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
 

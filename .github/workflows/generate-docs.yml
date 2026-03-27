@@ -13,12 +13,18 @@ concurrency:
   group: generate-docs
   cancel-in-progress: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
 jobs:
   generate-docs:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
@@ -28,7 +34,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fetch-depth: 0
       - name: Generate sphinx documentation sources from docstrings
         shell: bash
@@ -46,7 +52,7 @@ jobs:
 
           if [[ -n "$(git status --porcelain)" ]]; then
             git add docs/source/*
-            git pull
-            git commit -m "docs: update docs [${{ github.event.pull_request.title }}] [skip-ci]"
-            git push
+            git commit -m "docs: update docs [${{ github.event_name == 'pull_request' && github.event.pull_request.title || github.ref_name }}] [skip-ci]"
+            git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+              HEAD:${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fi
