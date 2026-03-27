@@ -9,5 +9,5 @@ pointtorch.metrics
 
 .. automodule:: pointtorch.metrics
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
