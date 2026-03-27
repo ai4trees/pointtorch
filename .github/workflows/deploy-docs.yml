@@ -37,7 +37,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
 
