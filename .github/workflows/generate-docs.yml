@@ -53,5 +53,6 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git add docs/source/*
             git commit -m "docs: update docs [${{ github.event_name == 'pull_request' && github.event.pull_request.title || github.ref_name }}] [skip-ci]"
-            git push origin HEAD:${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+            git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+              HEAD:${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fi
