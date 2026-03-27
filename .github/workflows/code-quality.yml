@@ -6,6 +6,9 @@ on:
       codecov_token:
         required: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   black:
     runs-on: ubuntu-latest
