@@ -104,8 +104,8 @@ class TestSampling:
             start_idx = end_idx
 
         return (
-            torch.row_stack(downsampled_coords),
-            torch.row_stack(downsampled_features) if features is not None else None,
+            torch.vstack(downsampled_coords),
+            torch.vstack(downsampled_features) if features is not None else None,
             torch.tensor(downsampled_batch_indices, dtype=torch.long, device=device),
             torch.tensor(downsampled_point_cloud_sizes, dtype=torch.long, device=device),
         )

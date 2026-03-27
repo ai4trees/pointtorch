@@ -71,13 +71,15 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     voxel_indices = np.floor_divide(shifted_points, voxel_size).astype(np.int64)
 
     if point_aggregation == "random":
-        _, selected_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_index=True, return_inverse=True)
+        _, selected_indices, inverse_indices = np.unique(
+            voxel_indices, axis=0, return_index=True, return_inverse=True, sorted=False
+        )
     else:
         shift = voxel_indices.min(axis=0)
         voxel_indices -= shift
         shifted_points -= shift.astype(float) * voxel_size
 
-        filled_voxel_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_inverse=True)
+        filled_voxel_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_inverse=True, sorted=True)
 
         device = "cpu"
 

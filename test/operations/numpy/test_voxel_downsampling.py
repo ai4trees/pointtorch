@@ -199,7 +199,7 @@ class TestVoxelDownSampling:
         self, voxel_size: float, point_aggregation: Literal["nearest_neighbor", "random"], preserve_order: bool
     ):
         points = self._point_grid(1) * voxel_size
-        duplicated_points = np.row_stack([points, points])
+        duplicated_points = np.vstack([points, points])
 
         downsampled_points, downsampled_indices, inverse_indices = voxel_downsampling(
             duplicated_points, voxel_size, point_aggregation=point_aggregation, preserve_order=preserve_order
