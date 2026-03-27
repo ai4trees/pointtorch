@@ -13,6 +13,7 @@ ENV FORCE_CUDA=1
 ENV TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    build-essential \
     curl \
     git \
     g++ \
@@ -24,11 +25,14 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libgl1 \
     libgomp1 \
     liblzma-dev \
+    libreadline-dev \
+    libsqlite3-dev \
     lsb-release \
     libssl-dev \
     libx11-xcb1 \
     make \
     software-properties-common \
+    sqlite3 \
     tzdata \
     unzip \
     wget \
@@ -116,6 +120,7 @@ ENV PYTHON_VERSION=3.13.12
 WORKDIR /workspace
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    build-essential \
     curl \
     git \
     g++ \
@@ -127,11 +132,14 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libgl1 \
     libgomp1 \
     liblzma-dev \
+    libreadline-dev \
+    libsqlite3-dev \
     lsb-release \
     libssl-dev \
     libx11-xcb1 \
     make \
     software-properties-common \
+    sqlite3 \
     tzdata \
     unzip \
     wget \
@@ -155,7 +163,7 @@ COPY --from=builder /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/x86_64-linux-g
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0 /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libGLX.so.0 /usr/lib/x86_64-linux-gnu/libGLX.so.0
 
-# copy python installation to avoid building python twice
+# copy Python installation to avoid building Python twice
 COPY --from=builder /usr/local/bin/python3.13 /usr/local/bin/python3.13
 COPY --from=builder /usr/local/lib/python3.13 /usr/local/lib/python3.13
 COPY --from=builder /usr/local/include/python3.13 /usr/local/include/python3.13
