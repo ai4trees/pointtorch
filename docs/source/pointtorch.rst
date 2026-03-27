@@ -13,8 +13,8 @@ pointtorch
 
 .. automodule:: pointtorch
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 
@@ -23,5 +23,5 @@ pointtorch.type\_aliases
 
 .. automodule:: pointtorch.type_aliases
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

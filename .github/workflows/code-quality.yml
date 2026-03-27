@@ -6,6 +6,9 @@ on:
       codecov_token:
         required: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   black:
     runs-on: ubuntu-latest
@@ -27,7 +30,7 @@ jobs:
   mypy:
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
@@ -44,7 +47,7 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
@@ -119,7 +122,7 @@ jobs:
   test-with-optional-dependencies:
     runs-on: ubuntu-latest
     container:
-      image: josafatburmeister/pointtorch:latest
+      image: josafatburmeister/pointtorch:cpu
       volumes:
         - ${{ github.workspace }}:/github/workspace
     steps:
