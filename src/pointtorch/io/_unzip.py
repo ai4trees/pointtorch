@@ -4,23 +4,23 @@ __all__ = ["unzip"]
 
 import pathlib
 from shutil import copyfileobj
-from typing import IO, List, Optional, Union
+from typing import BinaryIO, IO, Iterable, List, Optional, Tuple, Union
 import zipfile
 
+from stream_unzip import stream_unzip
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
-import zipfile_deflate64  # pylint: disable=unused-import # needed to patch zipfile
 
 
-def unzip(  # pylint: disable=too-many-branches
+def unzip(
     zip_path: Union[str, pathlib.Path],
     dest_path: Union[str, pathlib.Path],
     items: Optional[List[str]] = None,
     progress_bar: bool = True,
     progress_bar_desc: Optional[str] = None,
-):
+) -> None:
     """
-    Extracts all files from a zip archive.
+    Extract files from a zip archive.
 
     Args:
         zip_path: Path of the zip archive.
@@ -37,6 +37,28 @@ def unzip(  # pylint: disable=too-many-branches
     """
     if isinstance(dest_path, str):
         dest_path = pathlib.Path(dest_path)
+
+    if isinstance(zip_path, str):
+        zip_path = pathlib.Path(zip_path)
+
+    try:
+        _unzip_with_zipfile(zip_path, dest_path, items, progress_bar=progress_bar, progress_bar_desc=progress_bar_desc)
+    except NotImplementedError:
+        _unzip_with_stream_unzip(
+            zip_path, dest_path, items, progress_bar=progress_bar, progress_bar_desc=progress_bar_desc
+        )
+
+
+def _unzip_with_zipfile(  # pylint: disable=too-many-branches
+    zip_path: pathlib.Path,
+    dest_path: pathlib.Path,
+    items: Optional[List[str]] = None,
+    progress_bar: bool = True,
+    progress_bar_desc: Optional[str] = None,
+) -> None:
+    """
+    Extracts all files from a zip archive using :code:`zipfile`.
+    """
 
     with zipfile.ZipFile(zip_path) as zip_file:
         total_size = 0
@@ -69,3 +91,96 @@ def unzip(  # pylint: disable=too-many-branches
                     else:
                         file_reader = in_file
                     copyfileobj(file_reader, out_file)
+
+
+def _unzip_with_stream_unzip(
+    zip_path: pathlib.Path,
+    dest_path: pathlib.Path,
+    items: Optional[List[str]] = None,
+    progress_bar: bool = True,
+    progress_bar_desc: Optional[str] = None,
+) -> None:
+    """
+    Extracts all files from a zip archive using :code:`stream_unzip`.
+
+    This implementation is used as a fallback for compression methods that are
+    unsupported by the standard :mod:`zipfile` module.
+    """
+    valid_items = []
+    total_size = 0
+
+    # we make a first pass to validate the requested items and compute the total file size
+    for item_name, item_size, chunks in _iter_zip_members(zip_path):
+        valid_items.append(item_name)
+        if items is None or item_name in items:
+            total_size += item_size or 0
+        for _ in chunks:
+            pass
+
+    if items is not None:
+        invalid_items = [item for item in items if item not in valid_items]
+        if len(invalid_items) > 0:
+            raise KeyError(f"The following items are not contained in the zipfile: {invalid_items}.")
+
+    if progress_bar:
+        prog_bar = tqdm(desc=progress_bar_desc, unit="B", unit_scale=True, unit_divisor=1000, total=total_size)
+    else:
+        prog_bar = None
+
+    for item_name, _, chunks in _iter_zip_members(zip_path):
+        if items is not None and item_name not in items:
+            for _ in chunks:
+                pass
+            continue
+
+        file_path = dest_path / item_name
+
+        if item_name.endswith("/"):
+            file_path.mkdir(exist_ok=True, parents=True)
+            continue
+
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        with open(file_path, "wb") as out_file:
+            for chunk in chunks:
+                out_file.write(chunk)
+                if prog_bar is not None:
+                    prog_bar.update(len(chunk))
+
+
+def _iter_zip_members(
+    zip_path: pathlib.Path, chunk_size: int = 65536
+) -> Iterable[Tuple[str, Optional[int], Iterable[bytes]]]:
+    """
+    Yield archive members from a zip file.
+
+    Args:
+        zip_path: Path to the archive to read.
+        chunk_size: Number of bytes to read per iteration from the underlying file object.
+
+    Yields:
+        Tuples of member name, optional uncompressed member size, and an iterable over the member's uncompressed byte
+        chunks.
+    """
+    with open(zip_path, "rb") as zip_file:
+        yield from (
+            (file_name.decode("utf-8"), file_size, unzipped_chunks)
+            for file_name, file_size, unzipped_chunks in stream_unzip(_read_chunks(zip_file, chunk_size))
+        )
+
+
+def _read_chunks(file_obj: BinaryIO, chunk_size: int) -> Iterable[bytes]:
+    """
+    Reads a binary file chunk-wise.
+
+    Args:
+        file_obj: Open binary file object to read from.
+        chunk_size: Maximum number of bytes to return per chunk.
+
+    Yields:
+        Consecutive non-empty byte chunks from the file object.
+    """
+    while True:
+        chunk = file_obj.read(chunk_size)
+        if not chunk:
+            break
+        yield chunk
