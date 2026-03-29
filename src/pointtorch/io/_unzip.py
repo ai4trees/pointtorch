@@ -93,7 +93,7 @@ def _unzip_with_zipfile(  # pylint: disable=too-many-branches
                     copyfileobj(file_reader, out_file)
 
 
-def _unzip_with_stream_unzip(
+def _unzip_with_stream_unzip(  #pylint: disable=too-many-branches
     zip_path: pathlib.Path,
     dest_path: pathlib.Path,
     items: Optional[List[str]] = None,
