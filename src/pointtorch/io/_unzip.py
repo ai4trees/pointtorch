@@ -161,7 +161,7 @@ def _iter_zip_members(
         )
 
 
-def _read_chunks(file_obj: BinaryIO, chunk_size: int) -> Iterable[bytes]:
+def _read_chunks(file_obj: Union[BinaryIO, CallbackIOWrapper], chunk_size: int) -> Iterable[bytes]:
     """
     Reads a binary file chunk-wise.
 
