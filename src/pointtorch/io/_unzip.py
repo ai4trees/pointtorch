@@ -106,32 +106,22 @@ def _unzip_with_stream_unzip(  # pylint: disable=too-many-branches
     This implementation is used as a fallback for compression methods that are
     unsupported by the standard :mod:`zipfile` module.
     """
-    valid_items = []
-    total_size = 0
+    remaining_items = None if items is None else set(items)
+    total_size = zip_path.stat().st_size
+    prog_bar = (
+        tqdm(desc=progress_bar_desc, unit="B", unit_scale=True, unit_divisor=1000, total=total_size)
+        if progress_bar
+        else None
+    )
 
-    # we make a first pass to validate the requested items and compute the total file size
-    for item_name, item_size, chunks in _iter_zip_members(zip_path):
-        valid_items.append(item_name)
-        if items is None or item_name in items:
-            total_size += item_size or 0
-        for _ in chunks:
-            pass
-
-    if items is not None:
-        invalid_items = [item for item in items if item not in valid_items]
-        if len(invalid_items) > 0:
-            raise KeyError(f"The following items are not contained in the zipfile: {invalid_items}.")
-
-    if progress_bar:
-        prog_bar = tqdm(desc=progress_bar_desc, unit="B", unit_scale=True, unit_divisor=1000, total=total_size)
-    else:
-        prog_bar = None
-
-    for item_name, _, chunks in _iter_zip_members(zip_path):
-        if items is not None and item_name not in items:
+    for item_name, _, chunks in _iter_zip_members(zip_path, progress_bar=prog_bar):
+        if remaining_items is not None and item_name not in remaining_items:
             for _ in chunks:
                 pass
             continue
+
+        if remaining_items is not None:
+            remaining_items.remove(item_name)
 
         file_path = dest_path / item_name
 
@@ -143,12 +133,13 @@ def _unzip_with_stream_unzip(  # pylint: disable=too-many-branches
         with open(file_path, "wb") as out_file:
             for chunk in chunks:
                 out_file.write(chunk)
-                if prog_bar is not None:
-                    prog_bar.update(len(chunk))
+
+    if remaining_items:
+        raise KeyError(f"The following items are not contained in the zipfile: {sorted(remaining_items)}.")
 
 
 def _iter_zip_members(
-    zip_path: pathlib.Path, chunk_size: int = 65536
+    zip_path: pathlib.Path, chunk_size: int = 65536, progress_bar: Optional[tqdm] = None
 ) -> Iterable[Tuple[str, Optional[int], Iterable[bytes]]]:
     """
     Yield archive members from a zip file.
@@ -156,19 +147,21 @@ def _iter_zip_members(
     Args:
         zip_path: Path to the archive to read.
         chunk_size: Number of bytes to read per iteration from the underlying file object.
+        progress_bar: Optional progress bar to update with compressed bytes read.
 
     Yields:
         Tuples of member name, optional uncompressed member size, and an iterable over the member's uncompressed byte
         chunks.
     """
     with open(zip_path, "rb") as zip_file:
+        file_obj = CallbackIOWrapper(progress_bar.update, zip_file, "read") if progress_bar is not None else zip_file
         yield from (
             (file_name.decode("utf-8"), file_size, unzipped_chunks)
-            for file_name, file_size, unzipped_chunks in stream_unzip(_read_chunks(zip_file, chunk_size))
+            for file_name, file_size, unzipped_chunks in stream_unzip(_read_chunks(file_obj, chunk_size))
         )
 
 
-def _read_chunks(file_obj: BinaryIO, chunk_size: int) -> Iterable[bytes]:
+def _read_chunks(file_obj: Union[BinaryIO, CallbackIOWrapper], chunk_size: int) -> Iterable[bytes]:
     """
     Reads a binary file chunk-wise.
 
