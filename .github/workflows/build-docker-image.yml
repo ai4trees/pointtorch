@@ -40,16 +40,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      # - name: Build and push CPU docker image
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: .
-      #     file: ./Dockerfile_cpu
-      #     push: true
-      #     provenance: false
-      #     tags: |
-      #       josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cpu
-      #       josafatburmeister/pointtorch:cpu
+      - name: Build and push CPU docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile_cpu
+          push: true
+          provenance: false
+          tags: |
+            josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cpu
+            josafatburmeister/pointtorch:cpu
       - name: Delete previously built images to free disk space
         run: |
           docker system prune --all --volumes --force

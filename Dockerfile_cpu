@@ -88,7 +88,7 @@ RUN mkdir /workspace/Open3D/build && cd /workspace/Open3D/build && \
           -DPYTHON3_LIBRARY=$(python -c "import sysconfig && print(sysconfig.get_config_var('LIBDIR'))") \
           -DBUILD_CUDA_MODULE=OFF -DGLIBCXX_USE_CXX11_ABI=ON -DBUILD_PYTORCH_OPS=ON -DBUILD_TENSORFLOW_OPS=OFF \
           -DBUNDLE_OPEN3D_ML=ON -DOPEN3D_ML_ROOT=/workspace/Open3D-ML .. && \
-    make -j$(nproc) && \
+    make -j4 && \
     make install-pip-package
 
 # uninstall build dependencies from virtual environment again
