@@ -63,7 +63,7 @@ RUN python get-pip.py && python -m pip install --upgrade pip
 # these packages are dependencies of the other packages but not listed in their requirements
 # therefore, they have to be installed manually
 RUN python -m pip install tensorboard yapf wheel packaging
-RUN python -m pip install torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0 --index-url https://download.pytorch.org/whl/cpu
+RUN python -m pip install torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cpu
 RUN python -m pip install torch-scatter torch-cluster -f https://data.pyg.org/whl/torch-2.10.0+cpu.html
 RUN python -m pip install --no-build-isolation "git+https://github.com/facebookresearch/pytorch3d.git@stable"
 RUN python -m pip install spconv
