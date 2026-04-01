@@ -76,8 +76,33 @@ RUN python -m pip install spconv-cu124
 RUN pip install https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3%2Bcu128torch2.10-cp313-cp313-linux_x86_64.whl
 RUN python -m pip install --extra-index-url=https://pypi.nvidia.com "cuml-cu12==26.2.*"
 
-# ######################## Open3D installation #################################
-RUN python -m pip install open3d && python -c "import open3d.ml.torch as ml3d"
+######################## Open3D build #################################
+RUN git clone https://github.com/isl-org/Open3D
+RUN git clone https://github.com/isl-org/Open3D-ML.git
+
+# remove sudo from script since it is not available in Docker
+RUN sed -i 's/SUDO=${SUDO:=sudo}/SUDO=" "/g' Open3D/util/install_deps_ubuntu.sh && \
+    Open3D/util/install_deps_ubuntu.sh assume-yes
+
+# install latest version of cmake
+# see https://askubuntu.com/questions/355565/how-do-i-install-the-latest-version-of-cmake-from-the-command-line
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+RUN apt update && apt install kitware-archive-keyring && rm /etc/apt/trusted.gpg.d/kitware.gpg && apt install cmake -y
+
+# first, build CPU version and then build CUDA version
+RUN mkdir /workspace/Open3D/build && cd /workspace/Open3D/build && \
+    cmake -DPYTHON3_INCLUDE_DIR=$(python -c "import sysconfig && print(sysconfig.get_path('include'))") \
+          -DPYTHON3_LIBRARY=$(python -c "import sysconfig && print(sysconfig.get_config_var('LIBDIR'))") \
+          -DBUILD_CUDA_MODULE=OFF -DGLIBCXX_USE_CXX11_ABI=ON -DBUILD_PYTORCH_OPS=ON -DBUILD_TENSORFLOW_OPS=OFF \
+          -DBUNDLE_OPEN3D_ML=ON -DOPEN3D_ML_ROOT=/workspace/Open3D-ML .. && \
+    make -j$(nproc) && \
+    cmake -DPYTHON3_INCLUDE_DIR=$(python -c "import sysconfig && print(sysconfig.get_path('include'))") \
+          -DPYTHON3_LIBRARY=$(python -c "import sysconfig && print(sysconfig.get_config_var('LIBDIR'))") \
+          -DBUILD_CUDA_MODULE=ON -DGLIBCXX_USE_CXX11_ABI=ON -DBUILD_PYTORCH_OPS=ON -DBUILD_TENSORFLOW_OPS=OFF \
+          -DBUNDLE_OPEN3D_ML=ON -DOPEN3D_ML_ROOT=/workspace/Open3D-ML .. && \
+    make -j$(nproc) && \
+    make install-pip-package
 
 # uninstall build dependencies from virtual environment again
 RUN python -m pip uninstall -y yapf wheel packaging
