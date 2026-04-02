@@ -1,8 +1,6 @@
 name: Build of Docker images
 
 on:
-  release:
-    types: [published]
   # Allows to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -15,6 +13,7 @@ concurrency:
 jobs:
   build-docker-image:
     runs-on: self-hosted
+    timeout-minutes: 720
     steps:
       - name: Clean working directory
         uses: AutoModality/action-clean@v1.1.0
@@ -32,48 +31,36 @@ jobs:
         run: |
           latest_version=$(git tag -l 'v[0-9]*\.[0-9]*\.[0-9]*' | sort | tail -1)
           echo "latest_version=${latest_version:1}" >> $GITHUB_ENV
-      - name: Build and push CPU docker image with pointtorch installation (version tag)
-        uses: elgohr/Publish-Docker-Github-Action@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
-          name: josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cpu
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          dockerfile: Dockerfile_cpu
-          context: .
-      - name: Build and push CPU docker image with pointtorch installation (cpu tag)
-        uses: elgohr/Publish-Docker-Github-Action@v5
+      - name: Build and push CPU docker image
+        uses: docker/build-push-action@v6
         with:
-          name: josafatburmeister/pointtorch:cpu
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          dockerfile: Dockerfile_cpu
           context: .
+          file: ./Dockerfile_cpu
+          push: true
+          provenance: false
+          tags: |
+            josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cpu
+            josafatburmeister/pointtorch:cpu
       - name: Delete previously built images to free disk space
         run: |
           docker system prune --all --volumes --force
-      - name: Build and push GPU docker image with pointtorch installation (version tag)
-        uses: elgohr/Publish-Docker-Github-Action@v5
+      - name: Build and push GPU docker image
+        uses: docker/build-push-action@v6
         with:
-          name: josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cu129
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          dockerfile: Dockerfile_gpu
           context: .
-      - name: Build and push GPU docker image with pointtorch installation (cu129 tag)
-        uses: elgohr/Publish-Docker-Github-Action@v5
-        with:
-          name: josafatburmeister/pointtorch:cu129
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          dockerfile: Dockerfile_gpu
-          context: .
-      - name: Build and push GPU docker image with pointtorch installation (latest tag)
-        uses: elgohr/Publish-Docker-Github-Action@v5
-        with:
-          name: josafatburmeister/pointtorch:latest
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          dockerfile: Dockerfile_gpu
-          context: .
+          file: ./Dockerfile_gpu
+          push: true
+          provenance: false
+          tags: |
+            josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cu129
+            josafatburmeister/pointtorch:cu129
+            josafatburmeister/pointtorch:latest
       - name: Clean up docker build remains
         run: docker system prune --all --volumes --force
