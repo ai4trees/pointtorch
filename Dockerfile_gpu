@@ -69,14 +69,14 @@ RUN python get-pip.py && python -m pip install --upgrade pip
 # these packages are dependencies of the other packages but not listed in their requirements
 # therefore, they have to be installed manually
 RUN python -m pip install tensorboard yapf wheel packaging
-RUN python -m pip install torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0 --index-url https://download.pytorch.org/whl/cu129
+RUN python -m pip install torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cu129
 RUN python -m pip install torch-scatter torch-cluster -f https://data.pyg.org/whl/torch-2.10.0+cu128.html
 RUN python -m pip install --no-build-isolation "git+https://github.com/facebookresearch/pytorch3d.git@stable"
 RUN python -m pip install spconv-cu124
 RUN pip install https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3%2Bcu128torch2.10-cp313-cp313-linux_x86_64.whl
 RUN python -m pip install --extra-index-url=https://pypi.nvidia.com "cuml-cu12==26.2.*"
 
-# ######################## Open3D build #################################
+######################## Open3D build #################################
 RUN git clone https://github.com/isl-org/Open3D
 RUN git clone https://github.com/isl-org/Open3D-ML.git
 
