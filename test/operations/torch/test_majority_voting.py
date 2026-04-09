@@ -31,3 +31,14 @@ class TestMajorityVoting:
         majority_labels = majority_voting(labels, batch_indices)
 
         np.testing.assert_array_equal(expected_majority_labels, majority_labels.cpu().numpy())
+
+    @pytest.mark.parametrize("device", ("cpu", "cuda") if torch.cuda.is_available() else ("cpu",))
+    def test_sparse_labels(self, device: str):
+        labels = torch.tensor([10, 10, 1000000, 1000001, 1000001], dtype=torch.long, device=device)
+        batch_indices = torch.tensor([0, 0, 1, 1, 1], dtype=torch.long, device=device)
+
+        expected_majority_labels = np.array([10, 1000001], dtype=np.int64)
+
+        majority_labels = majority_voting(labels, batch_indices)
+
+        np.testing.assert_array_equal(expected_majority_labels, majority_labels.cpu().numpy())
