@@ -3,8 +3,7 @@
 __all__ = ["majority_voting"]
 
 import torch
-import torch.nn.functional as F
-from torch_scatter import scatter_add
+from torch_scatter import scatter_max
 
 
 def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.Tensor:
@@ -16,7 +15,8 @@ def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.
         batch_indices: Indices indicating to which input point cloud each point in the batch belongs.
 
     Returns:
-        Most common label for each batch item.
+        Most common label for each batch item. If several labels occur with the exactly the same frequencey within a
+        batch item, any of them may be returned.
 
     Shape:
         - :code:`labels`: :math:`(N)`
@@ -30,11 +30,14 @@ def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.
     """
     min_label = labels.min()
     labels = labels - min_label
-    num_classes = int(labels.max().item()) + 1
     num_batch_items = int(batch_indices.max().item()) + 1
+    label_range = int(labels.max().item()) + 1
 
-    label_counts = torch.zeros((num_batch_items, num_classes), device=labels.device, dtype=torch.long)
-    label_counts.index_put_((batch_indices, labels), torch.ones_like(labels, dtype=torch.long), accumulate=True)
+    pair_ids = batch_indices * label_range + labels
+    unique_pair_ids, counts = torch.unique(pair_ids, sorted=True, return_counts=True)
 
-    majority_labels = label_counts.argmax(dim=-1) + min_label
-    return majority_labels
+    pair_batch_indices = unique_pair_ids // label_range
+    pair_labels = unique_pair_ids % label_range
+
+    _, majority_pair_indices = scatter_max(counts, pair_batch_indices, dim=0, dim_size=num_batch_items)
+    return pair_labels[majority_pair_indices] + min_label
