@@ -239,10 +239,14 @@ class TestMetrics:
     ):
         start_instance_id = invalid_instance_id + 1
 
-        target = torch.tensor([0, -1, 2, 2, 3, -1, -1, 1, 1, 1, 1, -1, -1, -1, -1, -1], device=device) + start_instance_id
+        target = (
+            torch.tensor([0, -1, 2, 2, 3, -1, -1, 1, 1, 1, 1, -1, -1, -1, -1, -1], device=device) + start_instance_id
+        )
         unique_target_ids = torch.unique(target)
         unique_target_ids = unique_target_ids[unique_target_ids != invalid_instance_id]
-        prediction = torch.tensor([0, 0, 0, 0, 0, -1, -1, 1, 1, 2, -1, 1, 1, 1, 1, 1], device=device) + start_instance_id
+        prediction = (
+            torch.tensor([0, 0, 0, 0, 0, -1, -1, 1, 1, 2, -1, 1, 1, 1, 1, 1], device=device) + start_instance_id
+        )
         unique_prediction_ids = torch.unique(prediction)
         unique_prediction_ids = unique_prediction_ids[unique_prediction_ids != invalid_instance_id]
 
