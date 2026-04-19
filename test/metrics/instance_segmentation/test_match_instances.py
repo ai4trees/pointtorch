@@ -239,19 +239,23 @@ class TestMetrics:
     ):
         start_instance_id = invalid_instance_id + 1
 
-        target = torch.tensor([0, -1, 2, 2, 3, -1, -1, 1, 1, 1], device=device) + start_instance_id
+        target = (
+            torch.tensor([0, -1, 2, 2, 3, -1, -1, 1, 1, 1, 1, -1, -1, -1, -1, -1], device=device) + start_instance_id
+        )
         unique_target_ids = torch.unique(target)
         unique_target_ids = unique_target_ids[unique_target_ids != invalid_instance_id]
-        prediction = torch.tensor([0, 0, 0, 0, 0, -1, -1, 2, 2, 1], device=device) + start_instance_id
+        prediction = (
+            torch.tensor([0, 0, 0, 0, 0, -1, -1, 1, 1, 2, -1, 1, 1, 1, 1, 1], device=device) + start_instance_id
+        )
         unique_prediction_ids = torch.unique(prediction)
         unique_prediction_ids = unique_prediction_ids[unique_prediction_ids != invalid_instance_id]
 
         expected_matched_target_ids = np.array([2, -1, 1], dtype=np.int64) + start_instance_id
         expected_matched_predicted_ids = np.array([0, 2, 0, 0], dtype=np.int64) + start_instance_id
         expected_metrics = {
-            "tp": np.array([1, 2, 2, 1], dtype=np.int64),
+            "tp": np.array([1, 1, 2, 1], dtype=np.int64),
             "fp": np.array([4, 0, 3, 4], dtype=np.int64),
-            "fn": np.array([0, 1, 0, 0], dtype=np.int64),
+            "fn": np.array([0, 3, 0, 0], dtype=np.int64),
         }
 
         matched_target_ids, matched_predicted_ids, metrics = match_instances_iou(
