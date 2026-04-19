@@ -320,6 +320,7 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
         | :math:`P` = number of predicted instances
         | :math:`T` = number of target instances
     """
+    print("invalid_instance_id", invalid_instance_id)
 
     if min_iou_treshold is None:
         min_iou_treshold = -1
@@ -360,10 +361,18 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
 
     target_ids_to_match, target_batch_indices = torch.unique_consecutive(paired_target_ids, return_inverse=True)
 
-    tp, best_predicted_ids = scatter_max(pair_counts, target_batch_indices, dim=0)
+    pair_target_sizes = target_sizes[paired_target_ids]
+    pair_predicted_sizes = predicted_sizes[paired_predicted_ids]
+    pair_ious = pair_counts.to(torch.float) / (
+        pair_target_sizes.to(torch.float) + pair_predicted_sizes.to(torch.float) - pair_counts.to(torch.float)
+    )
+
+    iou, best_predicted_ids = scatter_max(pair_ious, target_batch_indices, dim=0)
     predicted_ids_to_match = paired_predicted_ids[best_predicted_ids]
+    tp = pair_counts[best_predicted_ids]
 
     has_overlap = tp > 0
+    iou = iou[has_overlap]
     tp = tp[has_overlap]
     target_ids_to_match = target_ids_to_match[has_overlap]
     predicted_ids_to_match = predicted_ids_to_match[has_overlap]
@@ -373,8 +382,6 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
 
     fp = predicted_sizes - tp
     fn = target_sizes - tp
-
-    iou = tp.to(torch.float) / (tp.to(torch.float) + fp + fn)
 
     if accept_equal_iou:
         matching_mask = iou >= min_iou_treshold
