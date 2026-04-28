@@ -320,7 +320,6 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
         | :math:`P` = number of predicted instances
         | :math:`T` = number of target instances
     """
-    print("invalid_instance_id", invalid_instance_id)
 
     if min_iou_treshold is None:
         min_iou_treshold = -1
