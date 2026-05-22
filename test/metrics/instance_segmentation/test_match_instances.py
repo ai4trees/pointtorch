@@ -14,7 +14,7 @@ from pointtorch.metrics.instance_segmentation import (
 
 
 @pytest.mark.parametrize("device", ("cpu", "cuda") if torch.cuda.is_available() else ("cpu",))
-class TestMetrics:
+class TestMatchInstances:
     """Tests for pointtorch.metrics.match_instances."""
 
     @pytest.mark.parametrize(
@@ -64,7 +64,11 @@ class TestMetrics:
         expected_matched_predicted_ids += start_instance_id
 
         matched_target_ids, matched_predicted_ids, metrics = match_instances(
-            target, prediction, xyz=xyz, method=method, invalid_instance_id=invalid_instance_id
+            target,
+            prediction,
+            xyz=xyz,
+            method=method,
+            invalid_instance_id=invalid_instance_id,
         )
 
         np.testing.assert_array_equal(expected_matched_target_ids, matched_target_ids.cpu().numpy())
@@ -72,6 +76,57 @@ class TestMetrics:
 
         for key, expected_metric in expected_metrics.items():
             np.testing.assert_array_equal(expected_metric, metrics[key].cpu().numpy())
+
+    @pytest.mark.parametrize(
+        "method",
+        [
+            "panoptic_segmentation",
+            "point2tree",
+            "for_instance",
+            "for_ai_net",
+            "for_ai_net_coverage",
+            "tree_learn",
+        ],
+    )
+    @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
+    def test_return_best_matches(self, method: str, invalid_instance_id: int, device: str):
+        start_instance_id = invalid_instance_id + 1
+        target = torch.tensor([1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 1, 3, 3, 3, 3, -1], dtype=torch.long, device=device)
+        prediction = torch.tensor(
+            [2, 2, 2, 2, 3, 3, 1, 0, 0, 1, 2, -1, -1, -1, -1, -1], dtype=torch.long, device=device
+        )
+
+        expected_best_predicted_ids_per_target = np.array([0, 2, 3, -1], dtype=np.int64) + start_instance_id
+        expected_best_target_ids_per_prediction = np.array([0, 0, 1, 2], dtype=np.int64) + start_instance_id
+
+        target += start_instance_id
+        prediction += start_instance_id
+
+        if method in ["point2tree", "for_instance"]:
+            xyz = torch.zeros((len(target), 3), dtype=torch.float, device=device)
+            xyz[:, 2] = torch.tensor(
+                [0, 1, 10, 0, 1, 2, 5, 1, 2, 3, 4, 0, 0, 0, 15, 0], dtype=torch.float, device=device
+            )
+        else:
+            xyz = None
+
+        _, _, _, best_target_ids_per_prediction, best_predicted_ids_per_target = match_instances(
+            target,
+            prediction,
+            xyz=xyz,
+            method=method,
+            invalid_instance_id=invalid_instance_id,
+            return_best_matches=True,
+        )
+
+        np.testing.assert_array_equal(
+            best_predicted_ids_per_target.cpu().numpy(),
+            expected_best_predicted_ids_per_target,
+        )
+        np.testing.assert_array_equal(
+            best_target_ids_per_prediction.cpu().numpy(),
+            expected_best_target_ids_per_prediction,
+        )
 
     @pytest.mark.parametrize(
         "method",
@@ -106,7 +161,11 @@ class TestMetrics:
         prediction = torch.tensor([1, 1, 0, 0, 2, 2], dtype=torch.long, device=device) + start_instance_id
 
         matched_target_ids, matched_predicted_ids, metrics = match_instances(
-            target, prediction, xyz=xyz, method=method, invalid_instance_id=invalid_instance_id
+            target,
+            prediction,
+            xyz=xyz,
+            method=method,
+            invalid_instance_id=invalid_instance_id,
         )
 
         expected_matched_target_ids = np.array([1, 0, 2], dtype=np.int64) + start_instance_id
@@ -130,8 +189,11 @@ class TestMetrics:
             "tree_learn",
         ],
     )
+    @pytest.mark.parametrize("return_best_matches", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_all_false_negatives(self, method: str, invalid_instance_id: int, device: str):
+    def test_all_false_negatives(  # pylint: disable=too-many-locals
+        self, method: str, return_best_matches: bool, invalid_instance_id: int, device: str
+    ):
         start_instance_id = invalid_instance_id + 1
         target = torch.tensor([0, 0, 1, 1, 2, 2], dtype=torch.long, device=device) + start_instance_id
         prediction = torch.full((len(target),), fill_value=invalid_instance_id, dtype=torch.long, device=device)
@@ -141,9 +203,25 @@ class TestMetrics:
         else:
             xyz = None
 
-        matched_target_ids, matched_predicted_ids, metrics = match_instances(
-            target, prediction, xyz=xyz, method=method, invalid_instance_id=invalid_instance_id
+        results = match_instances(
+            target,
+            prediction,
+            xyz=xyz,
+            method=method,
+            invalid_instance_id=invalid_instance_id,
+            return_best_matches=return_best_matches,
         )
+        assert len(results) == (5 if return_best_matches else 3)
+        if return_best_matches:
+            (
+                matched_target_ids,
+                matched_predicted_ids,
+                metrics,
+                best_target_ids_per_prediction,
+                best_predicted_ids_per_target,
+            ) = results
+        else:
+            matched_target_ids, matched_predicted_ids, metrics = results
 
         np.testing.assert_array_equal(np.array([], dtype=np.int64), matched_target_ids.cpu().numpy())
         np.testing.assert_array_equal(
@@ -155,6 +233,16 @@ class TestMetrics:
         for key in ["tp", "fp"]:
             np.testing.assert_array_equal(
                 np.zeros(len(matched_predicted_ids), dtype=np.int64), metrics[key].cpu().numpy()
+            )
+
+        if return_best_matches:
+            np.testing.assert_array_equal(
+                best_target_ids_per_prediction.cpu().numpy(),
+                np.array([], dtype=np.int64),
+            )
+            np.testing.assert_array_equal(
+                best_predicted_ids_per_target.cpu().numpy(),
+                np.full((3,), fill_value=invalid_instance_id, dtype=np.int64),
             )
 
     @pytest.mark.parametrize(
