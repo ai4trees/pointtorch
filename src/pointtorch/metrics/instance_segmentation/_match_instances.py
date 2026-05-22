@@ -2,11 +2,17 @@
 
 __all__ = ["match_instances", "match_instances_iou", "match_instances_point2tree", "match_instances_tree_learn"]
 
-from typing import Dict, Literal, Optional, Tuple
+from typing import Dict, Literal, Optional, Tuple, Union
 
 from scipy.optimize import linear_sum_assignment
 import torch
 from torch_scatter import scatter_max, scatter_min
+
+
+MatchingResults = Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]
+MatchingResultsWithBestMatches = Tuple[
+    torch.Tensor, torch.Tensor, Dict[str, torch.Tensor], torch.Tensor, torch.Tensor
+]
 
 
 def match_instances(  # pylint: disable=too-many-locals, too-many-statements, too-many-return-statements, too-many-branches
@@ -22,7 +28,8 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
         "for_ai_net_coverage",
         "tree_learn",
     ] = "panoptic_segmentation",
-) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+    return_best_matches: bool = False,
+) -> Union[MatchingResults, MatchingResultsWithBestMatches]:
     r"""
     This method implements the instance matching methods proposed in the following works:
 
@@ -78,19 +85,33 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
         prediction: Predicted instance ID for each point.
         xyz: Coordinates of all points. Must be provided if method is set to :code:`"point2tree"` or
             :code:`"for_instance"`. Defaults to :code:`None`.
-        method: Instance matching method to be used. Defaults to :code:`"panoptic_segmentation"`.
         invalid_instance_id: ID that is assigned to points not assigned to any instance. Defaults to `-1`.
+        method: Instance matching method to be used. Defaults to :code:`"panoptic_segmentation"`.
+        return_best_matches: Whether to additionally return the best predicted instance for each target instance and
+            the best target instance for each predicted instance according to the score used by the matching method.
+            Best-match IDs are set to :code:`invalid_instance_id` if an instance has no overlap with any instance in
+            the other tensor. Defaults to :code:`False`.
 
     Returns: A tuple with the following elements:
         - :code:`matched_target_ids`: IDs of the matched target instance for each predicted instance. Predicted
-          instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a target instance are assigned :code:`invalid_instance_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
-          instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a predicted instance are assigned :code:`invalid_instance_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
           tensors whose length is equal to the number of target instances and that contain the number of true positive,
           false positive, and false negative points between the matched instances. For target instances not matched to
           any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
           points.
+        - :code:`best_target_ids_per_prediction`: IDs of the best
+          target instance for each predicted instance according to the score used by the matching method. In contrast
+          to :code:`matched_target_ids`, this also includes non-matched instances for which the score is below the
+          matching threshold. Predicted instances that do not overlap with any target instance are assigned
+          :code:`invalid_instance_id`. Only returned if :code:`return_best_matches` is :code:`True`.
+        - :code:`best_predicted_ids_per_target`: IDs of the best
+          predicted instance for each target instance according to the score used by the matching method. In contrast
+          to :code:`matched_predicted_ids`, this also includes non-matched instances for which the score is below the
+          matching threshold. Target instances that do not overlap with any predicted instance are assigned
+          :code:`invalid_instance_id`. Only returned if :code:`return_best_matches` is :code:`True`.
 
     Raises:
         ValueError: If :code:`target` and :code:`prediction` don't have the same length.
@@ -108,6 +129,8 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             - :code:`matched_target_ids`: :math:`(P)`
             - :code:`matched_predicted_ids`: :math:`(T)`
             - :code:`metrics`: Dictionary whose values are tensors of length :math:`(T)`
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
 
         | where
         |
@@ -133,9 +156,10 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
     num_predicted_instances = len(unique_prediction_ids)
 
     if num_predicted_instances == 0 or num_target_instances == 0:
-        return _initialize_matching_results(
+        matching_results = _initialize_matching_results(
             num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
         )
+        return _add_best_matches_to_results(matching_results, None, None, 0, invalid_instance_id, return_best_matches)
 
     start_instance_id_target = unique_target_ids.min()
     start_instance_id_prediction = unique_prediction_ids.min()
@@ -165,6 +189,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             invalid_instance_id,
             min_iou_treshold=0.5,
             accept_equal_iou=False,
+            return_best_matches=return_best_matches,
         )
     if method == "for_ai_net":
         return match_instances_iou(
@@ -176,6 +201,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             invalid_instance_id,
             min_iou_treshold=0.5,
             accept_equal_iou=True,
+            return_best_matches=return_best_matches,
         )
     if method == "for_ai_net_coverage":
         return match_instances_iou(
@@ -187,6 +213,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             invalid_instance_id,
             min_iou_treshold=None,
             accept_equal_iou=True,
+            return_best_matches=return_best_matches,
         )
     if method == "point2tree":
         return match_instances_point2tree(
@@ -200,6 +227,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             min_iou_treshold=None,
             accept_equal_iou=True,
             sort_by_target_height=True,
+            return_best_matches=return_best_matches,
         )
     if method == "for_instance":
         return match_instances_point2tree(
@@ -213,6 +241,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             min_iou_treshold=0.5,
             accept_equal_iou=True,
             sort_by_target_height=True,
+            return_best_matches=return_best_matches,
         )
     if method == "tree_learn":
         return match_instances_tree_learn(
@@ -224,6 +253,7 @@ def match_instances(  # pylint: disable=too-many-locals, too-many-statements, to
             invalid_instance_id,
             min_iou_treshold=0.5,
             accept_equal_iou=False,
+            return_best_matches=return_best_matches,
         )
 
     raise ValueError(f"Invalid matching method: {method}.")
@@ -238,7 +268,8 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
     invalid_instance_id: int,
     min_iou_treshold: Optional[float] = 0.5,
     accept_equal_iou: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+    return_best_matches: bool = False,
+) -> Union[MatchingResults, MatchingResultsWithBestMatches]:
     r"""
     This method matches each target instance with the predicted instance with which it has the highest Intersection over
     Union (IoU). If :code:`min_iou_treshold` is not :code:`None`, instances are only matched if their IoU is greater
@@ -292,27 +323,39 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
             stricly greater than this threshold.
         accept_equal_iou: Whether matched pairs of instances should be accepted if their IoU is equal to
             :code:`min_iou_treshold`.
+        return_best_matches: Whether to additionally return the best predicted instance for each target instance and
+            the best target instance for each predicted instance according to the IoU.
 
     Returns: A tuple with the following elements:
         - :code:`matched_target_ids`: IDs of the matched target instance for each predicted instance. Predicted
-          instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a target instance are assigned :code:`invalid_instance_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
-          instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a predicted instance are assigned :code:`invalid_instance_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
           tensors whose length is equal to the number of target instances and that contain the number of true positive,
           false positive, and false negative points between the matched instances. For target instances not matched to
           any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
           points.
+        - :code:`best_target_ids_per_prediction`: IDs of the best
+          target instance for each predicted instance according to the IoU. Predicted instances that do not overlap
+          with any target instance are assigned :code:`invalid_instance_id`. Only returned if
+          :code:`return_best_matches` is :code:`True`.
+        - :code:`best_predicted_ids_per_target`: IDs of the best
+          predicted instance for each target instance according to the IoU. Target instances that do not overlap with
+          any predicted instance are assigned :code:`invalid_instance_id`. Only returned if
+          :code:`return_best_matches` is :code:`True`.
 
     Shape:
         - :code:`target`: :math:`(N)`
-        - :code:`unique_target_ids`: math:`(T)`
+        - :code:`unique_target_ids`: :math:`(T)`
         - :code:`prediction`: :math:`(N)`
-        - :code:`unique_prediction_ids`: math:`(P)`
+        - :code:`unique_prediction_ids`: :math:`(P)`
         - Output:
             - :code:`matched_target_ids`: :math:`(P)`
             - :code:`matched_predicted_ids`: :math:`(T)`
             - :code:`metrics`: Dictionary whose values are tensors of length :math:`(T)`
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
 
         | where
         |
@@ -348,8 +391,16 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
     )
 
     if matching_candidates is None:
-        return _initialize_matching_results(
+        matching_results = _initialize_matching_results(
             num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
+        return _add_best_matches_to_results(
+            matching_results,
+            None,
+            None,
+            start_instance_id,
+            invalid_instance_id,
+            return_best_matches,
         )
 
     paired_target_ids, paired_predicted_ids, pair_counts = matching_candidates
@@ -365,6 +416,17 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
     pair_ious = pair_counts.to(torch.float) / (
         pair_target_sizes.to(torch.float) + pair_predicted_sizes.to(torch.float) - pair_counts.to(torch.float)
     )
+    best_target_ids_per_prediction = None
+    best_predicted_ids_per_target = None
+    if return_best_matches:
+        best_target_ids_per_prediction, best_predicted_ids_per_target = _get_best_matches(
+            pair_ious,
+            paired_target_ids,
+            paired_predicted_ids,
+            num_target_instances,
+            num_predicted_instances,
+            -1,
+        )
 
     iou, best_predicted_ids = scatter_max(pair_ious, target_batch_indices, dim=0)
     predicted_ids_to_match = paired_predicted_ids[best_predicted_ids]
@@ -420,7 +482,14 @@ def match_instances_iou(  # pylint: disable=too-many-statements, too-many-locals
     matched_predicted_ids = matched_predicted_ids + start_instance_id
     matched_predicted_ids[invalid_matches_mask] = invalid_instance_id
 
-    return matched_target_ids, matched_predicted_ids, metrics
+    return _add_best_matches_to_results(
+        (matched_target_ids, matched_predicted_ids, metrics),
+        best_target_ids_per_prediction,
+        best_predicted_ids_per_target,
+        start_instance_id,
+        invalid_instance_id,
+        return_best_matches,
+    )
 
 
 def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many-locals, too-many-positional-arguments
@@ -434,7 +503,8 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
     min_iou_treshold: Optional[float] = 0.5,
     accept_equal_iou: bool = False,
     sort_by_target_height: bool = True,
-) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+    return_best_matches: bool = False,
+) -> Union[MatchingResults, MatchingResultsWithBestMatches]:
     r"""
     This method sorts target instances either by their height (if :code:`sort_by_target_height` is :code:`True`) or by
     their maximum IoU with a predicted instance. The target instances are processed in the sorting order and each
@@ -486,28 +556,40 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
             their height. This corresponds to the matching approach proposed by Wielgosz et al. The processing order of
             the target instances is only relevant if the matching can be ambiguous, i.e. if matches with an IoU <= 0.5
             are accepted.
+        return_best_matches: Whether to additionally return the best predicted instance for each target instance and
+            the best target instance for each predicted instance according to the IoU.
 
     Returns: A tuple with the following elements:
         - :code:`matched_target_ids`: IDs of the matched target instance for each predicted instance. Predicted
-          instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a target instance are assigned :code:`invalid_instance_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
-          instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a predicted instance are assigned :code:`invalid_instance_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
           tensors whose length is equal to the number of target instances and that contain the number of true positive,
           false positive, and false negative points between the matched instances. For target instances not matched to
           any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
           points.
+        - :code:`best_target_ids_per_prediction`: IDs of the best
+          target instance for each predicted instance according to the IoU. Predicted instances that do not overlap
+          with any target instance are assigned :code:`invalid_instance_id`.  Only returned if
+          :code:`return_best_matches` is :code:`True`.
+        - :code:`best_predicted_ids_per_target`: IDs of the best
+          predicted instance for each target instance according to the IoU. Target instances that do not overlap with
+          any predicted instance are assigned :code:`invalid_instance_id`.  Only returned if
+          :code:`return_best_matches` is :code:`True`.
 
     Shape:
         - :code:`xyz`: :math:`(N, 3)`
         - :code:`target`: :math:`(N)`
-        - :code:`unique_target_ids`: math:`(T)`
+        - :code:`unique_target_ids`: :math:`(T)`
         - :code:`prediction`: :math:`(N)`
-        - :code:`unique_prediction_ids`: math:`(P)`
+        - :code:`unique_prediction_ids`: :math:`(P)`
         - Output:
             - :code:`matched_target_ids`: :math:`(P)`
             - :code:`matched_predicted_ids`: :math:`(T)`
             - :code:`metrics`: Dictionary whose values are tensors of length :math:`(T)`
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
 
         | where
         |
@@ -542,8 +624,16 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
     )
 
     if matching_candidates is None:
-        return _initialize_matching_results(
+        matching_results = _initialize_matching_results(
             num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
+        return _add_best_matches_to_results(
+            matching_results,
+            None,
+            None,
+            start_instance_id,
+            invalid_instance_id,
+            return_best_matches,
         )
 
     paired_target_ids, paired_predicted_ids, pair_counts = matching_candidates
@@ -571,6 +661,17 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
     ious = true_positives.to(torch.float) / (
         target_sizes[paired_target_ids] + predicted_sizes[paired_predicted_ids] - true_positives.to(torch.float)
     )
+    best_target_ids_per_prediction = None
+    best_predicted_ids_per_target = None
+    if return_best_matches:
+        best_target_ids_per_prediction, best_predicted_ids_per_target = _get_best_matches(
+            ious,
+            paired_target_ids,
+            paired_predicted_ids,
+            num_target_instances,
+            num_predicted_instances,
+            -1,
+        )
 
     if sort_by_target_height:
         z = xyz[valid_target_mask, 2]
@@ -631,7 +732,14 @@ def match_instances_point2tree(  # pylint: disable=too-many-statements, too-many
     matched_predicted_ids = matched_predicted_ids + start_instance_id
     matched_predicted_ids[invalid_matches_mask] = invalid_instance_id
 
-    return matched_target_ids, matched_predicted_ids, metrics
+    return _add_best_matches_to_results(
+        (matched_target_ids, matched_predicted_ids, metrics),
+        best_target_ids_per_prediction,
+        best_predicted_ids_per_target,
+        start_instance_id,
+        invalid_instance_id,
+        return_best_matches,
+    )
 
 
 def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many-locals, too-many-positional-arguments
@@ -643,7 +751,8 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
     invalid_instance_id: int,
     min_iou_treshold: Optional[float] = 0.5,
     accept_equal_iou: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+    return_best_matches: bool = False,
+) -> Union[MatchingResults, MatchingResultsWithBestMatches]:
     r"""
     Instance matching method that is proposed in `Henrich, Jonathan, et al. "TreeLearn: A Deep Learning Method for
     Segmenting Individual Trees from Ground-Based LiDAR Forest Point Clouds." Ecological Informatics 84 (2024): 102888.
@@ -663,27 +772,39 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
             corresponds to the setting proposed by Henrich et al.
         accept_equal_iou: Whether matched pairs of instances should be accepted if their IoU is equal to
             :code:`min_iou_treshold`.
+        return_best_matches: Whether to additionally return the best predicted instance for each target instance and
+            the best target instance for each predicted instance according to the IoU.
 
     Returns: A tuple with the following elements:
         - :code:`matched_target_ids`: IDs of the matched target instance for each predicted instance. Predicted
-          instances that are not matched to a target instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a target instance are assigned :code:`invalid_instance_id`.
         - :code:`matched_predicted_ids`: IDs of the matched predicted instance for each target instance. Target
-          instances that are not matched to a predicted instance are assigned :code:`invalid_tree_id`.
+          instances that are not matched to a predicted instance are assigned :code:`invalid_instance_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
           tensors whose length is equal to the number of target instances and that contain the number of true positive,
           false positive, and false negative points between the matched instances. For target instances not matched to
           any prediction, the true and false posiitves are set to zero and the false negatives to the number of target
           points.
+        - :code:`best_target_ids_per_prediction`: IDs of the best
+          target instance for each predicted instance according to the IoU. Predicted instances that do not overlap
+          with any target instance are assigned :code:`invalid_instance_id`. Only returned if
+          :code:`return_best_matches` is :code:`True`.
+        - :code:`best_predicted_ids_per_target`: IDs of the best
+          predicted instance for each target instance according to the IoU. Target instances that do not overlap with
+          any predicted instance are assigned :code:`invalid_instance_id`.  Only returned if
+          :code:`return_best_matches` is :code:`True`.
 
     Shape:
         - :code:`target`: :math:`(N)`
-        - :code:`unique_target_ids`: math:`(G)`
+        - :code:`unique_target_ids`: :math:`(T)`
         - :code:`prediction`: :math:`(N)`
-        - :code:`unique_prediction_ids`: math:`(P)`
+        - :code:`unique_prediction_ids`: :math:`(P)`
         - Output:
             - :code:`matched_target_ids`: :math:`(P)`
             - :code:`matched_predicted_ids`: :math:`(T)`
             - :code:`metrics`: Dictionary whose values are tensors of length :math:`(T)`
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
 
         | where
         |
@@ -718,8 +839,16 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
     )
 
     if matching_candidates is None:
-        return _initialize_matching_results(
+        matching_results = _initialize_matching_results(
             num_target_instances, num_predicted_instances, target_sizes, invalid_instance_id, device
+        )
+        return _add_best_matches_to_results(
+            matching_results,
+            None,
+            None,
+            start_instance_id,
+            invalid_instance_id,
+            return_best_matches,
         )
 
     matched_target_ids, matched_predicted_ids, metrics = _initialize_matching_results(
@@ -736,6 +865,12 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
 
     iou_matrix[paired_predicted_ids, paired_target_ids] = tp / union
     tp_matrix[paired_predicted_ids, paired_target_ids] = pair_counts
+    best_target_ids_per_prediction = None
+    best_predicted_ids_per_target = None
+    if return_best_matches:
+        best_target_ids_per_prediction, best_predicted_ids_per_target = _get_best_matches_from_score_matrix(
+            iou_matrix, -1
+        )
 
     iou_matrix_np = iou_matrix.detach().to("cpu").numpy()
     matched_predicted_indices_np, matched_target_indices_np = linear_sum_assignment(iou_matrix_np, maximize=True)
@@ -772,7 +907,14 @@ def match_instances_tree_learn(  # pylint: disable=too-many-statements, too-many
     matched_predicted_ids = matched_predicted_ids + start_instance_id
     matched_predicted_ids[invalid_matches_mask] = invalid_instance_id
 
-    return matched_target_ids, matched_predicted_ids, metrics
+    return _add_best_matches_to_results(
+        (matched_target_ids, matched_predicted_ids, metrics),
+        best_target_ids_per_prediction,
+        best_predicted_ids_per_target,
+        start_instance_id,
+        invalid_instance_id,
+        return_best_matches,
+    )
 
 
 def _initialize_matching_results(
@@ -794,12 +936,24 @@ def _initialize_matching_results(
 
     Returns: A tuple with the following elements:
         - :code:`matched_target_ids`: Tensor of length :code:`num_predicted_instances` with all values set to
-            :code:`invalid_tree_id`.
+            :code:`invalid_instance_id`.
         - :code:`matched_predicted_ids`: Tensor of length :code:`num_target_instances` with all values set to
-            :code:`invalid_tree_id`.
+            :code:`invalid_instance_id`.
         - :code:`metrics`: Dictionary with the keys :code:`"tp"`, :code:`"fp"`, :code:`"fn"`. The values are
-          tensors whose length is equal to the number of target instances. code:`"tp"` and :code:`"fp"` are initialized
-          with zero values, while :code:`fp` is initialized with the target sizes.
+          tensors whose length is equal to the number of target instances. :code:`"tp"` and :code:`"fp"` are
+          initialized with zero values, while :code:`"fn"` is initialized with the target sizes.
+
+    Shape:
+        - :code:`target_sizes`: :math:`(T)`
+        - Output:
+            - :code:`matched_target_ids`: :math:`(P)`
+            - :code:`matched_predicted_ids`: :math:`(T)`
+            - :code:`metrics`: Dictionary whose values are tensors of length :math:`(T)`
+
+        | where
+        |
+        | :math:`P` = number of predicted instances
+        | :math:`T` = number of target instances
     """
 
     matched_target_ids = torch.full(
@@ -816,6 +970,191 @@ def _initialize_matching_results(
     }
 
     return matched_target_ids, matched_predicted_ids, metrics
+
+
+def _get_best_matches(
+    scores: torch.Tensor,
+    target_ids: torch.Tensor,
+    predicted_ids: torch.Tensor,
+    num_target_instances: int,
+    num_predicted_instances: int,
+    invalid_instance_id: int,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Determines the best-scoring predicted instance for each target instance, and vice-versa.
+
+    Args:
+        scores: Score for each overlapping pair of target and predicted instances.
+        target_ids: Target instance ID for each score. The IDs are expected to be consecutive and start with zero.
+        predicted_ids: Predicted instance ID for each score. The IDs are expected to be consecutive and start with zero.
+        num_target_instances: Number of target instances.
+        num_predicted_instances: Number of predicted instances.
+        invalid_instance_id: ID to assign to instances that do not overlap with any instance in the other tensor.
+
+    Returns: A tuple with the following elements:
+        - :code:`best_target_ids_per_prediction`: Best target instance ID for each predicted instance. Predicted
+          instances without any overlapping target are assigned :code:`invalid_instance_id`.
+        - :code:`best_predicted_ids_per_target`: Best predicted instance ID for each target instance. Target instances
+          without any overlapping prediction are assigned :code:`invalid_instance_id`.
+
+    Shape:
+        - :code:`scores`: :math:`(M)`
+        - :code:`target_ids`: :math:`(M)`
+        - :code:`predicted_ids`: :math:`(M)`
+        - Output:
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
+
+        | where
+        |
+        | :math:`M` = number of overlapping target and predicted instance pairs
+        | :math:`P` = number of predicted instances
+        | :math:`T` = number of target instances
+    """
+    device = target_ids.device
+
+    best_predicted_scores, best_predicted_pair_ids = scatter_max(
+        scores, target_ids, dim=0, dim_size=num_target_instances
+    )
+    best_target_scores, best_target_pair_ids = scatter_max(
+        scores, predicted_ids, dim=0, dim_size=num_predicted_instances
+    )
+
+    best_predicted_ids = torch.full(
+        (num_target_instances,), fill_value=invalid_instance_id, device=device, dtype=torch.long
+    )
+    best_target_ids = torch.full(
+        (num_predicted_instances,), fill_value=invalid_instance_id, device=device, dtype=torch.long
+    )
+
+    has_best_prediction = best_predicted_scores > 0
+    has_best_target = best_target_scores > 0
+
+    best_predicted_ids[has_best_prediction] = predicted_ids[best_predicted_pair_ids[has_best_prediction]]
+    best_target_ids[has_best_target] = target_ids[best_target_pair_ids[has_best_target]]
+
+    return best_target_ids, best_predicted_ids
+
+
+def _get_best_matches_from_score_matrix(
+    score_matrix: torch.Tensor, invalid_instance_id: int
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Determines the best-scoring predicted instance per target and target instance per prediction from a score matrix.
+
+    Args:
+        score_matrix: Score for every predicted-target instance pair. Rows correspond to predicted instances and
+            columns correspond to target instances.
+        invalid_instance_id: ID to assign to instances whose best score is zero.
+
+    Returns: A tuple with the following elements:
+        - :code:`best_target_ids_per_prediction`: Best target instance ID for each predicted instance. Predicted
+          instances whose best score is zero are assigned :code:`invalid_instance_id`.
+        - :code:`best_predicted_ids_per_target`: Best predicted instance ID for each target instance. Target instances
+          whose best score is zero are assigned :code:`invalid_instance_id`.
+
+    Shape:
+        - :code:`score_matrix`: :math:`(P, T)`
+        - Output:
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
+
+        | where
+        |
+        | :math:`P` = number of predicted instances
+        | :math:`T` = number of target instances
+    """
+
+    device = score_matrix.device
+    num_predicted_instances, num_target_instances = score_matrix.shape
+
+    if num_predicted_instances == 0 or num_target_instances == 0:
+        return (
+            torch.full((num_predicted_instances,), fill_value=invalid_instance_id, device=device, dtype=torch.long),
+            torch.full((num_target_instances,), fill_value=invalid_instance_id, device=device, dtype=torch.long),
+        )
+
+    best_predicted_scores, best_predicted_ids = score_matrix.max(dim=0)
+    best_target_scores, best_target_ids = score_matrix.max(dim=1)
+
+    best_predicted_ids = best_predicted_ids.to(torch.long)
+    best_target_ids = best_target_ids.to(torch.long)
+    best_predicted_ids[best_predicted_scores <= 0] = invalid_instance_id
+    best_target_ids[best_target_scores <= 0] = invalid_instance_id
+
+    return best_target_ids, best_predicted_ids
+
+
+def _add_best_matches_to_results(
+    matching_results: MatchingResults,
+    best_target_ids_per_prediction: Optional[torch.Tensor],
+    best_predicted_ids_per_target: Optional[torch.Tensor],
+    start_instance_id: Union[int, torch.Tensor],
+    invalid_instance_id: int,
+    return_best_matches: bool,
+) -> Union[MatchingResults, MatchingResultsWithBestMatches]:
+    """
+    Appends best-match tensors to matching results if requested.
+
+    Args:
+        matching_results: Base matching results returned by an instance matching method.
+        best_target_ids_per_prediction: Best target instance ID for each predicted instance, using the local
+            zero-based ID space. If :code:`None`, an all-invalid tensor is created when best matches are requested.
+        best_predicted_ids_per_target: Best predicted instance ID for each target instance, using the local
+            zero-based ID space. If :code:`None`, an all-invalid tensor is created when best matches are requested.
+        start_instance_id: First valid instance ID in the original ID space.
+        invalid_instance_id: ID that is assigned to points not assigned to any instance.
+        return_best_matches: Whether to append best-match tensors to :code:`matching_results`.
+
+    Returns:
+        :code:`matching_results` if :code:`return_best_matches` is :code:`False`. Otherwise, a tuple with the
+        original matching results followed by :code:`best_target_ids_per_prediction` and
+        :code:`best_predicted_ids_per_target`, remapped to the original ID space.
+
+    Shape:
+        - :code:`matching_results[0]`: :math:`(P)`
+        - :code:`matching_results[1]`: :math:`(T)`
+        - :code:`matching_results[2]`: Dictionary whose values are tensors of length :math:`(T)`
+        - :code:`best_target_ids_per_prediction`: :math:`(P)`, if provided.
+        - :code:`best_predicted_ids_per_target`: :math:`(T)`, if provided.
+        - Output:
+            - :code:`matched_target_ids`: :math:`(P)`
+            - :code:`matched_predicted_ids`: :math:`(T)`
+            - :code:`metrics`: Dictionary whose values are tensors of length :math:`(T)`
+            - :code:`best_target_ids_per_prediction`: :math:`(P)`
+            - :code:`best_predicted_ids_per_target`: :math:`(T)`
+
+        | where
+        |
+        | :math:`P` = number of predicted instances
+        | :math:`T` = number of target instances
+    """
+
+    if not return_best_matches:
+        return matching_results
+
+    matched_target_ids, matched_predicted_ids, _ = matching_results
+    device = matched_target_ids.device
+
+    if best_predicted_ids_per_target is None:
+        best_predicted_ids_per_target = torch.full(
+            (len(matched_predicted_ids),), fill_value=invalid_instance_id, device=device, dtype=torch.long
+        )
+    else:
+        invalid_matches_mask = best_predicted_ids_per_target == -1
+        best_predicted_ids_per_target = best_predicted_ids_per_target + start_instance_id
+        best_predicted_ids_per_target[invalid_matches_mask] = invalid_instance_id
+
+    if best_target_ids_per_prediction is None:
+        best_target_ids_per_prediction = torch.full(
+            (len(matched_target_ids),), fill_value=invalid_instance_id, device=device, dtype=torch.long
+        )
+    else:
+        invalid_matches_mask = best_target_ids_per_prediction == -1
+        best_target_ids_per_prediction = best_target_ids_per_prediction + start_instance_id
+        best_target_ids_per_prediction[invalid_matches_mask] = invalid_instance_id
+
+    return (*matching_results, best_target_ids_per_prediction, best_predicted_ids_per_target)
 
 
 def _get_instance_sizes(
