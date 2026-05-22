@@ -91,8 +91,7 @@ class TestMatchInstances:
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
     def test_return_best_matches(self, method: str, invalid_instance_id: int, device: str):
         start_instance_id = invalid_instance_id + 1
-        target = torch.tensor(
-            [1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 1, 3, 3, 3, 3, -1], dtype=torch.long, device=device)
+        target = torch.tensor([1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 1, 3, 3, 3, 3, -1], dtype=torch.long, device=device)
         prediction = torch.tensor(
             [2, 2, 2, 2, 3, 3, 1, 0, 0, 1, 2, -1, -1, -1, -1, -1], dtype=torch.long, device=device
         )

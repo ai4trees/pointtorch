@@ -1,4 +1,4 @@
-"""Matching of target and predicted instances."""
+"""Matching of target and predicted instances."""  # pylint: disable=too-many-lines
 
 __all__ = ["match_instances", "match_instances_iou", "match_instances_point2tree", "match_instances_tree_learn"]
 
@@ -8,11 +8,8 @@ from scipy.optimize import linear_sum_assignment
 import torch
 from torch_scatter import scatter_max, scatter_min
 
-
 MatchingResults = Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]
-MatchingResultsWithBestMatches = Tuple[
-    torch.Tensor, torch.Tensor, Dict[str, torch.Tensor], torch.Tensor, torch.Tensor
-]
+MatchingResultsWithBestMatches = Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor], torch.Tensor, torch.Tensor]
 
 
 def match_instances(  # pylint: disable=too-many-locals, too-many-statements, too-many-return-statements, too-many-branches
