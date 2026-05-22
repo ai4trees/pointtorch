@@ -191,7 +191,9 @@ class TestMatchInstances:
     )
     @pytest.mark.parametrize("return_best_matches", [True, False])
     @pytest.mark.parametrize("invalid_instance_id", [-1, 0])
-    def test_all_false_negatives(self, method: str, return_best_matches: bool, invalid_instance_id: int, device: str):
+    def test_all_false_negatives(  # pylint: disable=too-many-locals
+        self, method: str, return_best_matches: bool, invalid_instance_id: int, device: str
+    ):
         start_instance_id = invalid_instance_id + 1
         target = torch.tensor([0, 0, 1, 1, 2, 2], dtype=torch.long, device=device) + start_instance_id
         prediction = torch.full((len(target),), fill_value=invalid_instance_id, dtype=torch.long, device=device)
