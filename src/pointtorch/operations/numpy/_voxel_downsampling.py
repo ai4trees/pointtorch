@@ -9,7 +9,6 @@ import torch
 from torch_scatter.scatter import scatter_min
 
 from pointtorch.type_aliases import FloatArray, LongArray
-from ._make_labels_consecutive import make_labels_consecutive
 
 
 def voxel_downsampling(  # pylint: disable=too-many-locals
@@ -95,18 +94,14 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
 
         voxel_centers = filled_voxel_indices.astype(float) * voxel_size + 0.5 * voxel_size
 
-        dists_to_voxel_center = np.linalg.norm(shifted_points - voxel_centers[inverse_indices], axis=-1)
-
-        dimensions = voxel_indices.max(axis=0) + 1
-        scatter_indices: LongArray = make_labels_consecutive(  # type: ignore[assignment]
-            np.ravel_multi_index(tuple(voxel_indices[:, dim] for dim in range(voxel_indices.shape[1])), dimensions)
-        )
+        squared_dists_to_voxel_center = ((shifted_points - voxel_centers[inverse_indices]) ** 2).sum(axis=-1)
 
         _, argmin_indices = scatter_min(
-            torch.from_numpy(dists_to_voxel_center).to(device), torch.from_numpy(scatter_indices).long().to(device)
+            torch.from_numpy(squared_dists_to_voxel_center).to(device),
+            torch.from_numpy(inverse_indices).long().to(device),
         )
 
-        selected_indices = np.arange(len(points))[argmin_indices.cpu().numpy()]
+        selected_indices = argmin_indices.cpu().numpy()
 
     if preserve_order:
         ordered_indices = selected_indices.argsort()
