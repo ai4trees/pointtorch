@@ -7,8 +7,7 @@ from typing import Literal, Optional, Tuple
 import torch
 from torch_scatter.scatter import scatter, scatter_min
 
-from ._make_labels_consecutive import make_labels_consecutive
-from ._ravel_index import ravel_multi_index, unravel_flat_index
+from ._ravel_index import ravel_multi_index
 
 
 def voxel_downsampling(  # pylint: disable=too-many-locals
@@ -94,24 +93,17 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     dimensions = voxel_indices.amax(0) + 1  # (4)
     flattened_indices = ravel_multi_index(voxel_indices, dimensions)  # (N)
 
-    unqiue_cluster_indices, cluster = torch.unique(flattened_indices, sorted=True, return_inverse=True)
-
-    cluster_centers = unravel_flat_index(unqiue_cluster_indices, dimensions)
-    batch_indices = cluster_centers[:, 0]
-    cluster_centers = cluster_centers[:, 1:].float() * voxel_size + 0.5 * voxel_size
-
-    scatter_indices: torch.Tensor = make_labels_consecutive(  # type: ignore[assignment]
-        flattened_indices - flattened_indices.min()
-    )
+    _, cluster = torch.unique(flattened_indices, sorted=True, return_inverse=True)
+    batch_indices = scatter(batch_indices, cluster, dim=0, reduce="min")
 
     if point_aggregation == "nearest_neighbor" or features is not None and feature_aggregation == "nearest_neighbor":
         point_indices = torch.arange(len(shifted_coords), device=coords.device, dtype=torch.long)
+        _, first_point_per_cluster = scatter_min(point_indices, cluster)
+        cluster_centers = voxel_indices[first_point_per_cluster, 1:].float() * voxel_size + 0.5 * voxel_size
 
-        dists_to_cluster_centers = torch.linalg.norm(  # pylint: disable=not-callable
-            shifted_coords - cluster_centers[cluster], dim=-1
-        )
+        squared_dists_to_cluster_centers = ((shifted_coords - cluster_centers[cluster]) ** 2).sum(dim=-1)
 
-        _, argmin_indices = scatter_min(dists_to_cluster_centers, scatter_indices)
+        _, argmin_indices = scatter_min(squared_dists_to_cluster_centers, cluster)
 
         selected_indices = point_indices[argmin_indices]
         if preserve_order and point_aggregation == "nearest_neighbor":
@@ -120,13 +112,13 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     if point_aggregation == "nearest_neighbor":
         coords = coords[selected_indices]
     else:
-        coords = scatter(coords, scatter_indices, dim=0, reduce="mean")
+        coords = scatter(coords, cluster, dim=0, reduce="mean")
 
     if features is not None:
         if feature_aggregation == "nearest_neighbor":
             features = features[selected_indices]
         else:
-            features = scatter(features, scatter_indices, dim=0, reduce=feature_aggregation)
+            features = scatter(features, cluster, dim=0, reduce=feature_aggregation)
             if preserve_order and point_aggregation == "nearest_neighbor":
                 features = features[sorting_indices]  # pylint: disable=used-before-assignment
 
