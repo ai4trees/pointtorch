@@ -11,7 +11,7 @@ import pytest
 from pointtorch import PointCloud, PointCloudSeries, read
 
 
-class TestPointCloud:
+class TestPointCloud:  # pylint: disable=too-many-public-methods
     """
     Tests for the pointtorch.core.PointCloud class.
     """
