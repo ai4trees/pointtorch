@@ -5,8 +5,6 @@ __all__ = ["voxel_downsampling"]
 from typing import Literal, Optional, Tuple
 
 import numpy as np
-import torch
-from torch_scatter.scatter import scatter_min
 
 from pointtorch.type_aliases import FloatArray, LongArray
 
@@ -42,6 +40,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
 
     Raises:
         ValueError: If `start` is not `None` and has an invalid shape.
+        ValueError: If `point_aggregation` is invalid.
 
     Shape:
         - :code:`points`: :math:`(N, 3 + D)`.
@@ -59,49 +58,37 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     if voxel_size <= 0:
         return points, np.arange(len(points), dtype=np.int64), np.arange(len(points), dtype=np.int64)
 
+    if len(points) == 0:
+        return points, np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64)
+
     if start is None:
         start_coords = np.array([0.0, 0.0, 0.0])
     else:
-        if start.shape != np.array([3]):
+        if start.shape != (3,):
             raise ValueError(f"The shape of the 'start' array is invalid: {start.shape}. ")
         start_coords = start
 
     shifted_points = points[:, :3] - start_coords
     voxel_indices = np.floor_divide(shifted_points, voxel_size).astype(np.int64)
+    shift = voxel_indices.min(axis=0)
+    voxel_indices = voxel_indices - shift
+    dimensions = voxel_indices.max(axis=0) + 1
+    flattened_indices = np.ravel_multi_index(tuple(voxel_indices.T), dimensions)
+    _, selected_indices, inverse_indices = np.unique(flattened_indices, return_index=True, return_inverse=True)
 
-    if point_aggregation == "random":
-        _, selected_indices, inverse_indices = np.unique(
-            voxel_indices, axis=0, return_index=True, return_inverse=True, sorted=False
-        )
-    else:
-        shift = voxel_indices.min(axis=0)
-        voxel_indices -= shift
-        shifted_points -= shift.astype(float) * voxel_size
+    if point_aggregation == "nearest_neighbor":
+        shifted_points = shifted_points - shift.astype(np.float64) * voxel_size
+        voxel_centers = voxel_indices.astype(np.float64) * voxel_size + 0.5 * voxel_size
+        squared_dists_to_voxel_center = np.square(shifted_points - voxel_centers).sum(axis=-1)
 
-        filled_voxel_indices, inverse_indices = np.unique(voxel_indices, axis=0, return_inverse=True, sorted=True)
-
-        device = "cpu"
-
-        # check if there is a GPU with sufficient memory to run the scatter_min step on GPU
-        if torch.cuda.is_available():
-            available_memory = torch.cuda.mem_get_info(device=torch.device("cuda:0"))[0]
-            double_size = torch.empty((0,)).double().element_size()
-            long_size = torch.empty((0,)).long().element_size()
-            approx_required_memory = len(points) * 2 * (double_size + long_size)
-
-            if available_memory > approx_required_memory:
-                device = "cuda:0"
-
-        voxel_centers = filled_voxel_indices.astype(float) * voxel_size + 0.5 * voxel_size
-
-        squared_dists_to_voxel_center = ((shifted_points - voxel_centers[inverse_indices]) ** 2).sum(axis=-1)
-
-        _, argmin_indices = scatter_min(
-            torch.from_numpy(squared_dists_to_voxel_center).to(device),
-            torch.from_numpy(inverse_indices).long().to(device),
-        )
-
-        selected_indices = argmin_indices.cpu().numpy()
+        sorting_indices = np.lexsort((squared_dists_to_voxel_center, inverse_indices))
+        sorted_inverse_indices = inverse_indices[sorting_indices]
+        first_in_voxel = np.empty(len(sorting_indices), dtype=bool)
+        first_in_voxel[0] = True
+        first_in_voxel[1:] = sorted_inverse_indices[1:] != sorted_inverse_indices[:-1]
+        selected_indices = sorting_indices[first_in_voxel]
+    elif point_aggregation != "random":
+        raise ValueError(f"Invalid point aggregation method: {point_aggregation}.")
 
     if preserve_order:
         ordered_indices = selected_indices.argsort()
