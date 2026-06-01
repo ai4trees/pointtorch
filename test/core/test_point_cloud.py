@@ -74,6 +74,19 @@ class TestPointCloud:
         np.testing.assert_array_equal(point_cloud["x"].to_numpy(dtype=np.float32), structured_array["x"])
         np.testing.assert_array_equal(point_cloud["z"].to_numpy(dtype=np.float32), structured_array["z"])
 
+    def test_to_structured_array_empty_without_named_fields_dtype(self):
+        point_cloud = PointCloud([], columns=["x", "y", "z"])
+        dtype = np.dtype(np.float32)
+
+        structured_array = point_cloud.to_structured_array(dtype=dtype)
+
+        assert dtype == structured_array.dtype
+        assert len(point_cloud) == 0
+
+    def test_to_structured_array_without_named_fields_dtype(self, point_cloud):
+        with pytest.raises(ValueError):
+            point_cloud.to_structured_array(dtype=np.dtype(np.float32))
+
     def test_from_structured_array(self):
         structured_array = np.array(
             [(0.0, 0.0, 0.0, 1), (1.0, 1.0, 1.0, 2)],

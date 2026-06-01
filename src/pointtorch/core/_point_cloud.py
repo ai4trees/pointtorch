@@ -105,6 +105,9 @@ class PointCloud(pd.DataFrame):
 
         Returns:
             Structured array containing the point cloud columns.
+
+        Raises:
+            ValueError: If :code:`dtype` does not define named fields and the point cloud is non-empty.
         """
 
         if dtype is None:
@@ -112,7 +115,9 @@ class PointCloud(pd.DataFrame):
 
         structured_array = np.empty(len(self), dtype=dtype)
         if dtype.names is None:
-            return structured_array
+            if len(self) == 0:
+                return structured_array
+            raise ValueError("The dtype must define named fields.")
 
         for column in dtype.names:
             if column in self.columns:
