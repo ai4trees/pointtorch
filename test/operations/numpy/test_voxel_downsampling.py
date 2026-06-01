@@ -213,6 +213,15 @@ class TestVoxelDownSampling:
             np.testing.assert_array_equal(np.sort(downsampled_indices), downsampled_indices)
         np.testing.assert_array_equal(duplicated_points, downsampled_points[inverse_indices])
 
+    def test_voxel_downsampling_empty_input(self):
+        points = np.empty((0, 3))
+
+        downsampled_points, downsampled_indices, inverse_indices = voxel_downsampling(points, 1)
+
+        assert (0, 3) == downsampled_points.shape
+        np.testing.assert_array_equal(np.empty((0,), dtype=np.int64), downsampled_indices)
+        np.testing.assert_array_equal(np.empty((0,), dtype=np.int64), inverse_indices)
+
     def test_voxel_downsampling_invalid_start(self):
         start = np.array([1.1, 0.0])
         points = np.zeros((20, 3))
@@ -220,3 +229,9 @@ class TestVoxelDownSampling:
 
         with pytest.raises(ValueError):
             voxel_downsampling(points, voxel_size, start=start)
+
+    def test_voxel_downsampling_invalid_point_aggregation(self):
+        points = np.zeros((2, 3))
+
+        with pytest.raises(ValueError):
+            voxel_downsampling(points, 1, point_aggregation="invalid")  # type: ignore[arg-type]
