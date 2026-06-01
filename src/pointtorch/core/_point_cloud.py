@@ -80,6 +80,97 @@ class PointCloud(pd.DataFrame):
 
         return self[["x", "y", "z"]].astype(np.float64).to_numpy()
 
+    def structured_dtype(self, extra_fields: Optional[list[tuple[str, np.dtype]]] = None) -> np.dtype:
+        """
+        Builds a structured numpy dtype from the point cloud columns.
+
+        Returns:
+            A numpy structured dtype representing the current point cloud columns.
+
+        Args:
+            extra_fields: Optional list of additional fields to append to the dtype.
+        """
+
+        dtype_fields = [(str(column), self[column].to_numpy().dtype) for column in self.columns]
+        if extra_fields is not None:
+            dtype_fields.extend(extra_fields)
+        return np.dtype(dtype_fields)
+
+    def to_structured_array(self, dtype: Optional[np.dtype] = None) -> npt.NDArray:
+        """
+        Converts the point cloud to a numpy structured array.
+
+        Args:
+            dtype: Structured dtype to use for the output. If not specified, one is derived from the point cloud.
+
+        Returns:
+            Structured array containing the point cloud columns.
+        """
+
+        if dtype is None:
+            dtype = self.structured_dtype()
+
+        structured_array = np.empty(len(self), dtype=dtype)
+        if dtype.names is None:
+            return structured_array
+
+        for column in dtype.names:
+            if column in self.columns:
+                structured_array[column] = self[column].to_numpy(dtype=dtype[column])
+
+        return structured_array
+
+    @classmethod
+    def from_structured_array(
+        cls,
+        structured_array: npt.NDArray,
+        *,
+        crs: Optional[str] = None,
+        identifier: Optional[str] = None,
+        x_max_resolution: Optional[float] = None,
+        y_max_resolution: Optional[float] = None,
+        z_max_resolution: Optional[float] = None,
+    ) -> "PointCloud":
+        """
+        Creates a point cloud from a numpy structured array.
+
+        Args:
+            structured_array: Structured array containing the point cloud columns.
+            crs: ESPG code of the point cloud's coordinate reference system. Defaults to :code:`None`
+            identifier: Point cloud identifier.
+            x_max_resolution: Maximum resolution of the point cloud's x-coordinates in meter. Defaults to :code:`None`.
+            y_max_resolution: Maximum resolution of the point cloud's y-coordinates in meter. Defaults to :code:`None`.
+            z_max_resolution: Maximum resolution of the point cloud's z-coordinates in meter. Defaults to :code:`None`.
+
+        Returns:
+            Point cloud built from the given structured array.
+
+        Raises:
+            ValueError: If :code:`structured_array` is non-empty and does not define named fields.
+        """
+
+        if structured_array.dtype.names is None:
+            if len(structured_array) == 0:
+                return cls(
+                    [],
+                    crs=crs,
+                    identifier=identifier,
+                    x_max_resolution=x_max_resolution,
+                    y_max_resolution=y_max_resolution,
+                    z_max_resolution=z_max_resolution,
+                )
+            raise ValueError("The structured array must define named fields.")
+
+        point_cloud_df = pd.DataFrame.from_records(structured_array, columns=list(structured_array.dtype.names))
+        return cls(
+            point_cloud_df,
+            crs=crs,
+            identifier=identifier,
+            x_max_resolution=x_max_resolution,
+            y_max_resolution=y_max_resolution,
+            z_max_resolution=z_max_resolution,
+        )
+
     def to(self, file_path: Union[str, Path], columns: Optional[list[str]] = None) -> None:
         """
         Writes the point cloud to a file.
