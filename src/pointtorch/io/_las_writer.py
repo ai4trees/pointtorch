@@ -3,7 +3,7 @@
 __all__ = ["LasWriter"]
 
 import pathlib
-from typing import Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import laspy
 from laspy.compression import LazrsBackend
@@ -44,15 +44,15 @@ class LasWriter(BasePointCloudWriter):
 
         return ["las", "laz"]
 
-    def _select_point_format(self, point_cloud: pd.DataFrame) -> int:
+    def _select_point_format(self, point_cloud: pd.DataFrame) -> laspy.point.format.PointFormat:
         """
         Determines the las file format that covers the most columns of the given point cloud.
 
         Returns:
-            ID of the chosen las file format.
+            Chosen las file format.
         """
         columns = set(point_cloud.columns).difference(["x", "y", "z"])
-        best_format = 0
+        best_format = laspy.point.format.PointFormat(0)
         covered_columns = 0
 
         for f in LasWriter._supported_las_formats:
@@ -71,6 +71,45 @@ class LasWriter(BasePointCloudWriter):
                 break
 
         return best_format
+
+    @classmethod
+    def _compute_scales_and_offsets(
+        cls,
+        xyz: np.ndarray,
+        default_scales: List[float],
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Computes LAS scales and offsets for storing coordinates in LAS integer fields.
+
+        The returned offsets are centered on the coordinate range to maximize the usable signed 32-bit integer span.
+        The requested scales are preserved unless they would cause the coordinate range to exceed that span, in which
+        case the affected scales are increased to the minimum supported values.
+
+        Args:
+            xyz: Point coordinates.
+            default_scales: Preferred LAS scales for the x, y, and z coordinates.
+
+        Returns:
+            Tuple containing the LAS scales and offsets for the x, y, and z coordinates.
+            
+        Shape:
+            - :code:`xyz`: :math:`(num_points, 3)`
+        """
+        scales = np.asarray(default_scales, dtype=np.float64)
+
+        if len(xyz) == 0:
+            return scales, np.zeros(3, dtype=np.float64)
+
+        lower_bounds = xyz.min(axis=0)
+        upper_bounds = xyz.max(axis=0)
+
+        offsets = (lower_bounds + upper_bounds) / 2
+
+        coordinate_spans = upper_bounds - lower_bounds
+        minimum_supported_scales = coordinate_spans / (2 * np.iinfo(np.int32).max)
+        scales = np.maximum(scales, minimum_supported_scales)
+
+        return scales, offsets
 
     def _write_data(  # pylint: disable=too-many-locals
         self,
@@ -101,9 +140,9 @@ class LasWriter(BasePointCloudWriter):
         ):
             point_cloud = point_cloud.rename({"r": "red", "g": "green", "b": "blue"}, axis=1)
 
-        las_data = laspy.create(point_format=self._select_point_format(point_cloud))
+        las_format = self._select_point_format(point_cloud)
+        las_data = laspy.create(point_format=las_format)
         point_coords = point_cloud[["x", "y", "z"]].values
-        offsets = point_coords.min(axis=0)
         scales = [self.maximum_resolution] * 3
         if x_max_resolution is not None:
             scales[0] = x_max_resolution
@@ -112,6 +151,7 @@ class LasWriter(BasePointCloudWriter):
         if z_max_resolution is not None:
             scales[2] = z_max_resolution
 
+        scales, offsets = self._compute_scales_and_offsets(point_coords, scales)
         las_data.change_scaling(scales=scales, offsets=offsets)
         las_data.xyz = point_coords
 
@@ -121,12 +161,16 @@ class LasWriter(BasePointCloudWriter):
             if column_name.lower() in ["x", "y", "z"]:
                 continue
 
+            column_format = las_format[column_name]
+
             if column_name.lower() in point_cloud.columns:
-                las_data[column_name] = point_cloud[column_name.lower()]
+                las_data[column_name] = point_cloud[column_name.lower()].to_numpy(dtype=column_format.dtype)
                 extra_columns.remove(column_name)
             else:
                 default_value = LasWriter._standard_field_defaults.get(column_name, 0)
-                las_data[column_name] = np.full_like(las_data[column_name], fill_value=default_value)
+                las_data[column_name] = np.full_like(
+                    las_data[column_name], fill_value=default_value, dtype=column_format.dtype
+                )
 
         extra_dims = []
         for column_name in extra_columns:
@@ -138,7 +182,7 @@ class LasWriter(BasePointCloudWriter):
         las_data.update_header()
 
         for extra_dim in extra_dims:
-            las_data[extra_dim.name] = point_cloud[extra_dim.name]
+            las_data[extra_dim.name] = point_cloud[extra_dim.name].to_numpy(dtype=extra_dim.type)
 
         if crs is not None:
             las_data.header.add_crs(CRS.from_string(crs))
