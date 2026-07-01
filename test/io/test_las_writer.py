@@ -182,3 +182,30 @@ class TestLasWriter:
 
         assert read_point_cloud_data.x_max_resolution is not None and read_point_cloud_data.x_max_resolution > 1e-6
         assert np.allclose(point_cloud_df.to_numpy(), read_point_cloud_data.data.to_numpy())
+
+    @pytest.mark.parametrize("file_format", ["las", "laz"])
+    def test_write_empty_point_cloud(
+        self, las_reader: LasReader, las_writer: LasWriter, cache_dir: str, file_format: str
+    ):
+        x_max_resolution = 0.1
+        y_max_resolution = 0.01
+        z_max_resolution = 1.0
+
+        point_cloud_df = pd.DataFrame(columns=["x", "y", "z"], dtype=np.float64)
+        point_cloud_data = PointCloudIoData(
+            point_cloud_df,
+            x_max_resolution=x_max_resolution,
+            y_max_resolution=y_max_resolution,
+            z_max_resolution=z_max_resolution,
+        )
+        file_path = os.path.join(cache_dir, f"empty_point_cloud.{file_format}")
+
+        las_writer.write(point_cloud_data, file_path)
+
+        read_point_cloud_data = las_reader.read(file_path)
+
+        assert len(read_point_cloud_data.data) == 0
+
+        assert read_point_cloud_data.x_max_resolution == x_max_resolution
+        assert read_point_cloud_data.y_max_resolution == y_max_resolution
+        assert read_point_cloud_data.z_max_resolution == z_max_resolution
