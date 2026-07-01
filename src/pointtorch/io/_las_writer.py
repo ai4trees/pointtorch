@@ -76,7 +76,7 @@ class LasWriter(BasePointCloudWriter):
     def _compute_scales_and_offsets(
         cls,
         xyz: np.ndarray,
-        default_scales: List[float],
+        default_scales: np.ndarray,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Computes LAS scales and offsets for storing coordinates in LAS integer fields.
@@ -95,10 +95,9 @@ class LasWriter(BasePointCloudWriter):
         Shape:
             - :code:`xyz`: :math:`(num_points, 3)`
         """
-        scales = np.asarray(default_scales, dtype=np.float64)
 
         if len(xyz) == 0:
-            return scales, np.zeros(3, dtype=np.float64)
+            return default_scales, np.zeros(3, dtype=np.float64)
 
         lower_bounds = xyz.min(axis=0)
         upper_bounds = xyz.max(axis=0)
@@ -107,7 +106,7 @@ class LasWriter(BasePointCloudWriter):
 
         coordinate_spans = upper_bounds - lower_bounds
         minimum_supported_scales = coordinate_spans / (2 * np.iinfo(np.int32).max)
-        scales = np.maximum(scales, minimum_supported_scales)
+        scales = np.maximum(default_scales, minimum_supported_scales)
 
         offsets = np.round(offsets / scales) * scales
 
