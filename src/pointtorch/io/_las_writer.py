@@ -145,7 +145,7 @@ class LasWriter(BasePointCloudWriter):
         las_format = self._select_point_format(point_cloud)
         las_data = laspy.create(point_format=las_format)
         point_coords = point_cloud[["x", "y", "z"]].values
-        scales = [self.maximum_resolution] * 3
+        scales = np.array([self.maximum_resolution] * 3)
         if x_max_resolution is not None:
             scales[0] = x_max_resolution
         if y_max_resolution is not None:
