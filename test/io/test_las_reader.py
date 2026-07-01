@@ -5,6 +5,7 @@ import pathlib
 import shutil
 from typing import Optional, Union
 
+import laspy
 import numpy as np
 import pandas as pd
 import pytest
@@ -66,6 +67,33 @@ class TestLasReader:
         read_point_cloud_data = las_reader.read(file_path, columns=columns, num_rows=num_rows)
 
         assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
+
+    @pytest.mark.parametrize("file_format", ["las", "laz"])
+    @pytest.mark.parametrize("use_pathlib", [True, False])
+    def test_read_scaled_extra_dimension(
+        self, las_reader: LasReader, cache_dir: str, file_format: str, use_pathlib: bool
+    ):
+        expected_values = np.array([10.0, 10.123, 10.5, 11.0, 12.0])
+
+        las_data = laspy.create(point_format=6)
+        coords = np.arange(len(expected_values), dtype=float)
+        las_data.x = coords
+        las_data.y = coords
+        las_data.z = coords
+        las_data.add_extra_dim(
+            laspy.ExtraBytesParams(name="scaled_dim", type=np.int32, scales=np.array([0.001]), offsets=np.array([10.0]))
+        )
+        las_data.scaled_dim = expected_values
+
+        file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
+        if use_pathlib:
+            file_path = pathlib.Path(file_path)
+
+        las_data.write(file_path)
+
+        read_point_cloud_data = las_reader.read(file_path)
+
+        assert np.allclose(expected_values, read_point_cloud_data.data["scaled_dim"].to_numpy())
 
     def test_read_unsupported_format(self, las_reader: LasReader, cache_dir: str):
         file_path = pathlib.Path(cache_dir) / "test_file.invalid"
