@@ -95,8 +95,8 @@ class LasReader(BasePointCloudReader):
         for column_name in las_header.point_format.extra_dimension_names:
             if column_name.lower() in ["x", "y", "z"] or columns is not None and column_name not in columns:
                 continue
-            column_values = np.array(las_data[column_name])
-            point_cloud_df[column_name] = column_values
+
+            point_cloud_df[column_name] = np.array(las_data[column_name])
 
         return point_cloud_df
 

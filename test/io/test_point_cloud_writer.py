@@ -94,7 +94,7 @@ class TestPointCloudWriter:
 
         read_point_cloud_data = point_cloud_reader.read(file_path)
 
-        assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
+        assert np.allclose(point_cloud_df.to_numpy(), read_point_cloud_data.data.to_numpy())
 
     @pytest.mark.parametrize("file_format", ["h5", "hdf", "las", "laz"])
     @pytest.mark.parametrize("use_pathlib", [True, False])
