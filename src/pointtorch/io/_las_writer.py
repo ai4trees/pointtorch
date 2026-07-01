@@ -91,7 +91,7 @@ class LasWriter(BasePointCloudWriter):
 
         Returns:
             Tuple containing the LAS scales and offsets for the x, y, and z coordinates.
-            
+
         Shape:
             - :code:`xyz`: :math:`(num_points, 3)`
         """
@@ -108,6 +108,8 @@ class LasWriter(BasePointCloudWriter):
         coordinate_spans = upper_bounds - lower_bounds
         minimum_supported_scales = coordinate_spans / (2 * np.iinfo(np.int32).max)
         scales = np.maximum(scales, minimum_supported_scales)
+
+        offsets = np.round(offsets / scales) * scales
 
         return scales, offsets
 

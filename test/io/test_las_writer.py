@@ -8,6 +8,7 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 import pytest
+import laspy
 
 from pointtorch.io import LasWriter, LasReader, PointCloudIoData
 
@@ -127,7 +128,7 @@ class TestLasWriter:
 
         read_point_cloud_data = las_reader.read(file_path)
 
-        assert (point_cloud_df.to_numpy() == read_point_cloud_data.data.to_numpy()).all()
+        assert np.allclose(point_cloud_df.to_numpy(), read_point_cloud_data.data.to_numpy())
 
     @pytest.mark.parametrize("file_format", ["las", "laz"])
     @pytest.mark.parametrize("use_pathlib", [True, False])
@@ -148,3 +149,36 @@ class TestLasWriter:
         read_point_cloud_data = las_reader.read(file_path)
 
         assert expected_crs == read_point_cloud_data.crs
+
+    @pytest.mark.parametrize("file_format", ["las", "laz"])
+    def test_offsets_for_wide_coordinate_ranges(
+        self, las_reader: LasReader, las_writer: LasWriter, cache_dir: str, file_format: str
+    ):
+        point_cloud_df = pd.DataFrame([[0.0, 0.0, 0.0], [3000.0, 10.0, 5.0]], columns=["x", "y", "z"])
+        point_cloud_data = PointCloudIoData(point_cloud_df)
+        file_path = os.path.join(cache_dir, f"wide_range.{file_format}")
+
+        las_writer.write(point_cloud_data, file_path)
+
+        with laspy.open(file_path) as las_file:
+            assert las_file.header.offsets[0] == pytest.approx(1500.0)
+            assert las_file.header.offsets[1] == pytest.approx(5.0)
+            assert las_file.header.offsets[2] == pytest.approx(2.5)
+
+        read_point_cloud_data = las_reader.read(file_path)
+        assert np.allclose(point_cloud_df.to_numpy(), read_point_cloud_data.data.to_numpy())
+
+    @pytest.mark.parametrize("file_format", ["las", "laz"])
+    def test_relaxes_resolution_to_prevent_overflow(
+        self, las_reader: LasReader, las_writer: LasWriter, cache_dir: str, file_format: str
+    ):
+        point_cloud_df = pd.DataFrame([[0.0, 0.0, 0.0], [50000.0, 0.0, 0.0]], columns=["x", "y", "z"])
+        point_cloud_data = PointCloudIoData(point_cloud_df, x_max_resolution=1e-6)
+        file_path = os.path.join(cache_dir, f"very_wide_range.{file_format}")
+
+        las_writer.write(point_cloud_data, file_path)
+
+        read_point_cloud_data = las_reader.read(file_path)
+
+        assert read_point_cloud_data.x_max_resolution is not None and read_point_cloud_data.x_max_resolution > 1e-6
+        assert np.allclose(point_cloud_df.to_numpy(), read_point_cloud_data.data.to_numpy())
