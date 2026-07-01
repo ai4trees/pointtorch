@@ -3,7 +3,7 @@
 __all__ = ["LasWriter"]
 
 import pathlib
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import laspy
 from laspy.compression import LazrsBackend
