@@ -156,7 +156,11 @@ def download_file(  # pylint: disable=too-many-arguments, too-many-locals, too-m
             except (urllib_error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as error:
                 # HTTP 416 ("Range Not Satisfiable") indicates that the requested byte range starts beyond the end of
                 # the file, i.e., that the file on disk is already complete from a previous download
-                if downloaded_bytes > 0 and isinstance(error, urllib_error.HTTPError) and error.code == 416:
+                if (
+                    downloaded_bytes > 0
+                    and isinstance(error, urllib_error.HTTPError)
+                    and error.code == 416  # pylint: disable=no-member
+                ):
                     break
 
                 if not _is_retryable(error):
