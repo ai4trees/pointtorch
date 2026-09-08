@@ -3,6 +3,8 @@
 import os
 import pathlib
 import shutil
+import threading
+import time
 from typing import Optional, Union
 import zipfile
 
@@ -11,6 +13,52 @@ from pytest_httpserver import HTTPServer
 import werkzeug
 
 from pointtorch.io import download_file
+
+
+def _flaky_handler(content: bytes, fail_after_bytes: int, stall_seconds: float = 0.0, always_stall: bool = False):
+    """
+    Builds a ``pytest_httpserver`` handler that serves :attr:`content` but stops sending data after
+    :attr:`fail_after_bytes` bytes (relative to the requested range) without closing the connection, simulating a
+    connection that stalls, e.g., because an idle connection was silently dropped. Unless :attr:`always_stall` is
+    set, this only happens on the first request for the full file; subsequent requests (including ``Range`` requests
+    used to resume the download) are served in full.
+
+    Returns:
+        Tuple of the handler function to pass to ``httpserver.expect_request(...).respond_with_handler(...)`` and a
+        dict tracking how many requests the handler has served (under the ``"attempts"`` key).
+    """
+
+    state = {"attempts": 0}
+    lock = threading.Lock()
+
+    def handle(request: werkzeug.Request) -> werkzeug.Response:
+        range_header = request.headers.get("Range")
+        start = int(range_header.split("=")[1].split("-")[0]) if range_header else 0
+
+        with lock:
+            state["attempts"] += 1
+            attempt = state["attempts"]
+
+        remaining = content[start:]
+        should_stall = always_stall or (attempt == 1 and start == 0)
+
+        def body():
+            if should_stall and fail_after_bytes < len(remaining):
+                yield remaining[:fail_after_bytes]
+                if stall_seconds > 0:
+                    time.sleep(stall_seconds)
+                return
+            yield remaining
+
+        headers = {"Content-Length": str(len(remaining))}
+        status = 200
+        if start > 0:
+            status = 206
+            headers["Content-Range"] = f"bytes {start}-{len(content) - 1}/{len(content)}"
+
+        return werkzeug.Response(body(), status=status, headers=headers, direct_passthrough=True)
+
+    return handle, state
 
 
 class TestDownloadFile:
@@ -81,6 +129,48 @@ class TestDownloadFile:
             file_content = file.read()
             assert "Test1" == file_content
 
+    def test_resumes_after_stalled_connection(self, cache_dir: str, httpserver: HTTPServer):
+        content = os.urandom(200_000)
+        handler, state = _flaky_handler(content, fail_after_bytes=150_000)
+        httpserver.expect_request("/file", method="GET").respond_with_handler(handler)
+
+        file_path = os.path.join(cache_dir, "downloaded.bin")
+        download_file(
+            httpserver.url_for("/file"),
+            file_path,
+            progress_bar=False,
+            timeout=2.0,
+            max_retries=3,
+            retry_backoff_seconds=0.1,
+        )
+
+        with open(file_path, "rb") as file:
+            assert file.read() == content
+        # the download must actually have been interrupted and retried, not merely succeeded on the first try
+        assert state["attempts"] >= 2
+
+    def test_gives_up_after_max_retries(self, cache_dir: str, httpserver: HTTPServer):
+        content = os.urandom(200_000)
+        # never send any data on any attempt (including retries), so that all retries are exhausted
+        handler, state = _flaky_handler(content, fail_after_bytes=0, always_stall=True)
+        httpserver.expect_request("/file", method="GET").respond_with_handler(handler)
+
+        file_path = os.path.join(cache_dir, "downloaded.bin")
+        start_time = time.monotonic()
+        with pytest.raises(RuntimeError):
+            download_file(
+                httpserver.url_for("/file"),
+                file_path,
+                progress_bar=False,
+                timeout=0.5,
+                max_retries=2,
+                retry_backoff_seconds=0.1,
+            )
+        elapsed = time.monotonic() - start_time
+        # must fail once retries are exhausted instead of hanging indefinitely
+        assert elapsed < 15.0
+        assert state["attempts"] == 3  # the initial attempt plus 2 retries
+
     def test_download_invalid_url(self, cache_dir: str):
         with pytest.raises(RuntimeError):
             download_file("http://broken-url.", os.path.join(cache_dir, "downloaded.zip"))
@@ -90,5 +180,10 @@ class TestDownloadFile:
             "Not found", status=404, content_type="text/plain"
         )
 
+        start_time = time.monotonic()
         with pytest.raises(RuntimeError):
             download_file(httpserver.url_for("/zipfile"), os.path.join(cache_dir, "downloaded.zip"))
+        download_time = time.monotonic() - start_time
+
+        # a 404 response is a permanent failure and must not be retried and should fail immediately
+        assert download_time < 5.0
