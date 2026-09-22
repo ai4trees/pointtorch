@@ -35,6 +35,14 @@ class TestPointCloud:  # pylint: disable=too-many-public-methods
         yield cache_dir
         shutil.rmtree(cache_dir)
 
+    def test_xy(self, data, point_cloud):
+        assert (data[:, :2] == point_cloud.xy()).all()
+
+    def test_xy_invalid(self, point_cloud):
+        point_cloud = point_cloud.drop("x", axis=1)
+        with pytest.raises(RuntimeError):
+            point_cloud.xy()
+
     def test_xyz(self, data, point_cloud):
         assert (data[:, :3] == point_cloud.xyz()).all()
 
