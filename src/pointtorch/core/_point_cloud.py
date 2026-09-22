@@ -66,6 +66,20 @@ class PointCloud(pd.DataFrame):
     def _constructor_sliced(self):
         return PointCloudSeries
 
+    def xy(self) -> npt.NDArray[np.float64]:
+        """
+        Returns:
+            x, and y coordinates of the points in the point cloud.
+
+        Raises:
+            RuntimeError: if "x", or "y" are not in `self.columns`.
+        """
+
+        if "x" not in self.columns or "y" not in self.columns:
+            raise RuntimeError("The point cloud does not contain xy coordinates.")
+
+        return self[["x", "y"]].astype(np.float64).to_numpy()
+
     def xyz(self) -> npt.NDArray[np.float64]:
         """
         Returns:
