@@ -22,9 +22,7 @@ class _PointCloudMetadataMixin:  # pylint: disable=too-few-public-methods
 
     _metadata: list[str]
 
-    def __finalize__(  # pylint: disable=overridden-final-method
-        self, other, method: Optional[str] = None, **kwargs
-    ):
+    def __finalize__(self, other, method: Optional[str] = None, **kwargs):  # pylint: disable=overridden-final-method
         """
         Propagates metadata from :code:`other` to :code:`self`. pandas calls this method on the result of most
         operations. For operations with a single input object (e.g., slicing, copying, or dropping columns), pandas
