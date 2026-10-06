@@ -4,7 +4,7 @@ import os
 import pathlib
 import shutil
 import struct
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 import zlib
 
 import pytest
@@ -28,15 +28,18 @@ class TestUnrar:
         return struct.pack("<H", zlib.crc32(head) & 0xFFFF) + head + data
 
     @staticmethod
-    def _write_rar_file(rar_file_path: str, files: Dict[str, bytes], compression_method: int = 0x30) -> None:
+    def _write_rar_file(rar_file_path: str, files: Dict[str, Optional[bytes]], compression_method: int = 0x30) -> None:
         """
-        Writes a RAR 4 archive. By default, the files are stored without compression, so that the archive can be read
-        by :code:`rarfile` without any external extraction tool, which cannot be assumed to be installed in the test
-        environment.
+        Writes a RAR 4 archive. Entries whose data is :code:`None` are written as directories. By default, the files are
+        stored without compression, so that the archive can be read by :code:`rarfile` without any external extraction
+        tool, which cannot be assumed to be installed in the test environment.
         """
 
         rar_data = b"Rar!\x1a\x07\x00" + TestUnrar._rar_block(0x73, 0, b"\x00" * 6)
         for file_name, file_data in files.items():
+            is_dir = file_data is None
+            if file_data is None:
+                file_data = b""
             encoded_file_name = file_name.encode("utf-8")
             file_header = (
                 struct.pack(
@@ -49,11 +52,13 @@ class TestUnrar:
                     20,
                     compression_method,
                     len(encoded_file_name),
-                    0o100644 << 16,
+                    (0o040755 if is_dir else 0o100644) << 16,
                 )
                 + encoded_file_name
             )
-            rar_data += TestUnrar._rar_block(0x74, 0x8000, file_header, file_data)
+            # 0x00E0 marks directory entries
+            flags = 0x8000 | (0x00E0 if is_dir else 0)
+            rar_data += TestUnrar._rar_block(0x74, flags, file_header, file_data)
         rar_data += TestUnrar._rar_block(0x7B, 0x4000, b"")
 
         with open(rar_file_path, "wb") as file:
@@ -100,6 +105,19 @@ class TestUnrar:
 
         assert not (cache_dir_path / "test0.txt").exists()
         assert (cache_dir_path / "test/test1.txt").exists()
+
+    def test_directories(self, cache_dir: str):
+        rar_file_path = os.path.join(cache_dir, "test.rar")
+        self._write_rar_file(
+            rar_file_path, {"empty_dir/sub_dir": None, "test": None, "test/test0.txt": b"Test0", "test/sub_dir": None}
+        )
+        dest_path = pathlib.Path(cache_dir) / "dest"
+
+        unrar(rar_file_path, dest_path, progress_bar=False)
+
+        assert (dest_path / "empty_dir/sub_dir").is_dir()
+        assert (dest_path / "test/sub_dir").is_dir()
+        assert (dest_path / "test/test0.txt").read_text(encoding="utf-8") == "Test0"
 
     def test_invalid_items(self, rar_file_path: str, cache_dir: str):
         with pytest.raises(KeyError):
