@@ -6,6 +6,7 @@ import shutil
 from typing import Union
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from pointtorch import PointCloud, PointCloudSeries, read
@@ -165,6 +166,66 @@ class TestPointCloud:  # pylint: disable=too-many-public-methods
         assert isinstance(point_cloud_slice, PointCloudSeries)
         assert identifier == point_cloud_slice.identifier
 
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            lambda point_cloud: point_cloud.copy(),
+            lambda point_cloud: point_cloud[point_cloud["x"] > 0],
+            lambda point_cloud: point_cloud.iloc[:1],
+            lambda point_cloud: point_cloud[["x", "y"]],
+            lambda point_cloud: point_cloud.drop(columns=["intensity"]),
+            lambda point_cloud: point_cloud.rename(columns={"intensity": "reflectance"}),
+            lambda point_cloud: point_cloud.astype(np.float32),
+            lambda point_cloud: point_cloud["x"],
+            lambda point_cloud: point_cloud["x"].to_frame(),
+            lambda point_cloud: pd.concat([point_cloud, point_cloud]),
+            lambda point_cloud: pd.concat([point_cloud["x"], point_cloud["x"]]),
+        ],
+    )
+    def test_metadata_propagation(self, point_cloud, operation):
+        point_cloud = PointCloud(
+            point_cloud,
+            crs="EPSG:4326",
+            identifier="test_point_cloud",
+            x_max_resolution=0.1,
+            y_max_resolution=0.2,
+            z_max_resolution=0.3,
+        )
+
+        result = operation(point_cloud)
+
+        assert "EPSG:4326" == result.crs
+        assert "test_point_cloud" == result.identifier
+        assert 0.1 == result.x_max_resolution
+        assert 0.2 == result.y_max_resolution
+        assert 0.3 == result.z_max_resolution
+
+    def test_concat_with_different_metadata(self, point_cloud):
+        point_cloud_1 = PointCloud(
+            point_cloud,
+            crs="EPSG:4326",
+            identifier="test_point_cloud_1",
+            x_max_resolution=0.1,
+            y_max_resolution=0.01,
+            z_max_resolution=0.1,
+        )
+        point_cloud_2 = PointCloud(
+            point_cloud,
+            crs="EPSG:4326",
+            identifier="test_point_cloud_2",
+            x_max_resolution=0.01,
+            y_max_resolution=0.1,
+            z_max_resolution=None,
+        )
+
+        result = pd.concat([point_cloud_1, point_cloud_2])
+
+        assert "EPSG:4326" == result.crs
+        assert result.identifier is None
+        assert 0.01 == result.x_max_resolution
+        assert 0.01 == result.y_max_resolution
+        assert result.z_max_resolution is None
+
     def test_crs(self, point_cloud):
         crs = "EPSG:4326"
         point_cloud = PointCloud(point_cloud, crs=crs)
@@ -188,10 +249,29 @@ class TestPointCloud:  # pylint: disable=too-many-public-methods
         point_cloud = PointCloud(point_cloud, z_max_resolution=z_max_resolution)
         assert z_max_resolution == point_cloud.z_max_resolution
 
-    @pytest.mark.parametrize("file_format", ["csv", "txt", "h5", "hdf", "las", "laz"])
+    @pytest.mark.parametrize(
+        "file_format, stored_metadata",
+        [
+            ("csv", []),
+            ("txt", []),
+            ("h5", ["crs", "identifier", "x_max_resolution", "y_max_resolution", "z_max_resolution"]),
+            ("hdf", ["crs", "identifier", "x_max_resolution", "y_max_resolution", "z_max_resolution"]),
+            ("las", ["crs", "x_max_resolution", "y_max_resolution", "z_max_resolution"]),
+            ("laz", ["crs", "x_max_resolution", "y_max_resolution", "z_max_resolution"]),
+        ],
+    )
     @pytest.mark.parametrize("use_pathlib", [True, False])
-    def test_to(self, file_format: str, use_pathlib: bool, cache_dir, point_cloud):
-        point_cloud = PointCloud(point_cloud)
+    def test_to(  # pylint: disable=too-many-positional-arguments
+        self, file_format: str, stored_metadata: list[str], use_pathlib: bool, cache_dir, point_cloud
+    ):
+        metadata = {
+            "crs": "EPSG:4326",
+            "identifier": "test_point_cloud_identifier",
+            "x_max_resolution": 0.01,
+            "y_max_resolution": 0.02,
+            "z_max_resolution": 0.05,
+        }
+        point_cloud = PointCloud(point_cloud, **metadata)
         file_path: Union[str, pathlib.Path] = os.path.join(cache_dir, f"test_point_cloud.{file_format}")
         if use_pathlib:
             file_path = pathlib.Path(file_path)
@@ -201,3 +281,5 @@ class TestPointCloud:  # pylint: disable=too-many-public-methods
         read_point_cloud_data = read(file_path)
 
         assert (point_cloud.to_numpy() == read_point_cloud_data.to_numpy()).all()
+        for name in stored_metadata:
+            assert metadata[name] == getattr(read_point_cloud_data, name)
