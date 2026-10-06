@@ -22,7 +22,7 @@ class _PointCloudMetadataMixin:  # pylint: disable=too-few-public-methods
 
     _metadata: list[str]
 
-    def __finalize__(  # type: ignore[misc]  # pylint: disable=overridden-final-method
+    def __finalize__(  # pylint: disable=overridden-final-method
         self, other, method: Optional[str] = None, **kwargs
     ):
         """
