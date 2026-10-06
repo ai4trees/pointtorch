@@ -141,6 +141,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     software-properties-common \
     sqlite3 \
     tzdata \
+    unrar \
     unzip \
     wget \
     zlib1g-dev \
