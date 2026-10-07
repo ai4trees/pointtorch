@@ -51,6 +51,19 @@ jobs:
       - name: Delete previously built images to free disk space
         run: |
           docker system prune --all --volumes --force
+      - name: Build and push slim CPU docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile_cpu_slim
+          push: true
+          provenance: false
+          tags: |
+            josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cpu-slim
+            josafatburmeister/pointtorch:cpu-slim
+      - name: Delete previously built images to free disk space
+        run: |
+          docker system prune --all --volumes --force
       - name: Build and push GPU docker image
         uses: docker/build-push-action@v6
         with:
@@ -62,5 +75,18 @@ jobs:
             josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cu129
             josafatburmeister/pointtorch:cu129
             josafatburmeister/pointtorch:latest
+      - name: Delete previously built images to free disk space
+        run: |
+          docker system prune --all --volumes --force
+      - name: Build and push slim GPU docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile_gpu_slim
+          push: true
+          provenance: false
+          tags: |
+            josafatburmeister/pointtorch:${{ env.latest_version }}-torch2.10.0-cu129-slim
+            josafatburmeister/pointtorch:cu129-slim
       - name: Clean up docker build remains
         run: docker system prune --all --volumes --force

@@ -11,8 +11,7 @@
 .idea
 
 # Dockerfiles (not needed inside the image)
-Dockerfile_cpu
-Dockerfile_gpu
+Dockerfile_*
 .dockerignore
 
 # Virtual environments
