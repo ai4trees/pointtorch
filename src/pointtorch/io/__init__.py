@@ -14,6 +14,7 @@ from ._ply_writer import *
 from ._point_cloud_io_data import *
 from ._point_cloud_reader import *
 from ._point_cloud_writer import *
+from ._unrar import *
 from ._unzip import *
 
 __all__ = [name for name in globals().keys() if not name.startswith("_")]
