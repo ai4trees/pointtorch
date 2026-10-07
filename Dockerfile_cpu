@@ -62,7 +62,7 @@ RUN python get-pip.py && python -m pip install --upgrade pip
 
 # these packages are dependencies of the other packages but not listed in their requirements
 # therefore, they have to be installed manually
-RUN python -m pip install tensorboard yapf wheel packaging
+RUN python -m pip install tensorboard packaging
 RUN python -m pip install torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cpu
 RUN python -m pip install torch-scatter torch-cluster -f https://data.pyg.org/whl/torch-2.10.0+cpu.html
 RUN python -m pip install --no-build-isolation "git+https://github.com/facebookresearch/pytorch3d.git@stable"
@@ -71,6 +71,13 @@ RUN python -m pip install spconv
 ######################## Open3D build #################################
 RUN git clone https://github.com/isl-org/Open3D
 RUN git clone https://github.com/isl-org/Open3D-ML.git
+
+# install Open3D build and runtime requirements
+# the runtime requirements are needed because the build imports open3d to generate typing stubs
+RUN python -m pip install \
+    -r Open3D/python/requirements_build.txt \
+    -r Open3D/python/requirements.txt \
+    -r Open3D-ML/requirements.txt
 
 # remove sudo from script since it is not available in Docker
 RUN sed -i 's/SUDO=${SUDO:=sudo}/SUDO=" "/g' Open3D/util/install_deps_ubuntu.sh && \
@@ -84,15 +91,15 @@ RUN apt update && apt install kitware-archive-keyring && rm /etc/apt/trusted.gpg
 
 # build the Open3D package (CPU version)
 RUN mkdir /workspace/Open3D/build && cd /workspace/Open3D/build && \
-    cmake -DPYTHON3_INCLUDE_DIR=$(python -c "import sysconfig && print(sysconfig.get_path('include'))") \
-          -DPYTHON3_LIBRARY=$(python -c "import sysconfig && print(sysconfig.get_config_var('LIBDIR'))") \
+    cmake -DPYTHON3_INCLUDE_DIR=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") \
+          -DPYTHON3_LIBRARY=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))") \
           -DBUILD_CUDA_MODULE=OFF -DGLIBCXX_USE_CXX11_ABI=ON -DBUILD_PYTORCH_OPS=ON -DBUILD_TENSORFLOW_OPS=OFF \
           -DBUNDLE_OPEN3D_ML=ON -DOPEN3D_ML_ROOT=/workspace/Open3D-ML .. && \
     make -j$(nproc) && \
     make install-pip-package
 
 # uninstall build dependencies from virtual environment again
-RUN python -m pip uninstall -y yapf wheel packaging
+RUN python -m pip uninstall -y yapf wheel packaging pybind11-stubgen
     
 ####################################################################
 ######################### Target Image #############################
