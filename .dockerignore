@@ -1,0 +1,50 @@
+# Version control and CI
+.git
+.gitignore
+.github
+.pre-commit-config.yaml
+
+# Agent / editor settings
+.agents
+.claude
+.vscode
+.idea
+
+# Dockerfiles (not needed inside the image)
+Dockerfile_cpu
+Dockerfile_gpu
+.dockerignore
+
+# Virtual environments
+.venv*
+venv*/
+env/
+ENV/
+.env
+
+# Byte-compiled files and caches
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+.mypy_cache
+.pytest_cache
+.hypothesis
+.ruff_cache
+.cache
+
+# Coverage reports
+.coverage
+.coverage.*
+coverage.xml
+htmlcov
+
+# Build artifacts
+build
+dist
+**/*.egg-info
+.eggs
+docs/build
+
+# Temporary files
+tmp
+**/*.log
