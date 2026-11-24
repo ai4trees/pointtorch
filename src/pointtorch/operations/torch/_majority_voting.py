@@ -8,15 +8,17 @@ from torch_scatter import scatter_max
 
 def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.Tensor:
     """
-    Selects the most common label among a set of labels belonging to the same batch item.
+    Selects the most common label among a set of labels belonging to the same batch item. If several labels occur with
+    exactly the same frequency within a batch item, the smallest of them is selected, so that the result is
+    deterministic.
 
     Args:
         labels: Label for each point.
         batch_indices: Indices indicating to which input point cloud each point in the batch belongs.
 
     Returns:
-        Most common label for each batch item. If several labels occur with the exactly the same frequencey within a
-        batch item, any of them may be returned.
+        Most common label for each batch item. If several labels occur with exactly the same frequency within a batch
+        item, the smallest of them is returned.
 
     Shape:
         - :code:`labels`: :math:`(N)`
@@ -39,5 +41,10 @@ def majority_voting(labels: torch.Tensor, batch_indices: torch.Tensor) -> torch.
     pair_batch_indices = unique_pair_ids // label_range
     pair_labels = unique_pair_ids % label_range
 
-    _, majority_pair_indices = scatter_max(counts, pair_batch_indices, dim=0, dim_size=num_batch_items)
-    return pair_labels[majority_pair_indices] + min_label
+    # on CUDA devices, the index of the maximum returned by scatter_max is not deterministic if several pairs of a batch
+    # item have the maximum count; therefore, the pairs are ranked by a key that is unique within each batch item and
+    # orders them by count and, for equal counts, prefers the smaller label; the maximum value of the key does not
+    # depend on the order in which the pairs are processed
+    pair_keys = counts * label_range + (label_range - 1 - pair_labels)
+    max_pair_keys, _ = scatter_max(pair_keys, pair_batch_indices, dim=0, dim_size=num_batch_items)
+    return label_range - 1 - max_pair_keys % label_range + min_label
