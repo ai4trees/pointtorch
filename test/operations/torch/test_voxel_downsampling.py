@@ -451,3 +451,64 @@ class TestSampling:
 
         # test that voxel indices are in range
         assert voxel_indices.amax().item() < len(downsampled_coords)
+
+    @pytest.mark.parametrize("feature_aggregation", ["max", "mean", "min"])
+    @pytest.mark.parametrize("device", ["cpu", "cuda:0"] if torch.cuda.is_available() else ["cpu"])
+    def test_deterministic_aggregation(self, feature_aggregation: Literal["max", "mean", "min"], device: torch.device):
+        generator = torch.Generator().manual_seed(0)
+        # many points per voxel, so that the result of a floating-point sum depends on the order of the summation
+        coords = (torch.rand((200000, 3), generator=generator) * 2).to(device)
+        features = torch.randn((200000, 4), generator=generator).to(device)
+        batch_indices = torch.zeros(len(coords), dtype=torch.long, device=device)
+        point_cloud_sizes = torch.tensor([len(coords)], dtype=torch.long, device=device)
+
+        results = [
+            voxel_downsampling(
+                coords,
+                batch_indices,
+                point_cloud_sizes,
+                1.0,
+                features=features,
+                feature_aggregation=feature_aggregation,
+                point_aggregation="mean",
+            )
+            for _ in range(10)
+        ]
+
+        for downsampled_coords, downsampled_features, _, _, _ in results[1:]:
+            assert torch.equal(downsampled_coords, results[0][0])
+            assert torch.equal(downsampled_features, results[0][1])  # type: ignore[arg-type]
+
+    @pytest.mark.parametrize("preserve_order", [True, False])
+    @pytest.mark.parametrize("device", ["cpu", "cuda:0"] if torch.cuda.is_available() else ["cpu"])
+    def test_nearest_neighbor_ties(self, preserve_order: bool, device: torch.device):
+        num_voxels = 20000
+        # each voxel contains four points that are equally close to the voxel center, in random order
+        offsets = torch.tensor([[0.25, 0.5, 0.5], [0.75, 0.5, 0.5], [0.5, 0.25, 0.5], [0.5, 0.75, 0.5]])
+        coords = torch.arange(num_voxels, dtype=torch.float).repeat_interleave(4).unsqueeze(-1) * torch.tensor(
+            [[1.0, 0.0, 0.0]]
+        ) + offsets.repeat(num_voxels, 1)
+        coords = coords[torch.randperm(len(coords), generator=torch.Generator().manual_seed(0))].to(device)
+        # the feature of each point is its index, so that the selected points can be identified
+        features = torch.arange(len(coords), dtype=torch.float, device=device).unsqueeze(-1)
+        batch_indices = torch.zeros(len(coords), dtype=torch.long, device=device)
+        point_cloud_sizes = torch.tensor([len(coords)], dtype=torch.long, device=device)
+
+        # the first point of each voxel in the input is selected
+        voxel_of_each_point = torch.floor(coords[:, 0]).long().cpu().numpy()
+        expected_selected_indices = np.full(num_voxels, len(coords))
+        np.minimum.at(expected_selected_indices, voxel_of_each_point, np.arange(len(coords)))
+
+        for _ in range(5):
+            _, downsampled_features, _, _, _ = voxel_downsampling(
+                coords,
+                batch_indices,
+                point_cloud_sizes,
+                1.0,
+                features=features,
+                feature_aggregation="nearest_neighbor",
+                point_aggregation="nearest_neighbor",
+                preserve_order=preserve_order,
+            )
+            selected_indices = downsampled_features.squeeze(-1).long().cpu().numpy()  # type: ignore[union-attr]
+            np.testing.assert_array_equal(np.sort(expected_selected_indices), np.sort(selected_indices))

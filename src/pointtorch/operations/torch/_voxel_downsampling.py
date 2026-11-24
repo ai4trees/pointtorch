@@ -5,9 +5,45 @@ __all__ = ["voxel_downsampling"]
 from typing import Literal, Optional, Tuple
 
 import torch
+from torch_scatter import segment_csr
 from torch_scatter.scatter import scatter, scatter_min
 
 from ._ravel_index import ravel_multi_index
+
+
+def _aggregate_per_cluster(
+    values: torch.Tensor, cluster: torch.Tensor, cluster_sizes: torch.Tensor, reduce: Literal["max", "mean", "min"]
+) -> torch.Tensor:
+    r"""
+    Aggregates the values of the points of each cluster. On CUDA devices, :code:`torch_scatter.scatter` sums
+    floating-point values in an order that changes between runs. Therefore, the points are sorted by cluster and
+    aggregated with :code:`torch_scatter.segment_csr`, which is deterministic.
+
+    Args:
+        values: Values of the points.
+        cluster: Index of the cluster of each point. The clusters must be numbered consecutively from zero.
+        cluster_sizes: Number of points of each cluster.
+        reduce: Aggregation method: :code:`"max"` | :code:`"mean"` | :code:`"min"`.
+
+    Returns:
+        Aggregated values of each cluster.
+
+    Shape:
+        - :code:`values`: :math:`(N, D)`
+        - :code:`cluster`: :math:`(N)`
+        - :code:`cluster_sizes`: :math:`(C)`
+        - Output: :math:`(C, D)`
+
+          | where
+          |
+          | :math:`N = \text{ number of points}`
+          | :math:`C = \text{ number of clusters}`
+          | :math:`D = \text{ number of value channels}`
+    """
+
+    sorting_indices = torch.argsort(cluster, stable=True)
+    offsets = torch.cat([cluster_sizes.new_zeros(1), torch.cumsum(cluster_sizes, dim=0)])
+    return segment_csr(values[sorting_indices], offsets, reduce=reduce)
 
 
 def voxel_downsampling(  # pylint: disable=too-many-locals
@@ -23,7 +59,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     start: Optional[torch.Tensor] = None,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor], torch.Tensor, torch.Tensor, torch.Tensor]:
     r"""
-    Voxel-based downsampling of a batch of point clouds.
+    Voxel-based downsampling of a batch of point clouds. The results are deterministic, also on CUDA devices.
 
     Args:
         coords: Coordinates of the points to be downsampled.
@@ -33,10 +69,12 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
         features: The features of the points to be downsampled. Defaults to `None`.
         feature_aggregation: Method to be used to aggregate features of points within the same voxel: `"max"` | \
             `"mean"` | `"min"` | `"nearest_neighbor"`. `"nearest_neighbor"` means that the features of the point \
-            closest to the voxel center are selected.
+            closest to the voxel center are selected. If several points are equally close to the voxel center, the \
+            point that comes first in the input is selected.
         point_aggregation: Method to be used to aggregate the point coordinates within the same voxel: `"mean"` |
             `"nearest_neighbor"`. `"nearest_neighbor"` means that the coordinates of the point closest to the voxel
-            center are selected.
+            center are selected. If several points are equally close to the voxel center, the point that comes first in
+            the input is selected.
         preserve_order: If this is set to `True` and `point_aggregation` is set to `"nearest_neighbor"`, the point order
             is preserved during downsampling. This means that for any two points included in the downsampled point
             cloud, the point that is first in the original point cloud is also first in the downsampled point cloud.
@@ -93,7 +131,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
     dimensions = voxel_indices.amax(0) + 1  # (4)
     flattened_indices = ravel_multi_index(voxel_indices, dimensions)  # (N)
 
-    _, cluster = torch.unique(flattened_indices, sorted=True, return_inverse=True)
+    _, cluster, cluster_sizes = torch.unique(flattened_indices, sorted=True, return_inverse=True, return_counts=True)
     batch_indices = scatter(batch_indices, cluster, dim=0, reduce="min")
 
     if point_aggregation == "nearest_neighbor" or features is not None and feature_aggregation == "nearest_neighbor":
@@ -103,22 +141,26 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
 
         squared_dists_to_cluster_centers = ((shifted_coords - cluster_centers[cluster]) ** 2).sum(dim=-1)
 
-        _, argmin_indices = scatter_min(squared_dists_to_cluster_centers, cluster)
-
-        selected_indices = point_indices[argmin_indices]
+        # on CUDA devices, the index of the minimum returned by scatter_min is not deterministic if several points of a
+        # voxel are equally close to the voxel center, so the first of these points is selected explicitly
+        min_squared_dists, _ = scatter_min(squared_dists_to_cluster_centers, cluster)
+        is_closest_point = squared_dists_to_cluster_centers == min_squared_dists[cluster]
+        selected_indices = scatter(
+            torch.where(is_closest_point, point_indices, len(point_indices)), cluster, dim=0, reduce="min"
+        )
         if preserve_order and point_aggregation == "nearest_neighbor":
             selected_indices, sorting_indices = selected_indices.sort()
 
     if point_aggregation == "nearest_neighbor":
         coords = coords[selected_indices]
     else:
-        coords = scatter(coords, cluster, dim=0, reduce="mean")
+        coords = _aggregate_per_cluster(coords, cluster, cluster_sizes, "mean")
 
     if features is not None:
         if feature_aggregation == "nearest_neighbor":
             features = features[selected_indices]
         else:
-            features = scatter(features, cluster, dim=0, reduce=feature_aggregation)
+            features = _aggregate_per_cluster(features, cluster, cluster_sizes, feature_aggregation)
             if preserve_order and point_aggregation == "nearest_neighbor":
                 features = features[sorting_indices]  # pylint: disable=used-before-assignment
 
