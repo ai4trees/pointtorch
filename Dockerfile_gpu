@@ -6,6 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ENV PYTHON_VERSION=3.13.12
 
+ENV PIP_NO_CACHE_DIR=1
+
 # needed to install the CUDA version of PyTorch3D
 # see https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md
 # see https://github.com/pytorch/extension-cpp/issues/71
@@ -118,11 +120,14 @@ RUN python -m pip uninstall -y yapf wheel packaging pybind11-stubgen
 ######################### Target Image #############################
 ####################################################################
 
-FROM nvidia/cuda:12.9.1-runtime-ubuntu24.04
+# the base image only contains the CUDA runtime, the other CUDA libraries are provided by the PyTorch wheels
+FROM nvidia/cuda:12.9.1-base-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV PYTHON_VERSION=3.13.12
+
+ENV PIP_NO_CACHE_DIR=1
 
 WORKDIR /workspace
 

@@ -171,7 +171,7 @@ class TestKnnSearch:
         )
 
         assert expected_neighbor_indices.shape == neighbor_indices.shape
-        assert expected_neighbor_dists.shape == expected_neighbor_dists.shape
+        assert expected_neighbor_dists.shape == neighbor_dists.shape
 
         if not return_sorted:
             neighbor_dists, sorting_indices = torch.sort(neighbor_dists)

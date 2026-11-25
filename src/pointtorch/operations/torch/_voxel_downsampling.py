@@ -120,7 +120,7 @@ def voxel_downsampling(  # pylint: disable=too-many-locals
         else:
             features = scatter(features, cluster, dim=0, reduce=feature_aggregation)
             if preserve_order and point_aggregation == "nearest_neighbor":
-                features = features[sorting_indices]  # pylint: disable=used-before-assignment
+                features = features[sorting_indices]  # pylint: disable=possibly-used-before-assignment
 
     point_cloud_sizes = scatter(torch.ones_like(batch_indices), batch_indices, reduce="sum")
 
